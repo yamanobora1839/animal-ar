@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>岐阜県動物愛護センター AR</title>
+  <title>愛護センターAR探検</title>
 
   <script type="module"
     src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
@@ -21,6 +21,7 @@
 
     h1 {
       margin: 20px 0 5px;
+      font-size: 24px;
     }
 
     p {
@@ -29,7 +30,7 @@
 
     model-viewer {
       width: 100%;
-      height: 70vh;
+      height: 65vh;
       background-color: white;
     }
 
@@ -40,78 +41,69 @@
       border-radius: 20px;
       padding: 12px 20px;
       font-size: 16px;
+
       position: absolute;
       left: 50%;
       bottom: 20px;
       transform: translateX(-50%);
     }
 
-    /* MENUボタン */
-    #menuButton {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 20;
-
+    /* スタンプ表示 */
+    #stampArea {
       background-color: white;
-      border: 2px solid #555;
-      border-radius: 25px;
-
-      padding: 12px 20px;
-      font-size: 17px;
-      font-weight: bold;
-
-      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-    }
-
-    /* メニュー */
-    #menu {
-      display: none;
-
-      position: fixed;
-      left: 50%;
-      bottom: 90px;
-      transform: translateX(-50%);
-
-      width: 90%;
-      max-width: 400px;
-
-      z-index: 30;
-
-      background-color: white;
-      border-radius: 18px;
-
-      padding: 15px 0;
-
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    }
-
-    #menu h2 {
-      margin: 5px 0 15px;
-      font-size: 20px;
-    }
-
-    #menu button {
-      display: block;
-
-      width: 85%;
-      margin: 10px auto;
-
+      margin: 15px auto;
       padding: 15px;
-
-      font-size: 18px;
-
-      border: none;
-      border-radius: 12px;
-
-      background-color: #f5f5f5;
-
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 450px;
+      border-radius: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-sizing: border-box;
     }
 
-    /* 閉じるボタン */
-    #closeButton {
-      background-color: #ddd !important;
+    #stampTitle {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #stamps {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stamp {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      font-size: 24px;
+
+      border: 2px solid #ccc;
+      background-color: #eee;
+    }
+
+    .stamp.get {
+      background-color: #fff;
+      border-color: #555;
+    }
+
+    #message {
+      margin-top: 12px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    /* ロゴ画像 */
+    .logo-image {
+      width: 300px;
+      max-width: 80%;
+      margin-bottom: 30px;
     }
   </style>
 
@@ -119,14 +111,13 @@
 
 <body>
 
-  <h1>岐阜県動物愛護センター</h1>
-  <p>ロゴをARで置いてみよう</p>
+  <h1>🐾 愛護センターAR探検</h1>
 
-  <!-- MENUボタン -->
+  <p>
+    ① 入口のARを楽しもう！
+  </p>
 
-  <button id="menuButton" onclick="openMenu()">
-    ☰ MENU
-  </button>
+  <!-- ARモデル -->
 
 <model-viewer
  id="logoModel"
@@ -147,28 +138,28 @@
 
   </model-viewer>
 
-  <!-- メニュー -->
+  <!-- スタンプ -->
 
-  <div id="menu">
+  <div id="stampArea">
 
 ```
-<h2>愛護センター体験</h2>
+<div id="stampTitle">
+  🐾 AR探検スタンプ
+</div>
 
-<button onclick="showMessage('お仕事体験')">
-  🐕 お仕事体験
-</button>
+<div id="stamps">
 
-<button onclick="showMessage('トリミング体験')">
-  ✂️ トリミング体験
-</button>
+  <div class="stamp" id="stamp1">①</div>
+  <div class="stamp" id="stamp2">②</div>
+  <div class="stamp" id="stamp3">③</div>
+  <div class="stamp" id="stamp4">④</div>
+  <div class="stamp" id="stamp5">⑤</div>
 
-<button onclick="showMessage('お散歩体験')">
-  🐾 お散歩体験
-</button>
+</div>
 
-<button id="closeButton" onclick="closeMenu()">
-  ✕ 閉じる
-</button>
+<div id="message">
+  入口ARをGET！
+</div>
 ```
 
   </div>
@@ -176,23 +167,86 @@
   <h2>岐阜県動物愛護センター</h2>
 
 <img
+ class="logo-image"
  src="https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/logo.jpg"
- alt="岐阜県動物愛護センターのロゴ"
- width="300">
+ alt="岐阜県動物愛護センターのロゴ">
 
   <script>
 
-    function openMenu() {
-      document.getElementById("menu").style.display = "block";
+    /*
+     * ============================
+     * AR探検スタンプ
+     * ============================
+     *
+     * 今回は①入口ARをGETします。
+     *
+     * localStorageという
+     * スマホのブラウザ内の保存領域を使います。
+     */
+
+    const stampKey = "animalAR_stamp_1";
+
+
+    // ①入口スタンプをGET
+    localStorage.setItem(stampKey, "get");
+
+
+    // スタンプ表示を更新
+    function updateStamps() {
+
+      // ①
+      if (localStorage.getItem("animalAR_stamp_1") === "get") {
+        document.getElementById("stamp1").classList.add("get");
+        document.getElementById("stamp1").textContent = "🐾";
+      }
+
+      // ②
+      if (localStorage.getItem("animalAR_stamp_2") === "get") {
+        document.getElementById("stamp2").classList.add("get");
+        document.getElementById("stamp2").textContent = "🐾";
+      }
+
+      // ③
+      if (localStorage.getItem("animalAR_stamp_3") === "get") {
+        document.getElementById("stamp3").classList.add("get");
+        document.getElementById("stamp3").textContent = "🐾";
+      }
+
+      // ④
+      if (localStorage.getItem("animalAR_stamp_4") === "get") {
+        document.getElementById("stamp4").classList.add("get");
+        document.getElementById("stamp4").textContent = "🐾";
+      }
+
+      // ⑤
+      if (localStorage.getItem("animalAR_stamp_5") === "get") {
+        document.getElementById("stamp5").classList.add("get");
+        document.getElementById("stamp5").textContent = "🐾";
+      }
+
+
+      // コンプリート判定
+
+      const allStamps =
+        localStorage.getItem("animalAR_stamp_1") === "get" &&
+        localStorage.getItem("animalAR_stamp_2") === "get" &&
+        localStorage.getItem("animalAR_stamp_3") === "get" &&
+        localStorage.getItem("animalAR_stamp_4") === "get" &&
+        localStorage.getItem("animalAR_stamp_5") === "get";
+
+
+      if (allStamps) {
+
+        document.getElementById("message").textContent =
+          "🎉 AR探検コンプリート！ 🎉";
+
+      }
+
     }
 
-    function closeMenu() {
-      document.getElementById("menu").style.display = "none";
-    }
 
-    function showMessage(name) {
-      alert(name + "を選択しました！");
-    }
+    // ページを開いたらスタンプ表示
+    updateStamps();
 
   </script>
 
