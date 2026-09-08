@@ -33,6 +33,7 @@
       background-color: white;
     }
 
+    /* ARボタン */
     .ar-button {
       background-color: white;
       border: 1px solid #777;
@@ -45,28 +46,72 @@
       transform: translateX(-50%);
     }
 
+    /* MENUボタン */
+    #menuButton {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 20;
+
+      background-color: white;
+      border: 2px solid #555;
+      border-radius: 25px;
+
+      padding: 12px 20px;
+      font-size: 17px;
+      font-weight: bold;
+
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
+
     /* メニュー */
     #menu {
       display: none;
+
       position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 20px;
-      z-index: 10;
-      text-align: center;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%);
+
+      width: 90%;
+      max-width: 400px;
+
+      z-index: 30;
+
+      background-color: white;
+      border-radius: 18px;
+
+      padding: 15px 0;
+
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    #menu h2 {
+      margin: 5px 0 15px;
+      font-size: 20px;
     }
 
     #menu button {
       display: block;
-      width: 80%;
-      max-width: 350px;
+
+      width: 85%;
       margin: 10px auto;
+
       padding: 15px;
+
       font-size: 18px;
+
       border: none;
       border-radius: 12px;
-      background: white;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+
+      background-color: #f5f5f5;
+
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* 閉じるボタン */
+    #closeButton {
+      background-color: #ddd !important;
     }
   </style>
 
@@ -76,6 +121,12 @@
 
   <h1>岐阜県動物愛護センター</h1>
   <p>ロゴをARで置いてみよう</p>
+
+  <!-- MENUボタン -->
+
+  <button id="menuButton" onclick="openMenu()">
+    ☰ MENU
+  </button>
 
 <model-viewer
  id="logoModel"
@@ -101,6 +152,8 @@
   <div id="menu">
 
 ```
+<h2>愛護センター体験</h2>
+
 <button onclick="showMessage('お仕事体験')">
   🐕 お仕事体験
 </button>
@@ -111,6 +164,10 @@
 
 <button onclick="showMessage('お散歩体験')">
   🐾 お散歩体験
+</button>
+
+<button id="closeButton" onclick="closeMenu()">
+  ✕ 閉じる
 </button>
 ```
 
@@ -125,15 +182,14 @@
 
   <script>
 
-    const model = document.getElementById("logoModel");
-    const menu = document.getElementById("menu");
+    function openMenu() {
+      document.getElementById("menu").style.display = "block";
+    }
 
-    // ロゴパネルをクリックしたらメニューを表示
-    model.addEventListener("click", function() {
-      menu.style.display = "block";
-    });
+    function closeMenu() {
+      document.getElementById("menu").style.display = "none";
+    }
 
-    // メニューを選んだとき
     function showMessage(name) {
       alert(name + "を選択しました！");
     }
