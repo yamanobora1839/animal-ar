@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>②犬舎AR | 愛護センターAR探検</title>
+
+  <script type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+  </script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    p {
+      font-size: 18px;
+    }
+
+    model-viewer {
+      width: 100%;
+      height: 60vh;
+      background: white;
+      border-radius: 15px;
+      margin-top: 20px;
+    }
+
+    .stamps {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+
+    .stamp {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .got {
+      background: #ffe082;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🐾 愛護センターAR探検</h1>
+
+  <h2>② 犬舎AR</h2>
+
+  <p>柴犬をARで見てみよう！</p>
+
+  <model-viewer
+    src="https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/quaternius_cc0-shiba-inu-1332.glb"
+    alt="柴犬の3Dモデル"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    shadow-intensity="1"
+    auto-rotate>
+  </model-viewer>
+
+  <div class="stamps">
+    <div id="stamp1" class="stamp">①</div>
+    <div id="stamp2" class="stamp">②</div>
+    <div id="stamp3" class="stamp">③</div>
+    <div id="stamp4" class="stamp">④</div>
+    <div id="stamp5" class="stamp">⑤</div>
+  </div>
+
+  <div id="message"></div>
+
+  <script>
+
+    // ②犬舎ARのスタンプをGET
+    localStorage.setItem("animalAR_stamp_2", "get");
+
+    function updateStamps() {
+
+      for (let i = 1; i <= 5; i++) {
+
+        const stamp = document.getElementById("stamp" + i);
+
+        if (localStorage.getItem("animalAR_stamp_" + i) === "get") {
+          stamp.classList.add("got");
+          stamp.textContent = "🐾";
+        }
+
+      }
+
+      // 5個すべて集まったか確認
+      let complete = true;
+
+      for (let i = 1; i <= 5; i++) {
+        if (localStorage.getItem("animalAR_stamp_" + i) !== "get") {
+          complete = false;
+        }
+      }
+
+      if (complete) {
+        document.getElementById("message").textContent =
+          "🎉 AR探検コンプリート！ 🎉";
+      } else {
+        document.getElementById("message").textContent =
+          "②犬舎ARのスタンプをGET！";
+      }
+    }
+
+    updateStamps();
+
+  </script>
+
+</body>
+</html>
