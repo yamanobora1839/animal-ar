@@ -1,12 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>ARテスト</title>
+  <title>岐阜県動物愛護センター AR</title>
 
-  <!-- 3Dモデル・AR表示用 -->
   <script type="module"
     src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
   </script>
@@ -44,37 +44,101 @@
       bottom: 20px;
       transform: translateX(-50%);
     }
+
+    /* メニュー */
+    #menu {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 20px;
+      z-index: 10;
+      text-align: center;
+    }
+
+    #menu button {
+      display: block;
+      width: 80%;
+      max-width: 350px;
+      margin: 10px auto;
+      padding: 15px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
   </style>
+
 </head>
 
 <body>
 
-  <h1>ロゴARテスト</h1>
-<p>ロゴをARで置いてみよう</p>
+  <h1>岐阜県動物愛護センター</h1>
+  <p>ロゴをARで置いてみよう</p>
 
- <model-viewer
-    src="https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/logo-board.glb"
-alt="岐阜県動物愛護センターのロゴ"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-    camera-controls
-    shadow-intensity="1"
-    auto-rotate>
+<model-viewer
+ id="logoModel"
+ src="https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/logo-board.glb"
+ alt="岐阜県動物愛護センターのロゴ"
+ ar
+ ar-modes="webxr scene-viewer quick-look"
+ camera-controls
+ shadow-intensity="1">
 
-    <button
-      slot="ar-button"
-      class="ar-button">
-      📱 ARで見る
-    </button>
+```
+<button
+  slot="ar-button"
+  class="ar-button">
+  📱 ARで見る
+</button>
+```
 
   </model-viewer>
+
+  <!-- メニュー -->
+
+  <div id="menu">
+
+```
+<button onclick="showMessage('お仕事体験')">
+  🐕 お仕事体験
+</button>
+
+<button onclick="showMessage('トリミング体験')">
+  ✂️ トリミング体験
+</button>
+
+<button onclick="showMessage('お散歩体験')">
+  🐾 お散歩体験
+</button>
+```
+
+  </div>
+
   <h2>岐阜県動物愛護センター</h2>
 
-  <img
-    src="https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/logo.jpg"
-    alt="岐阜県動物愛護センターのロゴ"
-    width="300">
+<img
+ src="https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/logo.jpg"
+ alt="岐阜県動物愛護センターのロゴ"
+ width="300">
 
-  
+  <script>
+
+    const model = document.getElementById("logoModel");
+    const menu = document.getElementById("menu");
+
+    // ロゴパネルをクリックしたらメニューを表示
+    model.addEventListener("click", function() {
+      menu.style.display = "block";
+    });
+
+    // メニューを選んだとき
+    function showMessage(name) {
+      alert(name + "を選択しました！");
+    }
+
+  </script>
+
 </body>
 </html>
