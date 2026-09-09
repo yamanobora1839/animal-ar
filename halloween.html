@@ -5,14 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>ハロウィンAR</title>
+  <title>AR床置きテスト</title>
 
   <style>
     body {
       margin: 0;
       overflow: hidden;
       font-family: sans-serif;
-      background: #000;
     }
 
     #info {
@@ -35,36 +34,24 @@
 <body>
 
 <div id="info">
-  3Dモデルを読み込んでいます……
+  ARボタンを押してください
 </div>
 
 
 <script type="module">
 
-  // ========================================
-  // Three.js
-  // ========================================
-
   import * as THREE from
     'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
-
-  import { GLTFLoader } from
-    'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
   import { ARButton } from
     'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/ARButton.js';
 
 
   // ========================================
-  // Scene
+  // 基本設定
   // ========================================
 
   const scene = new THREE.Scene();
-
-
-  // ========================================
-  // Camera
-  // ========================================
 
   const camera = new THREE.PerspectiveCamera(
     70,
@@ -74,16 +61,14 @@
   );
 
 
-  // ========================================
-  // Renderer
-  // ========================================
-
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true
   });
 
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(
+    window.devicePixelRatio
+  );
 
   renderer.setSize(
     window.innerWidth,
@@ -113,9 +98,6 @@
 
   // ========================================
   // ARボタン
-  //
-  // hit-testを「必須」ではなく
-  // 「オプション」にする
   // ========================================
 
   const arButton =
@@ -134,174 +116,49 @@
 
 
   // ========================================
-  // 複数モデルを入れるグループ
+  // 箱
   // ========================================
 
-  const modelGroup =
-    new THREE.Group();
-
-  modelGroup.visible = false;
-
-  scene.add(modelGroup);
-
-
-  // ========================================
-  // 表示するGLB
-  // ========================================
-
-  const models = [
-
-    {
-      url:
-        'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/inu-board.glb',
-
-      position: [-0.8, 0, -1.2],
-
-      scale: 0.2
-    },
-
-    {
-      url:
-        'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/neco-board.glb',
-
-      position: [0.8, 0, -1.2],
-
-      scale: 0.2
-    },
-
-    {
-      url:
-        'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/event-board.glb',
-
-      position: [-0.8, 0, -2.2],
-
-      scale: 0.2
-    },
-
-    {
-      url:
-        'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/logo-board.glb',
-
-      position: [0.8, 0, -2.2],
-
-      scale: 0.2
-    },
-
-    {
-      url:
-        'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/quaternius_cc0-shiba-inu-1332.glb',
-
-      position: [0, 0, -1.8],
-
-      scale: 0.2
-    }
-
-  ];
-
-
-  // ========================================
-  // GLB読み込み
-  // ========================================
-
-  const loader =
-    new GLTFLoader();
-
-  let loadedCount = 0;
-
-
-  models.forEach((item) => {
-
-    loader.load(
-
-      item.url,
-
-      (gltf) => {
-
-        const object =
-          gltf.scene;
-
-
-        // 位置
-        object.position.set(
-          item.position[0],
-          item.position[1],
-          item.position[2]
-        );
-
-
-        // 大きさ
-        object.scale.set(
-          item.scale,
-          item.scale,
-          item.scale
-        );
-
-
-        // グループに追加
-        modelGroup.add(
-          object
-        );
-
-
-        loadedCount++;
-
-
-        document.getElementById(
-          'info'
-        ).textContent =
-          '3Dモデル読み込み中　' +
-          loadedCount +
-          ' / ' +
-          models.length;
-
-
-        // 全部読み込み完了
-        if (
-          loadedCount === models.length
-        ) {
-
-          document.getElementById(
-            'info'
-          ).textContent =
-            '準備完了！ ARボタンを押してください';
-
-        }
-
-      },
-
-
-      undefined,
-
-
-      (error) => {
-
-        console.error(
-          'GLB読み込みエラー',
-          item.url,
-          error
-        );
-
-      }
-
+  const geometry =
+    new THREE.BoxGeometry(
+      0.2,
+      0.2,
+      0.2
     );
 
-  });
+  const material =
+    new THREE.MeshStandardMaterial({
+      color: 0xff0000
+    });
+
+  const cube =
+    new THREE.Mesh(
+      geometry,
+      material
+    );
+
+
+  // 最初は非表示
+  cube.visible = false;
+
+  scene.add(cube);
 
 
   // ========================================
-  // AR
+  // Hit Test
   // ========================================
 
   let hitTestSource = null;
 
-  let hitTestSourceRequested =
-    false;
+  let hitTestSourceRequested = false;
+
+  let currentHitPose = null;
 
   let placed = false;
 
 
   // ========================================
-  // ARセッション開始
+  // AR開始
   // ========================================
 
   renderer.xr.addEventListener(
@@ -311,16 +168,18 @@
       document.getElementById(
         'info'
       ).textContent =
-        '床を映してください';
+        '床をゆっくり映してください';
 
       placed = false;
+
+      cube.visible = false;
 
     }
   );
 
 
   // ========================================
-  // ARセッション終了
+  // AR終了
   // ========================================
 
   renderer.xr.addEventListener(
@@ -329,13 +188,13 @@
 
       hitTestSource = null;
 
-      hitTestSourceRequested =
-        false;
+      hitTestSourceRequested = false;
+
+      currentHitPose = null;
 
       placed = false;
 
-      modelGroup.visible =
-        false;
+      cube.visible = false;
 
       document.getElementById(
         'info'
@@ -347,7 +206,7 @@
 
 
   // ========================================
-  // タップしたら配置
+  // 画面タップ
   // ========================================
 
   renderer.domElement.addEventListener(
@@ -355,16 +214,31 @@
     () => {
 
       if (
-        hitTestSource &&
+        currentHitPose &&
         !placed
       ) {
 
+        const position =
+          currentHitPose.transform.position;
+
+
+        // タップした床の位置に固定
+        cube.position.set(
+          position.x,
+          position.y + 0.1,
+          position.z
+        );
+
+
+        cube.visible = true;
+
         placed = true;
+
 
         document.getElementById(
           'info'
         ).textContent =
-          '5つの3Dモデルを配置しました！';
+          '箱を床に配置しました！';
 
       }
 
@@ -373,7 +247,7 @@
 
 
   // ========================================
-  // ARアニメーション
+  // ARループ
   // ========================================
 
   renderer.setAnimationLoop(
@@ -389,7 +263,7 @@
 
 
         // --------------------------------
-        // Hit Test準備
+        // Hit Testを準備
         // --------------------------------
 
         if (
@@ -420,17 +294,6 @@
             );
 
 
-          session.addEventListener(
-            'end',
-            () => {
-
-              hitTestSource =
-                null;
-
-            }
-          );
-
-
           hitTestSourceRequested =
             true;
 
@@ -438,11 +301,12 @@
 
 
         // --------------------------------
-        // 床を検出
+        // 床を探す
         // --------------------------------
 
         if (
-          hitTestSource
+          hitTestSource &&
+          !placed
         ) {
 
           const hitTestResults =
@@ -459,28 +323,16 @@
               hitTestResults[0];
 
 
-            const pose =
+            currentHitPose =
               hit.getPose(
                 referenceSpace
               );
 
 
-            // まだ配置していない
-            if (!placed) {
-
-              // 床の位置を保存
-              modelGroup.position.set(
-                pose.transform.position.x,
-                pose.transform.position.y,
-                pose.transform.position.z
-              );
-
-
-              // プレビューとして表示
-              modelGroup.visible =
-                true;
-
-            }
+            document.getElementById(
+              'info'
+            ).textContent =
+              '床を見つけました！画面をタップしてください';
 
           }
 
