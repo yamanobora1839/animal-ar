@@ -3,38 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>🎃 ハロウィンAR</title>
-
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: sans-serif;
-    }
-
-    #info {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 10;
-
-      background: rgba(255,255,255,0.9);
-      padding: 10px 14px;
-      border-radius: 10px;
-
-      font-size: 16px;
-      line-height: 1.5;
-    }
-  </style>
+  <title>ハロウィンARテスト</title>
 </head>
 
 <body>
 
-<div id="info">
-  🎃 ハロウィンAR<br>
-  床を見つけてタップしてください
-</div>
+<h1>🎃 ハロウィンAR</h1>
+<p>ARボタンが出るかテストします</p>
 
 <script type="module">
 
@@ -44,21 +19,12 @@ import * as THREE from
 import { ARButton } from
   'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/ARButton.js';
 
-import { GLTFLoader } from
-  'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
-
-// =====================================================
 // シーン
-// =====================================================
-
 const scene = new THREE.Scene();
 
 
-// =====================================================
 // カメラ
-// =====================================================
-
 const camera = new THREE.PerspectiveCamera(
   70,
   window.innerWidth / window.innerHeight,
@@ -67,10 +33,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 
-// =====================================================
 // ライト
-// =====================================================
-
 const light = new THREE.HemisphereLight(
   0xffffff,
   0xbbbbff,
@@ -80,155 +43,13 @@ const light = new THREE.HemisphereLight(
 scene.add(light);
 
 
-// =====================================================
-// 5つのGLBを入れるグループ
-// =====================================================
-
-const group = new THREE.Group();
-
-group.visible = false;
-
-scene.add(group);
-
-
-// =====================================================
-// GLBの場所
-// =====================================================
-
-const BASE =
-  'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/';
-
-
-// =====================================================
-// GLTF Loader
-// =====================================================
-
-const loader = new GLTFLoader();
-
-
-// =====================================================
-// GLBを読み込む関数
-// =====================================================
-
-function loadModel(
-  file,
-  x,
-  y,
-  z,
-  scale
-) {
-
-  loader.load(
-
-    BASE + file,
-
-    function(gltf) {
-
-      const model = gltf.scene;
-
-      model.position.set(
-        x,
-        y,
-        z
-      );
-
-      model.scale.setScalar(
-        scale
-      );
-
-      group.add(model);
-
-      console.log(
-        '読み込み成功:',
-        file
-      );
-
-    },
-
-    undefined,
-
-    function(error) {
-
-      console.error(
-        '読み込み失敗:',
-        file,
-        error
-      );
-
-    }
-
-  );
-
-}
-
-
-// =====================================================
-// 5つのモデルを個別に読み込む
-// =====================================================
-
-// 左奥
-loadModel(
-  'inu-board.glb',
-  -1.0,
-  0,
-  -0.8,
-  1
-);
-
-
-// 右奥
-loadModel(
-  'neco-board.glb',
-  1.0,
-  0,
-  -0.8,
-  1
-);
-
-
-// 中央
-loadModel(
-  'event-board.glb',
-  0,
-  0,
-  0,
-  1
-);
-
-
-// 左手前
-loadModel(
-  'logo-board.glb',
-  -1.0,
-  0,
-  0.8,
-  1
-);
-
-
-// 右手前
-loadModel(
-  'quaternius_cc0-shiba-inu-1332.glb',
-  1.0,
-  0,
-  0.8,
-  1
-);
-
-
-// =====================================================
 // Renderer
-// =====================================================
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  alpha: true
+});
 
-const renderer =
-  new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: true
-  });
-
-renderer.setPixelRatio(
-  window.devicePixelRatio
-);
+renderer.setPixelRatio(window.devicePixelRatio);
 
 renderer.setSize(
   window.innerWidth,
@@ -237,197 +58,25 @@ renderer.setSize(
 
 renderer.xr.enabled = true;
 
-document.body.appendChild(
-  renderer.domElement
-);
+document.body.appendChild(renderer.domElement);
 
 
-// =====================================================
 // ARボタン
-// =====================================================
-
 document.body.appendChild(
-
   ARButton.createButton(
     renderer,
     {
-     optionalFeatures: [
-  'hit-test'
-]
+      optionalFeatures: [
+        'hit-test'
+      ]
     }
   )
-
 );
 
 
-// =====================================================
-// Hit Test
-// =====================================================
-
-let hitTestSource = null;
-
-let hitTestSourceRequested = false;
-
-let currentHitPose = null;
-
-let placed = false;
-
-
-// =====================================================
-// ARコントローラー
-// =====================================================
-
-const controller =
-  renderer.xr.getController(0);
-
-
-// =====================================================
-// スマホ画面をタップ
-// =====================================================
-
-controller.addEventListener(
-  'select',
-  () => {
-
-    if (!currentHitPose) {
-      return;
-    }
-
-
-    // 5つ全部を床の位置へ移動
-    group.position.set(
-      currentHitPose.transform.position.x,
-      currentHitPose.transform.position.y,
-      currentHitPose.transform.position.z
-    );
-
-
-    // 表示
-    group.visible = true;
-
-    placed = true;
-
-
-    document.getElementById(
-      'info'
-    ).innerHTML =
-      '🎃 ハロウィンAR<br>5つのモデルを配置しました！';
-
-  }
-);
-
-scene.add(controller);
-
-
-// =====================================================
 // ARループ
-// =====================================================
-
 renderer.setAnimationLoop(
-  (timestamp, frame) => {
-
-    if (frame) {
-
-      const referenceSpace =
-        renderer.xr.getReferenceSpace();
-
-      const session =
-        renderer.xr.getSession();
-
-
-      // -----------------------------------------------
-      // Hit Testの準備
-      // -----------------------------------------------
-
-      if (!hitTestSourceRequested) {
-
-        session.requestReferenceSpace(
-          'viewer'
-        ).then(
-          (viewerSpace) => {
-
-            session.requestHitTestSource({
-              space: viewerSpace
-            }).then(
-              (source) => {
-
-                hitTestSource = source;
-
-              }
-            );
-
-          }
-        );
-
-
-        session.addEventListener(
-          'end',
-          () => {
-
-            hitTestSourceRequested = false;
-
-            hitTestSource = null;
-
-            currentHitPose = null;
-
-            placed = false;
-
-            group.visible = false;
-
-          }
-        );
-
-
-        hitTestSourceRequested = true;
-
-      }
-
-
-      // -----------------------------------------------
-      // 床を探す
-      // -----------------------------------------------
-
-      if (hitTestSource) {
-
-        const results =
-          frame.getHitTestResults(
-            hitTestSource
-          );
-
-
-        if (results.length > 0) {
-
-          const hit =
-            results[0];
-
-
-          currentHitPose =
-            hit.getPose(
-              referenceSpace
-            );
-
-
-          // まだ配置していないとき
-          // 床に追従させる
-
-          if (!placed) {
-
-            group.position.set(
-              currentHitPose.transform.position.x,
-              currentHitPose.transform.position.y,
-              currentHitPose.transform.position.z
-            );
-
-            group.visible = true;
-
-          }
-
-        }
-
-      }
-
-    }
-
+  () => {
 
     renderer.render(
       scene,
@@ -438,10 +87,7 @@ renderer.setAnimationLoop(
 );
 
 
-// =====================================================
 // 画面サイズ変更
-// =====================================================
-
 window.addEventListener(
   'resize',
   () => {
