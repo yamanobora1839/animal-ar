@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>複数3DモデルARテスト</title>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    #info {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      right: 15px;
+      z-index: 10;
+      background: rgba(255,255,255,0.9);
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="info">
+    ARボタンを押して、床をタップしてください
+  </div>
+
+  <script type="module">
+
+    import * as THREE from
+      'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+
+    import { GLTFLoader } from
+      'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
+
+    import { ARButton } from
+      'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/ARButton.js';
+
+
+    // --------------------------------
+    // 基本設定
+    // --------------------------------
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      70,
+      window.innerWidth / window.innerHeight,
+      0.01,
+      20
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true
+    });
+
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    renderer.xr.enabled = true;
+
+    document.body.appendChild(renderer.domElement);
+
+
+    // --------------------------------
+    // 光
+    // --------------------------------
+
+    const light = new THREE.HemisphereLight(
+      0xffffff,
+      0xbbbbff,
+      3
+    );
+
+    scene.add(light);
+
+
+    // --------------------------------
+    // ARボタン
+    // --------------------------------
+
+    document.body.appendChild(
+      ARButton.createButton(renderer, {
+        requiredFeatures: ['hit-test']
+      })
+    );
+
+
+    // --------------------------------
+    // 3Dモデル読み込み
+    // --------------------------------
+
+    const loader = new GLTFLoader();
+
+    const modelGroup = new THREE.Group();
+
+    modelGroup.visible = false;
+
+    scene.add(modelGroup);
+
+
+    const models = [
+
+      {
+        url: 'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/inu-board.glb',
+        position: [-0.8, 0, -1.2]
+      },
+
+      {
+        url: 'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/neco-board.glb',
+        position: [0.8, 0, -1.2]
+      },
+
+      {
+        url: 'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/event-board.glb',
+        position: [-0.8, 0, -2.2]
+      },
+
+      {
+        url: 'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/logo-board.glb',
+        position: [0.8, 0, -2.2]
+      },
+
+      {
+        url: 'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/quaternius_cc0-shiba-inu-1332.glb',
+        position: [0, 0, -1.8]
+      }
+
+    ];
+
+
+    // --------------------------------
+    // モデルを順番に読み込む
+    // --------------------------------
+
+    let loadedCount = 0;
+
+    models.forEach((item) => {
+
+      loader.load(
+
+        item.url,
+
+        (gltf) => {
+
+          const object = gltf.scene;
+
+          object.position.set(
+            item.position[0],
+            item.position[1],
+            item.position[2]
+          );
+
+          // とりあえず全部同じ大きさ
+          object.scale.set(
+            0.2,
+            0.2,
+            0.2
+          );
+
+          modelGroup.add(object);
+
+          loadedCount++;
+
+          document.getElementById('info').textContent =
+            '3Dモデル読み込み中 ' +
+            loadedCount +
+            ' / ' +
+            models.length;
+
+          if (loadedCount === models.length) {
+
+            document.getElementById('info').textContent =
+              '準備完了！ARボタンを押してください';
+
+          }
+
+        },
+
+        undefined,
+
+        (error) => {
+
+          console.error(
+            'モデル読み込みエラー',
+            item.url,
+            error
+          );
+
+        }
+
+      );
+
+    });
+
+
+    // --------------------------------
+    // 床を探す
+    // --------------------------------
+
+    let hitTestSource = null;
+    let hitTestSourceRequested = false;
+
+
+    // --------------------------------
+    // AR中の処理
+    // --------------------------------
+
+    renderer.setAnimationLoop(
+      function(time, frame) {
+
+        if (frame) {
+
+          const referenceSpace =
+            renderer.xr.getReferenceSpace();
+
+          const session =
+            renderer.xr.getSession();
+
+
+          if (!hitTestSourceRequested) {
+
+            session.requestReferenceSpace('viewer')
+              .then((referenceSpace) => {
+
+                session.requestHitTestSource({
+                  space: referenceSpace
+                }).then((source) => {
+
+                  hitTestSource = source;
+
+                });
+
+              });
+
+
+            session.addEventListener(
+              'end',
+              () => {
+
+                hitTestSourceRequested = false;
+                hitTestSource = null;
+
+                modelGroup.visible = false;
+
+              }
+            );
+
+            hitTestSourceRequested = true;
+
+          }
+
+
+          if (hitTestSource) {
+
+            const hitTestResults =
+              frame.getHitTestResults(hitTestSource);
+
+
+            if (hitTestResults.length > 0) {
+
+              const hit =
+                hitTestResults[0];
+
+              const pose =
+                hit.getPose(referenceSpace);
+
+
+              if (!modelGroup.visible) {
+
+                modelGroup.visible = true;
+
+                modelGroup.position.set(
+                  pose.transform.position.x,
+                  pose.transform.position.y,
+                  pose.transform.position.z
+                );
+
+              }
+
+            }
+
+          }
+
+        }
+
+
+        renderer.render(
+          scene,
+          camera
+        );
+
+      }
+    );
+
+
+    // --------------------------------
+    // 画面サイズ変更
+    // --------------------------------
+
+    window.addEventListener(
+      'resize',
+      () => {
+
+        camera.aspect =
+          window.innerWidth /
+          window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+          window.innerWidth,
+          window.innerHeight
+        );
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
