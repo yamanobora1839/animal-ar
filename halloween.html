@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>犬ARテスト</title>
+  <title>🎃 ハロウィンAR</title>
 
   <style>
     body {
@@ -18,10 +18,13 @@
       top: 10px;
       left: 10px;
       z-index: 10;
+
       background: rgba(255,255,255,0.9);
-      padding: 12px;
+      padding: 10px 14px;
       border-radius: 10px;
+
       font-size: 16px;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -29,8 +32,8 @@
 <body>
 
 <div id="info">
-  🐕 犬AR<br>
-  3Dモデル読み込み中…
+  🎃 ハロウィンAR<br>
+  床を見つけてタップしてください
 </div>
 
 <script type="module">
@@ -45,11 +48,16 @@ import { GLTFLoader } from
   'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
 
-// -----------------------------
+// =====================================================
 // シーン
-// -----------------------------
+// =====================================================
 
 const scene = new THREE.Scene();
+
+
+// =====================================================
+// カメラ
+// =====================================================
 
 const camera = new THREE.PerspectiveCamera(
   70,
@@ -59,76 +67,158 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 
-// -----------------------------
+// =====================================================
 // ライト
-// -----------------------------
+// =====================================================
 
-scene.add(
-  new THREE.HemisphereLight(
-    0xffffff,
-    0xbbbbff,
-    3
-  )
+const light = new THREE.HemisphereLight(
+  0xffffff,
+  0xbbbbff,
+  3
 );
 
-
-// -----------------------------
-// 犬を入れるグループ
-// -----------------------------
-
-const dogGroup = new THREE.Group();
-
-dogGroup.visible = false;
-
-scene.add(dogGroup);
+scene.add(light);
 
 
-// -----------------------------
-// 犬GLBを読み込む
-// -----------------------------
+// =====================================================
+// 5つのGLBを入れるグループ
+// =====================================================
+
+const group = new THREE.Group();
+
+group.visible = false;
+
+scene.add(group);
+
+
+// =====================================================
+// GLBの場所
+// =====================================================
+
+const BASE =
+  'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/';
+
+
+// =====================================================
+// GLTF Loader
+// =====================================================
 
 const loader = new GLTFLoader();
 
-const dogURL =
-  'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/inu-board.glb';
+
+// =====================================================
+// GLBを読み込む関数
+// =====================================================
+
+function loadModel(
+  file,
+  x,
+  y,
+  z,
+  scale
+) {
+
+  loader.load(
+
+    BASE + file,
+
+    function(gltf) {
+
+      const model = gltf.scene;
+
+      model.position.set(
+        x,
+        y,
+        z
+      );
+
+      model.scale.setScalar(
+        scale
+      );
+
+      group.add(model);
+
+      console.log(
+        '読み込み成功:',
+        file
+      );
+
+    },
+
+    undefined,
+
+    function(error) {
+
+      console.error(
+        '読み込み失敗:',
+        file,
+        error
+      );
+
+    }
+
+  );
+
+}
 
 
-loader.load(
+// =====================================================
+// 5つのモデルを個別に読み込む
+// =====================================================
 
-  dogURL,
-
-  (gltf) => {
-
-    const dog = gltf.scene;
-
-    dog.scale.setScalar(1);
-
-    dogGroup.add(dog);
-
-    document.getElementById('info').innerHTML =
-      '🐕 犬の読み込み完了！<br>ARボタンを押してください';
-
-    console.log('犬の読み込み成功');
-
-  },
-
-  undefined,
-
-  (error) => {
-
-    console.error('犬の読み込み失敗', error);
-
-    document.getElementById('info').innerHTML =
-      '❌ 犬の読み込みに失敗しました';
-
-  }
-
+// 左奥
+loadModel(
+  'inu-board.glb',
+  -1.0,
+  0,
+  -0.8,
+  1
 );
 
 
-// -----------------------------
+// 右奥
+loadModel(
+  'neco-board.glb',
+  1.0,
+  0,
+  -0.8,
+  1
+);
+
+
+// 中央
+loadModel(
+  'event-board.glb',
+  0,
+  0,
+  0,
+  1
+);
+
+
+// 左手前
+loadModel(
+  'logo-board.glb',
+  -1.0,
+  0,
+  0.8,
+  1
+);
+
+
+// 右手前
+loadModel(
+  'quaternius_cc0-shiba-inu-1332.glb',
+  1.0,
+  0,
+  0.8,
+  1
+);
+
+
+// =====================================================
 // Renderer
-// -----------------------------
+// =====================================================
 
 const renderer =
   new THREE.WebGLRenderer({
@@ -152,9 +242,9 @@ document.body.appendChild(
 );
 
 
-// -----------------------------
+// =====================================================
 // ARボタン
-// -----------------------------
+// =====================================================
 
 document.body.appendChild(
 
@@ -170,43 +260,58 @@ document.body.appendChild(
 );
 
 
-// -----------------------------
+// =====================================================
 // Hit Test
-// -----------------------------
+// =====================================================
 
 let hitTestSource = null;
+
 let hitTestSourceRequested = false;
+
 let currentHitPose = null;
+
 let placed = false;
 
 
-// -----------------------------
-// タップ
-// -----------------------------
+// =====================================================
+// ARコントローラー
+// =====================================================
 
 const controller =
   renderer.xr.getController(0);
+
+
+// =====================================================
+// スマホ画面をタップ
+// =====================================================
 
 controller.addEventListener(
   'select',
   () => {
 
-    if (currentHitPose) {
-
-      dogGroup.position.set(
-        currentHitPose.transform.position.x,
-        currentHitPose.transform.position.y,
-        currentHitPose.transform.position.z
-      );
-
-      dogGroup.visible = true;
-
-      placed = true;
-
-      document.getElementById('info').innerHTML =
-        '🐕 犬を配置しました！';
-
+    if (!currentHitPose) {
+      return;
     }
+
+
+    // 5つ全部を床の位置へ移動
+    group.position.set(
+      currentHitPose.transform.position.x,
+      currentHitPose.transform.position.y,
+      currentHitPose.transform.position.z
+    );
+
+
+    // 表示
+    group.visible = true;
+
+    placed = true;
+
+
+    document.getElementById(
+      'info'
+    ).innerHTML =
+      '🎃 ハロウィンAR<br>5つのモデルを配置しました！';
 
   }
 );
@@ -214,9 +319,9 @@ controller.addEventListener(
 scene.add(controller);
 
 
-// -----------------------------
+// =====================================================
 // ARループ
-// -----------------------------
+// =====================================================
 
 renderer.setAnimationLoop(
   (timestamp, frame) => {
@@ -229,6 +334,10 @@ renderer.setAnimationLoop(
       const session =
         renderer.xr.getSession();
 
+
+      // -----------------------------------------------
+      // Hit Testの準備
+      // -----------------------------------------------
 
       if (!hitTestSourceRequested) {
 
@@ -256,10 +365,14 @@ renderer.setAnimationLoop(
           () => {
 
             hitTestSourceRequested = false;
+
             hitTestSource = null;
+
             currentHitPose = null;
+
             placed = false;
-            dogGroup.visible = false;
+
+            group.visible = false;
 
           }
         );
@@ -269,6 +382,10 @@ renderer.setAnimationLoop(
 
       }
 
+
+      // -----------------------------------------------
+      // 床を探す
+      // -----------------------------------------------
 
       if (hitTestSource) {
 
@@ -280,7 +397,9 @@ renderer.setAnimationLoop(
 
         if (results.length > 0) {
 
-          const hit = results[0];
+          const hit =
+            results[0];
+
 
           currentHitPose =
             hit.getPose(
@@ -288,16 +407,18 @@ renderer.setAnimationLoop(
             );
 
 
-          // 犬を床の検出位置に仮表示
+          // まだ配置していないとき
+          // 床に追従させる
+
           if (!placed) {
 
-            dogGroup.position.set(
+            group.position.set(
               currentHitPose.transform.position.x,
               currentHitPose.transform.position.y,
               currentHitPose.transform.position.z
             );
 
-            dogGroup.visible = true;
+            group.visible = true;
 
           }
 
@@ -317,9 +438,9 @@ renderer.setAnimationLoop(
 );
 
 
-// -----------------------------
-// リサイズ
-// -----------------------------
+// =====================================================
+// 画面サイズ変更
+// =====================================================
 
 window.addEventListener(
   'resize',
