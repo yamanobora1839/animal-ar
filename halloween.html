@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>ハロウィンAR テスト</title>
+  <title>犬ARテスト</title>
 
   <style>
     body {
@@ -22,21 +22,6 @@
       padding: 12px;
       border-radius: 10px;
       font-size: 16px;
-      line-height: 1.6;
-    }
-
-    #loading {
-      position: fixed;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 20;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      padding: 20px;
-      border-radius: 15px;
-      font-size: 18px;
-      text-align: center;
     }
   </style>
 </head>
@@ -44,12 +29,8 @@
 <body>
 
 <div id="info">
-  🎃 ハロウィンAR<br>
-  読み込み中…
-</div>
-
-<div id="loading">
-  3Dモデルを読み込んでいます…
+  🐕 犬AR<br>
+  3Dモデル読み込み中…
 </div>
 
 <script type="module">
@@ -64,9 +45,9 @@ import { GLTFLoader } from
   'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
 
-// ========================================
+// -----------------------------
 // シーン
-// ========================================
+// -----------------------------
 
 const scene = new THREE.Scene();
 
@@ -78,186 +59,76 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 
-// ========================================
+// -----------------------------
 // ライト
-// ========================================
+// -----------------------------
 
-const light = new THREE.HemisphereLight(
-  0xffffff,
-  0xbbbbff,
-  3
+scene.add(
+  new THREE.HemisphereLight(
+    0xffffff,
+    0xbbbbff,
+    3
+  )
 );
 
-scene.add(light);
+
+// -----------------------------
+// 犬を入れるグループ
+// -----------------------------
+
+const dogGroup = new THREE.Group();
+
+dogGroup.visible = false;
+
+scene.add(dogGroup);
 
 
-// ========================================
-// 5モデル用グループ
-// ========================================
-
-const modelGroup = new THREE.Group();
-
-modelGroup.visible = false;
-
-scene.add(modelGroup);
-
-
-// ========================================
-// GLTF Loader
-// ========================================
+// -----------------------------
+// 犬GLBを読み込む
+// -----------------------------
 
 const loader = new GLTFLoader();
 
-const baseURL =
-  'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/';
+const dogURL =
+  'https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/inu-board.glb';
 
 
-// ========================================
-// モデル一覧
-// ========================================
+loader.load(
 
-const models = [
+  dogURL,
 
-  {
-    name: '犬',
-    file: 'inu-board.glb',
-    position: [-1.2, 0, -0.8]
+  (gltf) => {
+
+    const dog = gltf.scene;
+
+    dog.scale.setScalar(1);
+
+    dogGroup.add(dog);
+
+    document.getElementById('info').innerHTML =
+      '🐕 犬の読み込み完了！<br>ARボタンを押してください';
+
+    console.log('犬の読み込み成功');
+
   },
 
-  {
-    name: '猫',
-    file: 'neco-board.glb',
-    position: [1.2, 0, -0.8]
-  },
+  undefined,
 
-  {
-    name: 'イベント',
-    file: 'event-board.glb',
-    position: [0, 0, 0]
-  },
+  (error) => {
 
-  {
-    name: 'ロゴ',
-    file: 'logo-board.glb',
-    position: [-1.2, 0, 0.8]
-  },
+    console.error('犬の読み込み失敗', error);
 
-  {
-    name: '柴犬',
-    file: 'quaternius_cc0-shiba-inu-1332.glb',
-    position: [1.2, 0, 0.8]
+    document.getElementById('info').innerHTML =
+      '❌ 犬の読み込みに失敗しました';
+
   }
 
-];
+);
 
 
-let loadedCount = 0;
-
-
-// ========================================
-// 読み込み状況表示
-// ========================================
-
-function updateInfo(message) {
-
-  document.getElementById('info').innerHTML =
-    message;
-
-}
-
-
-// ========================================
-// GLB読み込み
-// ========================================
-
-models.forEach((item) => {
-
-  updateInfo(
-    `🎃 3Dモデルを読み込んでいます<br>` +
-    `${loadedCount} / ${models.length}<br>` +
-    `現在：${item.name}`
-  );
-
-
-  loader.load(
-
-    baseURL + item.file,
-
-    (gltf) => {
-
-      const object = gltf.scene;
-
-      object.position.set(
-        item.position[0],
-        item.position[1],
-        item.position[2]
-      );
-
-      modelGroup.add(object);
-
-      loadedCount++;
-
-
-      console.log(
-        '読み込み成功：',
-        item.name,
-        item.file
-      );
-
-
-      updateInfo(
-        `🎃 読み込み中<br>` +
-        `${loadedCount} / ${models.length}<br>` +
-        `完了：${item.name}`
-      );
-
-
-      // 全部読み込み完了
-      if (loadedCount === models.length) {
-
-        document.getElementById(
-          'loading'
-        ).style.display = 'none';
-
-        updateInfo(
-          '🎃 準備完了！<br>' +
-          'ARボタンを押してください'
-        );
-
-      }
-
-    },
-
-
-    undefined,
-
-
-    (error) => {
-
-      console.error(
-        '読み込み失敗：',
-        item.name,
-        item.file,
-        error
-      );
-
-
-      updateInfo(
-        `❌ 読み込み失敗<br>` +
-        `${item.name}<br>` +
-        `${item.file}`
-      );
-
-    }
-
-  );
-
-});
-
-
-// ========================================
+// -----------------------------
 // Renderer
-// ========================================
+// -----------------------------
 
 const renderer =
   new THREE.WebGLRenderer({
@@ -281,9 +152,9 @@ document.body.appendChild(
 );
 
 
-// ========================================
+// -----------------------------
 // ARボタン
-// ========================================
+// -----------------------------
 
 document.body.appendChild(
 
@@ -299,22 +170,19 @@ document.body.appendChild(
 );
 
 
-// ========================================
+// -----------------------------
 // Hit Test
-// ========================================
+// -----------------------------
 
 let hitTestSource = null;
-
 let hitTestSourceRequested = false;
-
 let currentHitPose = null;
-
 let placed = false;
 
 
-// ========================================
-// コントローラー
-// ========================================
+// -----------------------------
+// タップ
+// -----------------------------
 
 const controller =
   renderer.xr.getController(0);
@@ -323,24 +191,20 @@ controller.addEventListener(
   'select',
   () => {
 
-    if (
-      currentHitPose &&
-      loadedCount === models.length
-    ) {
+    if (currentHitPose) {
 
-      modelGroup.position.set(
+      dogGroup.position.set(
         currentHitPose.transform.position.x,
         currentHitPose.transform.position.y,
         currentHitPose.transform.position.z
       );
 
-      modelGroup.visible = true;
+      dogGroup.visible = true;
 
       placed = true;
 
-      updateInfo(
-        '🎃 5つの3Dモデルを配置しました！'
-      );
+      document.getElementById('info').innerHTML =
+        '🐕 犬を配置しました！';
 
     }
 
@@ -350,9 +214,9 @@ controller.addEventListener(
 scene.add(controller);
 
 
-// ========================================
+// -----------------------------
 // ARループ
-// ========================================
+// -----------------------------
 
 renderer.setAnimationLoop(
   (timestamp, frame) => {
@@ -365,8 +229,6 @@ renderer.setAnimationLoop(
       const session =
         renderer.xr.getSession();
 
-
-      // Hit Test準備
 
       if (!hitTestSourceRequested) {
 
@@ -394,14 +256,10 @@ renderer.setAnimationLoop(
           () => {
 
             hitTestSourceRequested = false;
-
             hitTestSource = null;
-
             currentHitPose = null;
-
             placed = false;
-
-            modelGroup.visible = false;
+            dogGroup.visible = false;
 
           }
         );
@@ -411,8 +269,6 @@ renderer.setAnimationLoop(
 
       }
 
-
-      // 床検出
 
       if (hitTestSource) {
 
@@ -424,8 +280,7 @@ renderer.setAnimationLoop(
 
         if (results.length > 0) {
 
-          const hit =
-            results[0];
+          const hit = results[0];
 
           currentHitPose =
             hit.getPose(
@@ -433,20 +288,16 @@ renderer.setAnimationLoop(
             );
 
 
-          // 配置前は床に追従
+          // 犬を床の検出位置に仮表示
+          if (!placed) {
 
-          if (
-            !placed &&
-            loadedCount === models.length
-          ) {
-
-            modelGroup.position.set(
+            dogGroup.position.set(
               currentHitPose.transform.position.x,
               currentHitPose.transform.position.y,
               currentHitPose.transform.position.z
             );
 
-            modelGroup.visible = true;
+            dogGroup.visible = true;
 
           }
 
@@ -466,9 +317,9 @@ renderer.setAnimationLoop(
 );
 
 
-// ========================================
+// -----------------------------
 // リサイズ
-// ========================================
+// -----------------------------
 
 window.addEventListener(
   'resize',
