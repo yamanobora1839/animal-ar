@@ -514,27 +514,39 @@ function onSelect() {
 
 if (foundCount < models.length) {
 
+  // --------------------------------
+  // 通常の発見
+  // --------------------------------
+
   info.innerHTML =
     `🎉 ${name}を発見！<br>` +
     `${foundCount} / ${models.length} 個発見`;
 
+  // 表示
+  info.style.opacity = "1";
+
+  // 2秒後に消す
+  setTimeout(() => {
+
+    info.style.opacity = "0";
+
+  }, 2000);
+
+
 } else {
+
+  // --------------------------------
+  // コンプリート！
+  // --------------------------------
 
   info.innerHTML =
     "🎉 AR探検コンプリート！ 🎉<br>" +
     "3つ全部見つけました！";
 
+  // ずっと表示
+  info.style.opacity = "1";
+
 }
-
-// 表示
-info.style.opacity = "1";
-
-// 2秒後に消す
-setTimeout(() => {
-
-  info.style.opacity = "0";
-
-}, 2000);
 
 }
 
