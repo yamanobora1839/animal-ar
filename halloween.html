@@ -51,6 +51,7 @@
     3Dモデルを読み込んでいます...
   </div>
 
+
   <script type="importmap">
   {
     "imports": {
@@ -59,6 +60,7 @@
     }
   }
   </script>
+
 
   <script type="module">
 
@@ -77,6 +79,11 @@
 
     let hitTestSource = null;
     let hitTestSourceRequested = false;
+
+
+    // ARでタップするためのコントローラー
+    let controller;
+
 
     const modelsGroup = new THREE.Group();
 
@@ -114,10 +121,19 @@
 
 
     // --------------------------------
-    // 発見したモデル
+    // 発見数
     // --------------------------------
 
     let foundCount = 0;
+
+
+    // --------------------------------
+    // レイキャスター
+    // --------------------------------
+
+    const raycaster = new THREE.Raycaster();
+
+    const tempMatrix = new THREE.Matrix4();
 
 
     // --------------------------------
@@ -140,6 +156,7 @@
       );
 
 
+      // 光
       const light = new THREE.HemisphereLight(
         0xffffff,
         0xbbbbff,
@@ -149,12 +166,18 @@
       scene.add(light);
 
 
+      // --------------------------------
+      // Renderer
+      // --------------------------------
+
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true
       });
 
-      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setPixelRatio(
+        window.devicePixelRatio
+      );
 
       renderer.setSize(
         window.innerWidth,
@@ -162,6 +185,7 @@
       );
 
       renderer.xr.enabled = true;
+
 
       document.body.appendChild(
         renderer.domElement
@@ -182,7 +206,26 @@
         }
       );
 
-      document.body.appendChild(arButton);
+      document.body.appendChild(
+        arButton
+      );
+
+
+      // --------------------------------
+      // ARコントローラー
+      // --------------------------------
+
+      controller =
+        renderer.xr.getController(0);
+
+      scene.add(controller);
+
+
+      // AR中のタップ
+      controller.addEventListener(
+        "select",
+        onSelect
+      );
 
 
       // --------------------------------
@@ -192,6 +235,10 @@
       loadModels();
 
 
+      // --------------------------------
+      // 画面サイズ変更
+      // --------------------------------
+
       window.addEventListener(
         "resize",
         onWindowResize
@@ -199,14 +246,8 @@
 
 
       // --------------------------------
-      // タップ処理
+      // 描画
       // --------------------------------
-
-      renderer.domElement.addEventListener(
-        "pointerdown",
-        onPointerDown
-      );
-
 
       renderer.setAnimationLoop(
         render
@@ -237,6 +278,7 @@
             const model = gltf.scene;
 
 
+            // 位置
             model.position.set(
               modelInfo.position[0],
               modelInfo.position[1],
@@ -244,6 +286,7 @@
             );
 
 
+            // 大きさ
             model.scale.set(
               modelInfo.scale,
               modelInfo.scale,
@@ -251,16 +294,20 @@
             );
 
 
-            // モデルに名前を付ける
+            // 名前
             model.userData.name =
               modelInfo.name;
 
-            // 発見済みフラグ
+
+            // 発見済みか
             model.userData.found =
               false;
 
 
-            modelsGroup.add(model);
+            // グループに追加
+            modelsGroup.add(
+              model
+            );
 
 
             loadedCount++;
@@ -280,7 +327,8 @@
 
                 document.getElementById(
                   "loading"
-                ).style.display = "none";
+                ).style.display =
+                  "none";
 
               }, 1000);
 
@@ -308,44 +356,43 @@
 
 
     // --------------------------------
-    // タップされたモデルを判定
+    // AR中にタップされた
     // --------------------------------
 
-    function onPointerDown(event) {
+    function onSelect() {
 
-      // AR中でなければ何もしない
-      if (!renderer.xr.isPresenting) {
+      // AR中でなければ終了
+      if (
+        !renderer.xr.isPresenting
+      ) {
         return;
       }
 
 
-      const rect =
-        renderer.domElement.getBoundingClientRect();
-
-
-      // タップ位置を-1～1に変換
-      const mouse = new THREE.Vector2();
-
-      mouse.x =
-        ((event.clientX - rect.left) /
-        rect.width) * 2 - 1;
-
-      mouse.y =
-        -((event.clientY - rect.top) /
-        rect.height) * 2 + 1;
-
-
-      // レイを飛ばす
-      const raycaster =
-        new THREE.Raycaster();
-
-      raycaster.setFromCamera(
-        mouse,
-        camera
+      // コントローラーの位置を取得
+      raycaster.ray.origin.setFromMatrixPosition(
+        controller.matrixWorld
       );
 
 
-      // 3Dモデルを調べる
+      // コントローラーの向きを取得
+      tempMatrix.identity()
+        .extractRotation(
+          controller.matrixWorld
+        );
+
+
+      // コントローラーから前方へレイを飛ばす
+      raycaster.ray.direction.set(
+        0,
+        0,
+        -1
+      ).applyMatrix4(
+        tempMatrix
+      );
+
+
+      // モデルを調べる
       const intersects =
         raycaster.intersectObjects(
           modelsGroup.children,
@@ -353,10 +400,13 @@
         );
 
 
+      // 何も当たらなかった
       if (
         intersects.length === 0
       ) {
+
         return;
+
       }
 
 
@@ -365,18 +415,19 @@
         intersects[0].object;
 
 
-      // 親をたどってモデル本体を探す
+      // モデル本体まで親をたどる
       while (
         object.parent &&
         object.parent !== modelsGroup
       ) {
 
-        object = object.parent;
+        object =
+          object.parent;
 
       }
 
 
-      // 名前を取得
+      // 名前
       const name =
         object.userData.name;
 
@@ -386,42 +437,54 @@
       }
 
 
-      // すでに発見済みなら無視
-      if (object.userData.found) {
+      // すでに発見済み
+      if (
+        object.userData.found
+      ) {
+
         return;
+
       }
 
 
-      // 発見済みにする
-      object.userData.found = true;
+      // --------------------------------
+      // 発見！
+      // --------------------------------
+
+      object.userData.found =
+        true;
 
       foundCount++;
 
 
-      // モデルを少し透明にする
-      object.traverse((child) => {
+      // 少し透明にする
+      object.traverse(
+        (child) => {
 
-        if (child.isMesh) {
+          if (child.isMesh) {
 
-          child.material =
-            child.material.clone();
+            child.material =
+              child.material.clone();
 
-          child.material.transparent =
-            true;
+            child.material.transparent =
+              true;
 
-          child.material.opacity =
-            0.25;
+            child.material.opacity =
+              0.25;
+
+          }
 
         }
-
-      });
+      );
 
 
       // --------------------------------
       // メッセージ
       // --------------------------------
 
-      if (foundCount < models.length) {
+      if (
+        foundCount < models.length
+      ) {
 
         document.getElementById(
           "info"
@@ -460,39 +523,55 @@
           renderer.xr.getSession();
 
 
+        // --------------------------------
+        // Hit Test の準備
+        // --------------------------------
+
         if (
           hitTestSourceRequested === false
         ) {
 
           session.requestReferenceSpace(
             "viewer"
-          ).then((referenceSpace) => {
+          ).then(
+            (referenceSpace) => {
 
-            session.requestHitTestSource({
-              space: referenceSpace
-            }).then((source) => {
+              session.requestHitTestSource({
+                space: referenceSpace
+              }).then(
+                (source) => {
 
-              hitTestSource = source;
+                  hitTestSource =
+                    source;
 
-            });
+                }
+              );
 
-          });
+            }
+          );
 
 
+          // AR終了時
           session.addEventListener(
             "end",
             () => {
 
-              hitTestSourceRequested = false;
+              hitTestSourceRequested =
+                false;
 
-              hitTestSource = null;
+              hitTestSource =
+                null;
+
 
               modelsGroup.visible =
                 false;
 
-              foundCount = 0;
 
-              // 再挑戦できるようにする
+              foundCount =
+                0;
+
+
+              // もう一度探せるようにする
               modelsGroup.traverse(
                 (object) => {
 
@@ -509,14 +588,25 @@
                 }
               );
 
+
+              document.getElementById(
+                "info"
+              ).innerHTML =
+                "🎃 3つのARを探そう！";
+
             }
           );
 
 
-          hitTestSourceRequested = true;
+          hitTestSourceRequested =
+            true;
 
         }
 
+
+        // --------------------------------
+        // 床を検出
+        // --------------------------------
 
         if (hitTestSource) {
 
@@ -561,6 +651,7 @@
                   "info"
                 ).innerHTML =
                   "🔍 3つのARを探してみよう！";
+
               }
 
             }
@@ -589,6 +680,7 @@
       camera.aspect =
         window.innerWidth /
         window.innerHeight;
+
 
       camera.updateProjectionMatrix();
 
