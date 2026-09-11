@@ -121,25 +121,141 @@
   {
     name: "犬",
     url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/inu-board.glb",
-    position: [-4.0, 0, -3.0],
+    position: null,
     scale: 0.2
   },
 
   {
     name: "猫",
     url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/neco-board.glb",
-    position: [4.0, 0, -3.0],
+    position: null,
     scale: 0.2
   },
 
   {
     name: "イベント",
     url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/event-board.glb",
-    position: [0, 0, 5.0],
+    position: null,
     scale: 0.2
   }
 
 ];
+
+    function generateRandomPositions() {
+
+  const positions = [];
+
+  // --------------------------------
+  // 配置条件
+  // --------------------------------
+
+  // 自分から最低3m
+  const MIN_DISTANCE_FROM_PLAYER = 3.0;
+
+  // 自分から最大8m
+  const MAX_DISTANCE_FROM_PLAYER = 8.0;
+
+  // モデル同士は最低4m離す
+  const MIN_DISTANCE_BETWEEN_MODELS = 4.0;
+
+
+  // --------------------------------
+  // 3個の位置を決める
+  // --------------------------------
+
+  for (let i = 0; i < models.length; i++) {
+
+    let position;
+    let valid = false;
+
+    // 最大100回まで場所を探す
+    for (let attempt = 0; attempt < 100; attempt++) {
+
+      // ランダムな角度
+      const angle =
+        Math.random() * Math.PI * 2;
+
+      // ランダムな距離
+      const distance =
+        MIN_DISTANCE_FROM_PLAYER +
+        Math.random() *
+        (
+          MAX_DISTANCE_FROM_PLAYER -
+          MIN_DISTANCE_FROM_PLAYER
+        );
+
+
+      // X・Z座標
+      const x =
+        Math.sin(angle) * distance;
+
+      const z =
+        Math.cos(angle) * distance;
+
+
+      position = [
+        x,
+        0,
+        z
+      ];
+
+
+      // --------------------------------
+      // 他のモデルと近すぎないか確認
+      // --------------------------------
+
+      valid = true;
+
+      for (const other of positions) {
+
+        const dx =
+          position[0] - other[0];
+
+        const dz =
+          position[2] - other[2];
+
+        const distanceBetween =
+          Math.sqrt(
+            dx * dx +
+            dz * dz
+          );
+
+
+        if (
+          distanceBetween <
+          MIN_DISTANCE_BETWEEN_MODELS
+        ) {
+
+          valid = false;
+          break;
+
+        }
+
+      }
+
+
+      if (valid) {
+        break;
+      }
+
+    }
+
+
+    // 位置を保存
+    positions.push(position);
+
+    models[i].position =
+      position;
+
+  }
+
+
+  console.log(
+    "今回のランダム配置:",
+    positions
+  );
+
+}
 
 
     // --------------------------------
@@ -162,6 +278,7 @@
     // 初期化
     // --------------------------------
 
+    generateRandomPositions();
     init();
 
 
