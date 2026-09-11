@@ -44,15 +44,13 @@
 <body>
 
   <div id="info">
-    🎃 ハロウィンAR テスト<br>
-    ARボタンを押して、床をタップしてください
+    🎃 3つのARを探そう！
   </div>
 
   <div id="loading">
     3Dモデルを読み込んでいます...
   </div>
 
-  <!-- Three.js -->
   <script type="importmap">
   {
     "imports": {
@@ -73,10 +71,6 @@
       "three/addons/webxr/ARButton.js";
 
 
-    // --------------------------------
-    // 基本設定
-    // --------------------------------
-
     let camera;
     let scene;
     let renderer;
@@ -84,41 +78,46 @@
     let hitTestSource = null;
     let hitTestSourceRequested = false;
 
-    // AR上で表示するモデルをまとめるグループ
     const modelsGroup = new THREE.Group();
 
-    // 最初は非表示
     modelsGroup.visible = false;
 
 
     // --------------------------------
-    // 3DモデルのURL
+    // 3Dモデル
     // --------------------------------
 
     const models = [
 
-  {
-    name: "犬",
-    url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/inu-board.glb",
-    position: [-4.0, 0, -3.0],
-    scale: 0.2
-  },
+      {
+        name: "犬",
+        url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/inu-board.glb",
+        position: [-4.0, 0, -3.0],
+        scale: 0.2
+      },
 
-  {
-    name: "猫",
-    url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/neco-board.glb",
-    position: [4.0, 0, -3.0],
-    scale: 0.2
-  },
+      {
+        name: "猫",
+        url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/neco-board.glb",
+        position: [4.0, 0, -3.0],
+        scale: 0.2
+      },
 
-  {
-    name: "イベント",
-    url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/event-board.glb",
-    position: [0, 0, -7.0],
-    scale: 0.2
-  }
+      {
+        name: "イベント",
+        url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/event-board.glb",
+        position: [0, 0, -7.0],
+        scale: 0.2
+      }
 
-];
+    ];
+
+
+    // --------------------------------
+    // 発見したモデル
+    // --------------------------------
+
+    let foundCount = 0;
 
 
     // --------------------------------
@@ -130,11 +129,9 @@
 
     function init() {
 
-      // シーン
       scene = new THREE.Scene();
 
 
-      // カメラ
       camera = new THREE.PerspectiveCamera(
         70,
         window.innerWidth / window.innerHeight,
@@ -143,7 +140,6 @@
       );
 
 
-      // 光
       const light = new THREE.HemisphereLight(
         0xffffff,
         0xbbbbff,
@@ -153,13 +149,13 @@
       scene.add(light);
 
 
-      // レンダラー
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true
       });
 
       renderer.setPixelRatio(window.devicePixelRatio);
+
       renderer.setSize(
         window.innerWidth,
         window.innerHeight
@@ -167,10 +163,11 @@
 
       renderer.xr.enabled = true;
 
-      document.body.appendChild(renderer.domElement);
+      document.body.appendChild(
+        renderer.domElement
+      );
 
 
-      // モデルグループ
       scene.add(modelsGroup);
 
 
@@ -189,23 +186,32 @@
 
 
       // --------------------------------
-      // 3Dモデル読み込み
+      // モデル読み込み
       // --------------------------------
 
       loadModels();
 
 
-      // 画面サイズ変更
       window.addEventListener(
         "resize",
         onWindowResize
       );
 
 
-      // アニメーション
+      // --------------------------------
+      // タップ処理
+      // --------------------------------
+
+      renderer.domElement.addEventListener(
+        "pointerdown",
+        onPointerDown
+      );
+
+
       renderer.setAnimationLoop(
         render
       );
+
     }
 
 
@@ -230,17 +236,28 @@
 
             const model = gltf.scene;
 
+
             model.position.set(
               modelInfo.position[0],
               modelInfo.position[1],
               modelInfo.position[2]
             );
 
+
             model.scale.set(
               modelInfo.scale,
               modelInfo.scale,
               modelInfo.scale
             );
+
+
+            // モデルに名前を付ける
+            model.userData.name =
+              modelInfo.name;
+
+            // 発見済みフラグ
+            model.userData.found =
+              false;
 
 
             modelsGroup.add(model);
@@ -291,6 +308,141 @@
 
 
     // --------------------------------
+    // タップされたモデルを判定
+    // --------------------------------
+
+    function onPointerDown(event) {
+
+      // AR中でなければ何もしない
+      if (!renderer.xr.isPresenting) {
+        return;
+      }
+
+
+      const rect =
+        renderer.domElement.getBoundingClientRect();
+
+
+      // タップ位置を-1～1に変換
+      const mouse = new THREE.Vector2();
+
+      mouse.x =
+        ((event.clientX - rect.left) /
+        rect.width) * 2 - 1;
+
+      mouse.y =
+        -((event.clientY - rect.top) /
+        rect.height) * 2 + 1;
+
+
+      // レイを飛ばす
+      const raycaster =
+        new THREE.Raycaster();
+
+      raycaster.setFromCamera(
+        mouse,
+        camera
+      );
+
+
+      // 3Dモデルを調べる
+      const intersects =
+        raycaster.intersectObjects(
+          modelsGroup.children,
+          true
+        );
+
+
+      if (
+        intersects.length === 0
+      ) {
+        return;
+      }
+
+
+      // 最初に当たったオブジェクト
+      let object =
+        intersects[0].object;
+
+
+      // 親をたどってモデル本体を探す
+      while (
+        object.parent &&
+        object.parent !== modelsGroup
+      ) {
+
+        object = object.parent;
+
+      }
+
+
+      // 名前を取得
+      const name =
+        object.userData.name;
+
+
+      if (!name) {
+        return;
+      }
+
+
+      // すでに発見済みなら無視
+      if (object.userData.found) {
+        return;
+      }
+
+
+      // 発見済みにする
+      object.userData.found = true;
+
+      foundCount++;
+
+
+      // モデルを少し透明にする
+      object.traverse((child) => {
+
+        if (child.isMesh) {
+
+          child.material =
+            child.material.clone();
+
+          child.material.transparent =
+            true;
+
+          child.material.opacity =
+            0.25;
+
+        }
+
+      });
+
+
+      // --------------------------------
+      // メッセージ
+      // --------------------------------
+
+      if (foundCount < models.length) {
+
+        document.getElementById(
+          "info"
+        ).innerHTML =
+          `🎉 ${name}を発見！<br>` +
+          `${foundCount} / ${models.length} 個発見`;
+
+      } else {
+
+        document.getElementById(
+          "info"
+        ).innerHTML =
+          "🎉 AR探検コンプリート！ 🎉<br>" +
+          "3つ全部見つけました！";
+
+      }
+
+    }
+
+
+    // --------------------------------
     // AR描画
     // --------------------------------
 
@@ -307,10 +459,6 @@
         const session =
           renderer.xr.getSession();
 
-
-        // --------------------------------
-        // 初回だけHit Testを準備
-        // --------------------------------
 
         if (
           hitTestSourceRequested === false
@@ -336,21 +484,39 @@
             () => {
 
               hitTestSourceRequested = false;
+
               hitTestSource = null;
 
-              modelsGroup.visible = false;
+              modelsGroup.visible =
+                false;
+
+              foundCount = 0;
+
+              // 再挑戦できるようにする
+              modelsGroup.traverse(
+                (object) => {
+
+                  if (
+                    object.userData &&
+                    object.userData.name
+                  ) {
+
+                    object.userData.found =
+                      false;
+
+                  }
+
+                }
+              );
 
             }
           );
 
 
           hitTestSourceRequested = true;
+
         }
 
-
-        // --------------------------------
-        // 床を検出
-        // --------------------------------
 
         if (hitTestSource) {
 
@@ -376,9 +542,6 @@
 
             if (pose) {
 
-              // 最初に床を検出した場所に
-              // 3Dモデルを出現させる
-
               if (
                 modelsGroup.visible === false
               ) {
@@ -390,14 +553,14 @@
                 );
 
 
-                modelsGroup.visible = true;
+                modelsGroup.visible =
+                  true;
 
 
                 document.getElementById(
                   "info"
                 ).innerHTML =
-                  "🎃 3Dモデルが出現しました！<br>犬・猫・イベントを探してみよう！";
-
+                  "🔍 3つのARを探してみよう！";
               }
 
             }
