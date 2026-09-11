@@ -359,150 +359,146 @@
     // AR中にタップされた
     // --------------------------------
 
-    function onSelect() {
+function onSelect() {
 
-      // AR中でなければ終了
+  // AR中でなければ終了
+  if (!renderer.xr.isPresenting) {
+    return;
+  }
+
+  // コントローラーの位置
+  raycaster.ray.origin.setFromMatrixPosition(
+    controller.matrixWorld
+  );
+
+  // コントローラーの向き
+  tempMatrix.identity()
+    .extractRotation(
+      controller.matrixWorld
+    );
+
+  // 前方へレイを飛ばす
+  raycaster.ray.direction.set(
+    0,
+    0,
+    -1
+  ).applyMatrix4(
+    tempMatrix
+  );
+
+  // モデルを調べる
+  const intersects =
+    raycaster.intersectObjects(
+      modelsGroup.children,
+      true
+    );
+
+  // 何も当たらなかった
+  if (intersects.length === 0) {
+    return;
+  }
+
+  // 当たったオブジェクト
+  let object = intersects[0].object;
+
+  // モデル本体まで親をたどる
+  while (
+    object.parent &&
+    object.parent !== modelsGroup
+  ) {
+    object = object.parent;
+  }
+
+  // 名前を取得
+  let name = object.userData.name;
+
+  // --------------------------------
+  // 名前が取れない場合の対策
+  // --------------------------------
+
+  if (!name) {
+
+    // GLBの中の親をさらに確認
+    let current = intersects[0].object;
+
+    while (current) {
+
       if (
-        !renderer.xr.isPresenting
+        current.userData &&
+        current.userData.name
       ) {
-        return;
+        name = current.userData.name;
+        object = current;
+        break;
       }
 
+      current = current.parent;
+    }
 
-      // コントローラーの位置を取得
-      raycaster.ray.origin.setFromMatrixPosition(
-        controller.matrixWorld
-      );
+  }
 
+  // 名前がまだ無ければ終了
+  if (!name) {
+    console.log("モデル名を取得できませんでした");
+    return;
+  }
 
-      // コントローラーの向きを取得
-      tempMatrix.identity()
-        .extractRotation(
-          controller.matrixWorld
-        );
+  console.log("タップしたモデル:", name);
 
+  // すでに発見済み
+  if (object.userData.found) {
+    return;
+  }
 
-      // コントローラーから前方へレイを飛ばす
-      raycaster.ray.direction.set(
-        0,
-        0,
-        -1
-      ).applyMatrix4(
-        tempMatrix
-      );
+  // 発見済みにする
+  object.userData.found = true;
 
+  foundCount++;
 
-      // モデルを調べる
-      const intersects =
-        raycaster.intersectObjects(
-          modelsGroup.children,
-          true
-        );
+  // --------------------------------
+  // 半透明にする
+  // --------------------------------
 
+  object.traverse((child) => {
 
-      // 何も当たらなかった
-      if (
-        intersects.length === 0
-      ) {
+    if (child.isMesh) {
 
-        return;
+      child.material =
+        child.material.clone();
 
-      }
-
-
-      // 最初に当たったオブジェクト
-      let object =
-        intersects[0].object;
-
-
-      // モデル本体まで親をたどる
-      while (
-        object.parent &&
-        object.parent !== modelsGroup
-      ) {
-
-        object =
-          object.parent;
-
-      }
-
-
-      // 名前
-      const name =
-        object.userData.name;
-
-
-      if (!name) {
-        return;
-      }
-
-
-      // すでに発見済み
-      if (
-        object.userData.found
-      ) {
-
-        return;
-
-      }
-
-
-      // --------------------------------
-      // 発見！
-      // --------------------------------
-
-      object.userData.found =
+      child.material.transparent =
         true;
 
-      foundCount++;
-
-
-      // 少し透明にする
-      object.traverse(
-        (child) => {
-
-          if (child.isMesh) {
-
-            child.material =
-              child.material.clone();
-
-            child.material.transparent =
-              true;
-
-            child.material.opacity =
-              0.25;
-
-          }
-
-        }
-      );
-
-
-      // --------------------------------
-      // メッセージ
-      // --------------------------------
-
-      if (
-        foundCount < models.length
-      ) {
-
-        document.getElementById(
-          "info"
-        ).innerHTML =
-          `🎉 ${name}を発見！<br>` +
-          `${foundCount} / ${models.length} 個発見`;
-
-      } else {
-
-        document.getElementById(
-          "info"
-        ).innerHTML =
-          "🎉 AR探検コンプリート！ 🎉<br>" +
-          "3つ全部見つけました！";
-
-      }
+      child.material.opacity =
+        0.25;
 
     }
+
+  });
+
+  // --------------------------------
+  // 発見メッセージ
+  // --------------------------------
+
+  if (foundCount < models.length) {
+
+    document.getElementById(
+      "info"
+    ).innerHTML =
+      `🎉 ${name}を発見！<br>` +
+      `${foundCount} / ${models.length} 個発見`;
+
+  } else {
+
+    document.getElementById(
+      "info"
+    ).innerHTML =
+      "🎉 AR探検コンプリート！ 🎉<br>" +
+      "3つ全部見つけました！";
+
+  }
+
+}
 
 
     // --------------------------------
