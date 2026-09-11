@@ -122,21 +122,24 @@
     name: "犬",
     url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/inu-board.glb",
     position: null,
-    scale: 0.2
+    scale: 0.2,
+    motion: "vertical"
   },
 
   {
     name: "猫",
     url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/neco-board.glb",
     position: null,
-    scale: 0.2
+    scale: 0.2,
+    motion: "horizontal"
   },
 
   {
     name: "イベント",
     url: "https://raw.githubusercontent.com/yamanobora1839/animal-ar/main/event-board.glb",
     position: null,
-    scale: 0.2
+    scale: 0.2,
+    motion: "figure8"
   }
 
 ];
@@ -430,6 +433,18 @@
               modelInfo.position[1],
               modelInfo.position[2]
             );
+
+            // 動く前の元の位置を保存
+model.userData.basePosition =
+  new THREE.Vector3(
+    modelInfo.position[0],
+    modelInfo.position[1],
+    modelInfo.position[2]
+  );
+
+// 動きの種類を保存
+model.userData.motion =
+  modelInfo.motion;
 
 
             // 大きさ
@@ -829,6 +844,77 @@ if (foundCount < models.length) {
 
       }
 
+      // --------------------------------
+// 3Dモデルを動かす
+// --------------------------------
+
+const time =
+  performance.now() * 0.002;
+
+
+// 動かすモデル
+modelsGroup.children.forEach(
+  (model, index) => {
+
+    // 元の位置
+    const base =
+      model.userData.basePosition;
+
+    if (!base) {
+      return;
+    }
+
+
+    // ----------------------------
+    // 犬：上下ふわふわ
+    // ----------------------------
+
+    if (
+      model.userData.motion === "vertical"
+    ) {
+
+      model.position.y =
+        base.y +
+        Math.sin(time) * 0.3;
+
+    }
+
+
+    // ----------------------------
+    // 猫：左右ふわふわ
+    // ----------------------------
+
+    if (
+      model.userData.motion === "horizontal"
+    ) {
+
+      model.position.x =
+        base.x +
+        Math.sin(time) * 0.3;
+
+    }
+
+
+    // ----------------------------
+    // イベント：8の字
+    // ----------------------------
+
+    if (
+      model.userData.motion === "figure8"
+    ) {
+
+      model.position.x =
+        base.x +
+        Math.sin(time) * 0.5;
+
+      model.position.z =
+        base.z +
+        Math.sin(time * 2) * 0.3;
+
+    }
+
+  }
+);
 
       renderer.render(
         scene,
