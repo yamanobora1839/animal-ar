@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>🎃 ハロウィンARフォトスポット</title>
+
+  <script type="module"
+    src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js">
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: sans-serif;
+    }
+
+    /* カメラ画面 */
+    #camera {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+    }
+
+    /* ARモデルを置く場所 */
+    #ar-area {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* 3Dモデル */
+    .character {
+      position: absolute;
+
+      width: 180px;
+      height: 180px;
+
+      left: 50%;
+      top: 45%;
+
+      transform: translate(-50%, -50%);
+
+      pointer-events: auto;
+
+      display: none;
+
+      touch-action: none;
+    }
+
+    model-viewer {
+      width: 100%;
+      height: 100%;
+
+      background: transparent;
+
+      --poster-color: transparent;
+
+      pointer-events: none;
+    }
+
+    /* 下部メニュー */
+    #menu {
+      position: fixed;
+
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      padding:
+        10px
+        10px
+        calc(10px + env(safe-area-inset-bottom));
+
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+
+      background: rgba(0, 0, 0, 0.55);
+
+      z-index: 100;
+    }
+
+    .menu-button {
+      flex: 1;
+
+      max-width: 110px;
+
+      border: none;
+      border-radius: 14px;
+
+      padding: 10px 4px;
+
+      background: rgba(255, 255, 255, 0.92);
+
+      color: #222;
+
+      font-size: 14px;
+      font-weight: bold;
+
+      cursor: pointer;
+
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .menu-button.active {
+      background: #ff9800;
+      color: white;
+    }
+
+    /* 上部タイトル */
+    #title {
+      position: fixed;
+
+      top: calc(10px + env(safe-area-inset-top));
+
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      z-index: 100;
+
+      padding: 8px 16px;
+
+      border-radius: 20px;
+
+      background: rgba(0,0,0,0.5);
+
+      color: white;
+
+      font-size: 15px;
+      font-weight: bold;
+
+      white-space: nowrap;
+    }
+
+    /* 操作説明 */
+    #help {
+      position: fixed;
+
+      left: 50%;
+      bottom: 82px;
+
+      transform: translateX(-50%);
+
+      z-index: 100;
+
+      width: calc(100% - 30px);
+
+      max-width: 500px;
+
+      padding: 8px 12px;
+
+      border-radius: 12px;
+
+      background: rgba(0,0,0,0.5);
+
+      color: white;
+
+      text-align: center;
+
+      font-size: 13px;
+
+      pointer-events: none;
+    }
+
+    /* カメラ開始前 */
+    #start-screen {
+      position: fixed;
+      inset: 0;
+
+      z-index: 200;
+
+      display: flex;
+      flex-direction: column;
+
+      justify-content: center;
+      align-items: center;
+
+      padding: 30px;
+
+      background:
+        radial-gradient(circle at center,
+          #5b267a 0%,
+          #24102f 55%,
+          #090509 100%);
+
+      color: white;
+
+      text-align: center;
+    }
+
+    #start-screen h1 {
+      font-size: 28px;
+      margin: 0 0 15px;
+    }
+
+    #start-screen p {
+      font-size: 15px;
+      line-height: 1.7;
+      margin: 0 0 25px;
+    }
+
+    #start-button {
+      border: none;
+
+      padding: 14px 30px;
+
+      border-radius: 30px;
+
+      background: #ff9800;
+
+      color: white;
+
+      font-size: 18px;
+      font-weight: bold;
+
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- カメラ映像 -->
+  <video id="camera"
+         autoplay
+         playsinline
+         muted>
+  </video>
+
+  <!-- タイトル -->
+  <div id="title">
+    🎃 ハロウィンARフォトスポット
+  </div>
+
+  <!-- ARモデル -->
+  <div id="ar-area">
+
+    <!-- おばけ -->
+    <div class="character" id="ghost">
+      <model-viewer
+        src="models/ghost.glb"
+        camera-controls="false"
+        interaction-prompt="none"
+        disable-zoom>
+      </model-viewer>
+    </div>
+
+    <!-- かぼちゃ -->
+    <div class="character" id="pumpkin">
+      <model-viewer
+        src="models/pumpkin.glb"
+        camera-controls="false"
+        interaction-prompt="none"
+        disable-zoom>
+      </model-viewer>
+    </div>
+
+    <!-- コウモリ -->
+    <div class="character" id="bat">
+      <model-viewer
+        src="models/bat.glb"
+        camera-controls="false"
+        interaction-prompt="none"
+        disable-zoom>
+      </model-viewer>
+    </div>
+
+    <!-- 魔女帽子 -->
+    <div class="character" id="witch-hat">
+      <model-viewer
+        src="models/witch-hat.glb"
+        camera-controls="false"
+        interaction-prompt="none"
+        disable-zoom>
+      </model-viewer>
+    </div>
+
+  </div>
+
+  <!-- 説明 -->
+  <div id="help">
+    👆 1本指で移動　🤏 2本指で大きさを変更
+  </div>
+
+  <!-- 下部メニュー -->
+  <div id="menu">
+
+    <button class="menu-button" data-target="ghost">
+      👻<br>おばけ
+    </button>
+
+    <button class="menu-button" data-target="witch-hat">
+      🎩<br>帽子
+    </button>
+
+    <button class="menu-button" data-target="pumpkin">
+      🎃<br>かぼちゃ
+    </button>
+
+    <button class="menu-button" data-target="bat">
+      🦇<br>コウモリ
+    </button>
+
+  </div>
+
+  <!-- 開始画面 -->
+  <div id="start-screen">
+
+    <h1>🎃 ハロウィンAR</h1>
+
+    <p>
+      カメラを使って<br>
+      ハロウィンキャラクターと<br>
+      写真を撮ろう！
+    </p>
+
+    <button id="start-button">
+      📷 カメラを起動
+    </button>
+
+  </div>
+
+
+<script>
+
+  // =====================================================
+  // カメラ
+  // =====================================================
+
+  const video = document.getElementById("camera");
+  const startScreen = document.getElementById("start-screen");
+  const startButton = document.getElementById("start-button");
+
+  async function startCamera() {
+
+    try {
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: {
+            ideal: "environment"
+          }
+        },
+        audio: false
+      });
+
+      video.srcObject = stream;
+
+      startScreen.classList.add("hidden");
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "カメラを起動できませんでした。\n" +
+        "ブラウザのカメラ使用を許可してください。"
+      );
+
+    }
+
+  }
+
+  startButton.addEventListener("click", startCamera);
+
+
+  // =====================================================
+  // キャラクター
+  // =====================================================
+
+  const characters = {
+
+    ghost: {
+      element: document.getElementById("ghost"),
+      x: 50,
+      y: 45,
+      scale: 1
+    },
+
+    pumpkin: {
+      element: document.getElementById("pumpkin"),
+      x: 50,
+      y: 45,
+      scale: 1
+    },
+
+    bat: {
+      element: document.getElementById("bat"),
+      x: 50,
+      y: 45,
+      scale: 1
+    },
+
+    "witch-hat": {
+      element: document.getElementById("witch-hat"),
+      x: 50,
+      y: 45,
+      scale: 1
+    }
+
+  };
+
+
+  // =====================================================
+  // 表示・非表示
+  // =====================================================
+
+  document.querySelectorAll(".menu-button").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const target = button.dataset.target;
+
+      const character = characters[target];
+
+      const element = character.element;
+
+      if (element.style.display === "block") {
+
+        element.style.display = "none";
+
+        button.classList.remove("active");
+
+      } else {
+
+        element.style.display = "block";
+
+        button.classList.add("active");
+
+        // 初期位置
+        character.x = 50;
+        character.y = 45;
+        character.scale = 1;
+
+        updateCharacter(character);
+
+      }
+
+    });
+
+  });
+
+
+  // =====================================================
+  // モデル位置・サイズ更新
+  // =====================================================
+
+  function updateCharacter(character) {
+
+    const element = character.element;
+
+    element.style.left = character.x + "%";
+    element.style.top = character.y + "%";
+
+    element.style.width =
+      (180 * character.scale) + "px";
+
+    element.style.height =
+      (180 * character.scale) + "px";
+
+  }
+
+
+  // =====================================================
+  // タッチ操作
+  // =====================================================
+
+  Object.values(characters).forEach(character => {
+
+    const element = character.element;
+
+    let startX = 0;
+    let startY = 0;
+
+    let startCharacterX = 0;
+    let startCharacterY = 0;
+
+    let startDistance = 0;
+    let startScale = 1;
+
+
+    element.addEventListener("touchstart", event => {
+
+      event.preventDefault();
+
+      const touches = event.touches;
+
+      if (touches.length === 1) {
+
+        // -----------------------------------------------
+        // 1本指
+        // -----------------------------------------------
+
+        startX = touches[0].clientX;
+        startY = touches[0].clientY;
+
+        startCharacterX = character.x;
+        startCharacterY = character.y;
+
+      }
+
+      else if (touches.length === 2) {
+
+        // -----------------------------------------------
+        // 2本指
+        // -----------------------------------------------
+
+        startDistance = getDistance(
+          touches[0],
+          touches[1]
+        );
+
+        startScale = character.scale;
+
+      }
+
+    }, {
+      passive: false
+    });
+
+
+    element.addEventListener("touchmove", event => {
+
+      event.preventDefault();
+
+      const touches = event.touches;
+
+      if (touches.length === 1) {
+
+        // -----------------------------------------------
+        // 1本指 → 移動
+        // -----------------------------------------------
+
+        const dx =
+          touches[0].clientX - startX;
+
+        const dy =
+          touches[0].clientY - startY;
+
+        character.x =
+          startCharacterX +
+          dx / window.innerWidth * 100;
+
+        character.y =
+          startCharacterY +
+          dy / window.innerHeight * 100;
+
+        updateCharacter(character);
+
+      }
+
+      else if (touches.length === 2) {
+
+        // -----------------------------------------------
+        // 2本指 → 拡大縮小
+        // -----------------------------------------------
+
+        const distance =
+          getDistance(
+            touches[0],
+            touches[1]
+          );
+
+        const ratio =
+          distance / startDistance;
+
+        character.scale =
+          Math.min(
+            4,
+            Math.max(
+              0.3,
+              startScale * ratio
+            )
+          );
+
+        updateCharacter(character);
+
+      }
+
+    }, {
+      passive: false
+    });
+
+  });
+
+
+  // =====================================================
+  // 2本指の距離
+  // =====================================================
+
+  function getDistance(touch1, touch2) {
+
+    const dx =
+      touch1.clientX -
+      touch2.clientX;
+
+    const dy =
+      touch1.clientY -
+      touch2.clientY;
+
+    return Math.sqrt(
+      dx * dx +
+      dy * dy
+    );
+
+  }
+
+</script>
+
+</body>
+</html>
