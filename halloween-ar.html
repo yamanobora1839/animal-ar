@@ -1,1 +1,1466 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>🎃 ハロウィンAR探検</title>
+
+  <style>
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: sans-serif;
+      background: #000;
+    }
+
+    /* --------------------------------
+       メッセージ
+    -------------------------------- */
+
+    #info {
+
+      position: fixed;
+
+      top: 58%;
+      left: 50%;
+
+      transform: translate(-50%, -50%);
+
+      width: auto;
+      max-width: 85%;
+
+      box-sizing: border-box;
+
+      padding: 14px 22px;
+
+      color: white;
+
+      background: rgba(0, 0, 0, 0.75);
+
+      text-align: center;
+
+      border-radius: 15px;
+
+      z-index: 10;
+
+      font-size: 20px;
+      font-weight: bold;
+
+      pointer-events: none;
+
+      opacity: 0;
+
+      transition: opacity 0.2s ease;
+    }
+
+
+    /* --------------------------------
+       読み込み表示
+    -------------------------------- */
+
+    #loading {
+
+      position: fixed;
+
+      top: 50%;
+      left: 50%;
+
+      transform: translate(-50%, -50%);
+
+      color: white;
+
+      font-size: 20px;
+
+      z-index: 20;
+
+      text-align: center;
+    }
+
+
+    /* --------------------------------
+       AR開始前の説明
+    -------------------------------- */
+
+    #start-message {
+
+      position: fixed;
+
+      left: 50%;
+      bottom: 80px;
+
+      transform: translateX(-50%);
+
+      width: 85%;
+
+      max-width: 400px;
+
+      box-sizing: border-box;
+
+      padding: 14px 18px;
+
+      color: white;
+
+      background: rgba(0, 0, 0, 0.75);
+
+      border-radius: 15px;
+
+      text-align: center;
+
+      font-size: 16px;
+
+      z-index: 5;
+
+      pointer-events: none;
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+
+  <!-- --------------------------------
+       メッセージ
+  -------------------------------- -->
+
+  <div id="info">
+    🎃 ハロウィンAR探検！
+  </div>
+
+
+  <!-- --------------------------------
+       読み込み
+  -------------------------------- -->
+
+  <div id="loading">
+    3Dモデルを読み込んでいます...
+  </div>
+
+
+  <!-- --------------------------------
+       最初の説明
+  -------------------------------- -->
+
+  <div id="start-message">
+
+    🎃 ハロウィンAR探検 🎃<br><br>
+
+    ARを開始して<br>
+    まわりを探してみよう！<br><br>
+
+    👻 🎃 🦇 🧙
+
+  </div>
+
+
+  <!-- =================================
+       Three.js
+  ================================= -->
+
+  <script type="importmap">
+
+  {
+    "imports": {
+
+      "three":
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+
+      "three/addons/":
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+
+    }
+  }
+
+  </script>
+
+
+  <!-- =================================
+       メイン
+  ================================= -->
+
+  <script type="module">
+
+    import * as THREE from "three";
+
+    import { GLTFLoader } from
+      "three/addons/loaders/GLTFLoader.js";
+
+    import { ARButton } from
+      "three/addons/webxr/ARButton.js";
+
+
+    // =================================
+    // 基本変数
+    // =================================
+
+    let camera;
+
+    let scene;
+
+    let renderer;
+
+    let controller;
+
+
+    // =================================
+    // Hit Test
+    // =================================
+
+    let hitTestSource = null;
+
+    let hitTestSourceRequested = false;
+
+
+    // =================================
+    // モデルをまとめるグループ
+    // =================================
+
+    const modelsGroup =
+      new THREE.Group();
+
+    modelsGroup.visible = false;
+
+
+    // =================================
+    // 発見数
+    // =================================
+
+    let foundCount = 0;
+
+
+    // =================================
+    // モデル一覧
+    // =================================
+
+    const models = [
+
+      {
+        name: "おばけ",
+
+        url: "ghost.glb",
+
+        scale: 0.7,
+
+        motion: "vertical"
+      },
+
+
+      {
+        name: "かぼちゃ",
+
+        url: "pumpkin.glb",
+
+        scale: 0.7,
+
+        motion: "horizontal"
+      },
+
+
+      {
+        name: "コウモリ",
+
+        url: "bat.glb",
+
+        scale: 0.7,
+
+        motion: "figure8"
+      },
+
+
+      {
+        name: "魔女の帽子",
+
+        url: "witch-hat.glb",
+
+        scale: 0.7,
+
+        motion: "vertical"
+      }
+
+    ];
+
+
+    // =================================
+    // ランダム配置
+    // =================================
+
+    function generateRandomPositions() {
+
+      const positions = [];
+
+
+      // プレイヤーからの最小距離
+      const MIN_DISTANCE_FROM_PLAYER = 2.5;
+
+
+      // プレイヤーからの最大距離
+      const MAX_DISTANCE_FROM_PLAYER = 6.0;
+
+
+      // モデル同士の最低距離
+      const MIN_DISTANCE_BETWEEN_MODELS = 2.0;
+
+
+      // --------------------------------
+      // 4個配置
+      // --------------------------------
+
+      for (
+        let i = 0;
+        i < models.length;
+        i++
+      ) {
+
+        let position;
+
+        let valid = false;
+
+
+        // 最大100回探す
+        for (
+          let attempt = 0;
+          attempt < 100;
+          attempt++
+        ) {
+
+          const angle =
+            Math.random() *
+            Math.PI *
+            2;
+
+
+          const distance =
+            MIN_DISTANCE_FROM_PLAYER +
+
+            Math.random() *
+            (
+              MAX_DISTANCE_FROM_PLAYER -
+              MIN_DISTANCE_FROM_PLAYER
+            );
+
+
+          const x =
+            Math.sin(angle) *
+            distance;
+
+
+          const z =
+            -Math.cos(angle) *
+            distance;
+
+
+          position = [
+            x,
+            0,
+            z
+          ];
+
+
+          // --------------------------------
+          // 他のモデルとの距離確認
+          // --------------------------------
+
+          valid = true;
+
+
+          for (
+            const other of positions
+          ) {
+
+            const dx =
+              position[0] -
+              other[0];
+
+
+            const dz =
+              position[2] -
+              other[2];
+
+
+            const distanceBetween =
+              Math.sqrt(
+                dx * dx +
+                dz * dz
+              );
+
+
+            if (
+              distanceBetween <
+              MIN_DISTANCE_BETWEEN_MODELS
+            ) {
+
+              valid = false;
+
+              break;
+
+            }
+
+          }
+
+
+          if (valid) {
+            break;
+          }
+
+        }
+
+
+        positions.push(position);
+
+        models[i].position =
+          position;
+
+      }
+
+
+      console.log(
+        "今回のAR配置:",
+        positions
+      );
+
+    }
+
+
+    // =================================
+    // 初期配置
+    // =================================
+
+    generateRandomPositions();
+
+
+    // =================================
+    // Raycaster
+    // =================================
+
+    const raycaster =
+      new THREE.Raycaster();
+
+
+    const tempMatrix =
+      new THREE.Matrix4();
+
+
+    // =================================
+    // 初期化
+    // =================================
+
+    init();
+
+
+    function init() {
+
+
+      // --------------------------------
+      // Scene
+      // --------------------------------
+
+      scene =
+        new THREE.Scene();
+
+
+      // --------------------------------
+      // Camera
+      // --------------------------------
+
+      camera =
+        new THREE.PerspectiveCamera(
+
+          70,
+
+          window.innerWidth /
+          window.innerHeight,
+
+          0.01,
+
+          20
+
+        );
+
+
+      // --------------------------------
+      // 光
+      // --------------------------------
+
+      const light =
+        new THREE.HemisphereLight(
+
+          0xffffff,
+
+          0xbbbbff,
+
+          3
+
+        );
+
+
+      scene.add(light);
+
+
+      // --------------------------------
+      // Renderer
+      // --------------------------------
+
+      renderer =
+        new THREE.WebGLRenderer({
+
+          antialias: true,
+
+          alpha: true
+
+        });
+
+
+      renderer.setPixelRatio(
+        window.devicePixelRatio
+      );
+
+
+      renderer.setSize(
+
+        window.innerWidth,
+
+        window.innerHeight
+
+      );
+
+
+      renderer.xr.enabled = true;
+
+
+      document.body.appendChild(
+        renderer.domElement
+      );
+
+
+      // --------------------------------
+      // モデルグループ
+      // --------------------------------
+
+      scene.add(
+        modelsGroup
+      );
+
+
+      // --------------------------------
+      // ARボタン
+      // --------------------------------
+
+      const arButton =
+        ARButton.createButton(
+
+          renderer,
+
+          {
+
+            requiredFeatures: [
+
+              "hit-test",
+
+              "dom-overlay"
+
+            ],
+
+            domOverlay: {
+
+              root: document.body
+
+            }
+
+          }
+
+        );
+
+
+      document.body.appendChild(
+        arButton
+      );
+
+
+      // --------------------------------
+      // ARコントローラー
+      // --------------------------------
+
+      controller =
+        renderer.xr.getController(0);
+
+
+      scene.add(
+        controller
+      );
+
+
+      // --------------------------------
+      // タップイベント
+      // --------------------------------
+
+      controller.addEventListener(
+
+        "select",
+
+        onSelect
+
+      );
+
+
+      // --------------------------------
+      // モデル読み込み
+      // --------------------------------
+
+      loadModels();
+
+
+      // --------------------------------
+      // 画面サイズ変更
+      // --------------------------------
+
+      window.addEventListener(
+
+        "resize",
+
+        onWindowResize
+
+      );
+
+
+      // --------------------------------
+      // AR描画
+      // --------------------------------
+
+      renderer.setAnimationLoop(
+        render
+      );
+
+    }
+
+
+    // =================================
+    // モデル読み込み
+    // =================================
+
+    function loadModels() {
+
+      const loader =
+        new GLTFLoader();
+
+
+      let loadedCount = 0;
+
+
+      models.forEach(
+        (modelInfo) => {
+
+
+          loader.load(
+
+            modelInfo.url,
+
+
+            (gltf) => {
+
+
+              const model =
+                gltf.scene;
+
+
+              // --------------------------------
+              // 初期位置
+              // --------------------------------
+
+              model.position.set(
+
+                modelInfo.position[0],
+
+                modelInfo.position[1],
+
+                modelInfo.position[2]
+
+              );
+
+
+              // --------------------------------
+              // 元の位置を保存
+              // --------------------------------
+
+              model.userData.basePosition =
+
+                new THREE.Vector3(
+
+                  modelInfo.position[0],
+
+                  modelInfo.position[1],
+
+                  modelInfo.position[2]
+
+                );
+
+
+              // --------------------------------
+              // 動き
+              // --------------------------------
+
+              model.userData.motion =
+                modelInfo.motion;
+
+
+              // --------------------------------
+              // サイズ
+              // --------------------------------
+
+              model.scale.set(
+
+                modelInfo.scale,
+
+                modelInfo.scale,
+
+                modelInfo.scale
+
+              );
+
+
+              // --------------------------------
+              // 名前
+              // --------------------------------
+
+              model.userData.name =
+                modelInfo.name;
+
+
+              // --------------------------------
+              // 発見済み
+              // --------------------------------
+
+              model.userData.found =
+                false;
+
+
+              // --------------------------------
+              // グループに追加
+              // --------------------------------
+
+              modelsGroup.add(
+                model
+              );
+
+
+              loadedCount++;
+
+
+              document.getElementById(
+                "loading"
+              ).textContent =
+
+                `${loadedCount} / ${models.length} 個のモデルを読み込みました`;
+
+
+              // --------------------------------
+              // 全部読み込み完了
+              // --------------------------------
+
+              if (
+                loadedCount ===
+                models.length
+              ) {
+
+                setTimeout(() => {
+
+                  document.getElementById(
+                    "loading"
+                  ).style.display =
+                    "none";
+
+                }, 700);
+
+              }
+
+            },
+
+
+            undefined,
+
+
+            (error) => {
+
+              console.error(
+
+                "モデル読み込みエラー:",
+
+                modelInfo.name,
+
+                error
+
+              );
+
+            }
+
+          );
+
+        }
+
+      );
+
+    }
+
+
+    // =================================
+    // AR中のタップ
+    // =================================
+
+    function onSelect() {
+
+
+      // AR中でなければ終了
+      if (
+        !renderer.xr.isPresenting
+      ) {
+
+        return;
+
+      }
+
+
+      // --------------------------------
+      // Rayの始点
+      // --------------------------------
+
+      raycaster.ray.origin.setFromMatrixPosition(
+
+        controller.matrixWorld
+
+      );
+
+
+      // --------------------------------
+      // Rayの向き
+      // --------------------------------
+
+      tempMatrix.identity()
+
+        .extractRotation(
+
+          controller.matrixWorld
+
+        );
+
+
+      raycaster.ray.direction.set(
+
+        0,
+
+        0,
+
+        -1
+
+      ).applyMatrix4(
+
+        tempMatrix
+
+      );
+
+
+      // --------------------------------
+      // モデルとの交差判定
+      // --------------------------------
+
+      const intersects =
+
+        raycaster.intersectObjects(
+
+          modelsGroup.children,
+
+          true
+
+        );
+
+
+      if (
+        intersects.length === 0
+      ) {
+
+        return;
+
+      }
+
+
+      // --------------------------------
+      // 一番近いモデル
+      // --------------------------------
+
+      let object =
+        intersects[0].object;
+
+
+      // --------------------------------
+      // 親をたどる
+      // --------------------------------
+
+      while (
+
+        object.parent &&
+
+        object.parent !== modelsGroup
+
+      ) {
+
+        object =
+          object.parent;
+
+      }
+
+
+      // --------------------------------
+      // 名前
+      // --------------------------------
+
+      const name =
+        object.userData.name;
+
+
+      if (!name) {
+
+        return;
+
+      }
+
+
+      console.log(
+        "発見:",
+        name
+      );
+
+
+      // --------------------------------
+      // すでに発見済み
+      // --------------------------------
+
+      if (
+        object.userData.found
+      ) {
+
+        return;
+
+      }
+
+
+      // --------------------------------
+      // 発見済みにする
+      // --------------------------------
+
+      object.userData.found =
+        true;
+
+
+      foundCount++;
+
+
+      // --------------------------------
+      // 半透明にする
+      // --------------------------------
+
+      object.traverse(
+
+        (child) => {
+
+          if (
+            child.isMesh
+          ) {
+
+            child.material =
+              child.material.clone();
+
+
+            child.material.transparent =
+              true;
+
+
+            child.material.opacity =
+              0.25;
+
+          }
+
+        }
+
+      );
+
+
+      // --------------------------------
+      // メッセージ
+      // --------------------------------
+
+      const info =
+        document.getElementById(
+          "info"
+        );
+
+
+      if (
+        foundCount <
+        models.length
+      ) {
+
+        info.innerHTML =
+
+          `🎉 ${name}を発見！<br>` +
+
+          `${foundCount} / ${models.length} 個発見`;
+
+
+        info.style.opacity =
+          "1";
+
+
+        setTimeout(() => {
+
+          info.style.opacity =
+            "0";
+
+        }, 2000);
+
+      }
+
+
+      // --------------------------------
+      // コンプリート
+      // --------------------------------
+
+      else {
+
+        info.innerHTML =
+
+          "🎉 AR探検コンプリート！ 🎉<br>" +
+
+          "4つ全部見つけました！";
+
+
+        info.style.opacity =
+          "1";
+
+      }
+
+    }
+
+
+    // =================================
+    // AR描画
+    // =================================
+
+    function render(
+      timestamp,
+      frame
+    ) {
+
+
+      if (frame) {
+
+
+        const referenceSpace =
+          renderer.xr.getReferenceSpace();
+
+
+        const session =
+          renderer.xr.getSession();
+
+
+        // --------------------------------
+        // Hit Test準備
+        // --------------------------------
+
+        if (
+          hitTestSourceRequested === false
+        ) {
+
+
+          session.requestReferenceSpace(
+            "viewer"
+          )
+
+          .then(
+            (referenceSpace) => {
+
+
+              session.requestHitTestSource({
+
+                space:
+                  referenceSpace
+
+              })
+
+              .then(
+                (source) => {
+
+                  hitTestSource =
+                    source;
+
+                }
+
+              );
+
+            }
+          );
+
+
+          // --------------------------------
+          // AR終了
+          // --------------------------------
+
+          session.addEventListener(
+
+            "end",
+
+            () => {
+
+
+              hitTestSourceRequested =
+                false;
+
+
+              hitTestSource =
+                null;
+
+
+              modelsGroup.visible =
+                false;
+
+
+              foundCount =
+                0;
+
+
+              // --------------------------------
+              // 発見状態をリセット
+              // --------------------------------
+
+              modelsGroup.traverse(
+
+                (object) => {
+
+                  if (
+
+                    object.userData &&
+
+                    object.userData.name
+
+                  ) {
+
+                    object.userData.found =
+                      false;
+
+                  }
+
+                }
+
+              );
+
+
+              // --------------------------------
+              // メッセージを戻す
+              // --------------------------------
+
+              const info =
+                document.getElementById(
+                  "info"
+                );
+
+
+              info.innerHTML =
+                "🎃 ハロウィンAR探検！";
+
+
+              info.style.opacity =
+                "0";
+
+
+              // --------------------------------
+              // 次回用に再配置
+              // --------------------------------
+
+              generateRandomPositions();
+
+
+              modelsGroup.children.forEach(
+
+                (model, index) => {
+
+                  const position =
+                    models[index].position;
+
+
+                  model.position.set(
+
+                    position[0],
+
+                    position[1],
+
+                    position[2]
+
+                  );
+
+
+                  model.userData.basePosition.set(
+
+                    position[0],
+
+                    position[1],
+
+                    position[2]
+
+                  );
+
+                }
+
+              );
+
+            }
+
+          );
+
+
+          hitTestSourceRequested =
+            true;
+
+        }
+
+
+        // --------------------------------
+        // 床の検出
+        // --------------------------------
+
+        if (
+          hitTestSource
+        ) {
+
+
+          const hitTestResults =
+
+            frame.getHitTestResults(
+
+              hitTestSource
+
+            );
+
+
+          if (
+            hitTestResults.length > 0
+          ) {
+
+
+            const hit =
+              hitTestResults[0];
+
+
+            const pose =
+              hit.getPose(
+                referenceSpace
+              );
+
+
+            if (pose) {
+
+
+              if (
+                modelsGroup.visible === false
+              ) {
+
+
+                // --------------------------------
+                // 現実空間に配置
+                // --------------------------------
+
+                modelsGroup.position.set(
+
+                  pose.transform.position.x,
+
+                  pose.transform.position.y,
+
+                  pose.transform.position.z
+
+                );
+
+
+                modelsGroup.visible =
+                  true;
+
+
+                // --------------------------------
+                // 案内
+                // --------------------------------
+
+                const info =
+                  document.getElementById(
+                    "info"
+                  );
+
+
+                info.innerHTML =
+
+                  "🔍 4つのハロウィンARを探そう！";
+
+
+                info.style.opacity =
+                  "1";
+
+
+                setTimeout(() => {
+
+                  info.style.opacity =
+                    "0";
+
+                }, 2500);
+
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+
+
+      // =================================
+      // モデルを動かす
+      // =================================
+
+      const time =
+        performance.now() *
+        0.002;
+
+
+      modelsGroup.children.forEach(
+
+        (model) => {
+
+
+          const base =
+            model.userData.basePosition;
+
+
+          if (!base) {
+
+            return;
+
+          }
+
+
+          // --------------------------------
+          // おばけ・帽子
+          // 上下ふわふわ
+          // --------------------------------
+
+          if (
+            model.userData.motion ===
+            "vertical"
+          ) {
+
+            model.position.y =
+
+              base.y +
+
+              Math.sin(time) *
+              0.15;
+
+          }
+
+
+          // --------------------------------
+          // かぼちゃ
+          // 左右ゆらゆら
+          // --------------------------------
+
+          if (
+            model.userData.motion ===
+            "horizontal"
+          ) {
+
+            model.position.x =
+
+              base.x +
+
+              Math.sin(time) *
+              0.15;
+
+          }
+
+
+          // --------------------------------
+          // コウモリ
+          // 8の字
+          // --------------------------------
+
+          if (
+            model.userData.motion ===
+            "figure8"
+          ) {
+
+            model.position.x =
+
+              base.x +
+
+              Math.sin(time) *
+              0.25;
+
+
+            model.position.z =
+
+              base.z +
+
+              Math.sin(time * 2) *
+              0.15;
+
+          }
+
+        }
+
+      );
+
+
+      // --------------------------------
+      // 描画
+      // --------------------------------
+
+      renderer.render(
+
+        scene,
+
+        camera
+
+      );
+
+    }
+
+
+    // =================================
+    // 画面サイズ変更
+    // =================================
+
+    function onWindowResize() {
+
+
+      camera.aspect =
+
+        window.innerWidth /
+        window.innerHeight;
+
+
+      camera.updateProjectionMatrix();
+
+
+      renderer.setSize(
+
+        window.innerWidth,
+
+        window.innerHeight
+
+      );
+
+    }
+
+  </script>
+
+</body>
+</html>
