@@ -2,14 +2,19 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
 
   <title>🎃 ハロウィンAR フォトスポット</title>
 
-  <script type="module"
-          src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js">
+  <script
+    type="module"
+    src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js">
   </script>
+
 
   <style>
 
@@ -17,23 +22,32 @@
       box-sizing: border-box;
     }
 
+
     html,
     body {
+
       margin: 0;
       padding: 0;
+
       width: 100%;
       height: 100%;
+
       overflow: hidden;
+
       background: black;
+
       font-family: sans-serif;
     }
+
 
     /* =========================================
        カメラ
     ========================================= */
 
     #camera {
+
       position: fixed;
+
       inset: 0;
 
       width: 100%;
@@ -42,6 +56,7 @@
       object-fit: cover;
 
       z-index: 1;
+
       background: black;
     }
 
@@ -51,7 +66,9 @@
     ========================================= */
 
     #ar-area {
+
       position: fixed;
+
       inset: 0;
 
       z-index: 2;
@@ -95,7 +112,7 @@
 
 
     /* =========================================
-       下部メニュー
+       キャラクターメニュー
     ========================================= */
 
     #menu {
@@ -149,7 +166,7 @@
 
 
     /* =========================================
-       フレーム切り替え
+       フレームON/OFF
     ========================================= */
 
     #frame-control {
@@ -225,7 +242,6 @@
       z-index: 22;
 
       width: 62px;
-
       height: 62px;
 
       border-radius: 50%;
@@ -241,7 +257,6 @@
       display: flex;
 
       align-items: center;
-
       justify-content: center;
 
       box-shadow: 0 4px 12px rgba(0,0,0,0.35);
@@ -590,8 +605,9 @@
 
   <script>
 
+
     /* =========================================
-       基本設定
+       基本要素
     ========================================= */
 
     const video =
@@ -659,34 +675,47 @@
        カメラ起動
     ========================================= */
 
-    startButton.addEventListener("click", async () => {
+    startButton.addEventListener(
+      "click",
+      async () => {
 
-      try {
+        try {
 
-        const stream =
-          await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: "environment"
-            },
-            audio: false
-          });
+          const stream =
+            await navigator.mediaDevices.getUserMedia({
 
-        video.srcObject = stream;
+              video: {
+                facingMode: "environment"
+              },
 
-        startScreen.style.display = "none";
+              audio: false
 
-      } catch (error) {
+            });
 
-        alert(
-          "カメラを起動できませんでした。\n" +
-          "ブラウザのカメラ許可を確認してください。"
-        );
 
-        console.error(error);
+          video.srcObject = stream;
+
+
+          await video.play();
+
+
+          startScreen.style.display =
+            "none";
+
+
+        } catch (error) {
+
+          console.error(error);
+
+          alert(
+            "カメラを起動できませんでした。\n" +
+            "ブラウザのカメラ許可を確認してください。"
+          );
+
+        }
 
       }
-
-    });
+    );
 
 
     /* =========================================
@@ -697,43 +726,64 @@
       .querySelectorAll("#menu button")
       .forEach(button => {
 
-        button.addEventListener("click", () => {
+        button.addEventListener(
+          "click",
+          () => {
 
-          const targetId =
-            button.dataset.target;
-
-          const character =
-            document.getElementById(targetId);
-
-          const visible =
-            character.style.display === "block";
+            const targetId =
+              button.dataset.target;
 
 
-          if (visible) {
+            const character =
+              document.getElementById(
+                targetId
+              );
 
-            character.style.display = "none";
 
-            button.classList.remove("active");
+            const visible =
+              character.style.display === "block";
 
-          } else {
 
-            character.style.display = "block";
+            if (visible) {
 
-            button.classList.add("active");
+              character.style.display =
+                "none";
 
-            character.style.left = "50%";
+              button.classList.remove(
+                "active"
+              );
 
-            character.style.top = "45%";
+            } else {
 
-            character.dataset.scale = "1";
+              character.style.display =
+                "block";
 
-            character.style.width = "180px";
+              button.classList.add(
+                "active"
+              );
 
-            character.style.height = "180px";
+
+              character.style.left =
+                "50%";
+
+              character.style.top =
+                "45%";
+
+
+              character.dataset.scale =
+                "1";
+
+
+              character.style.width =
+                "180px";
+
+              character.style.height =
+                "180px";
+
+            }
 
           }
-
-        });
+        );
 
       });
 
@@ -745,6 +795,7 @@
     document
       .querySelectorAll(".character")
       .forEach(character => {
+
 
         let startX = 0;
         let startY = 0;
@@ -766,24 +817,39 @@
 
             event.preventDefault();
 
-            if (event.touches.length === 1) {
+
+            if (
+              event.touches.length === 1
+            ) {
 
               const touch =
                 event.touches[0];
 
-              startX = touch.clientX;
-              startY = touch.clientY;
+
+              startX =
+                touch.clientX;
+
+              startY =
+                touch.clientY;
+
 
               startLeft =
-                parseFloat(character.style.left);
+                parseFloat(
+                  character.style.left
+                );
+
 
               startTop =
-                parseFloat(character.style.top);
+                parseFloat(
+                  character.style.top
+                );
 
             }
 
 
-            if (event.touches.length === 2) {
+            if (
+              event.touches.length === 2
+            ) {
 
               startDistance =
                 getDistance(
@@ -791,15 +857,19 @@
                   event.touches[1]
                 );
 
+
               startScale =
                 parseFloat(
-                  character.dataset.scale || "1"
+                  character.dataset.scale ||
+                  "1"
                 );
 
             }
 
           },
-          { passive: false }
+          {
+            passive: false
+          }
         );
 
 
@@ -810,10 +880,13 @@
             event.preventDefault();
 
 
-            if (event.touches.length === 1) {
+            if (
+              event.touches.length === 1
+            ) {
 
               const touch =
                 event.touches[0];
+
 
               const dx =
                 touch.clientX - startX;
@@ -825,20 +898,26 @@
               character.style.left =
                 (
                   startLeft +
-                  dx / window.innerWidth * 100
+                  dx /
+                  window.innerWidth *
+                  100
                 ) + "%";
 
 
               character.style.top =
                 (
                   startTop +
-                  dy / window.innerHeight * 100
+                  dy /
+                  window.innerHeight *
+                  100
                 ) + "%";
 
             }
 
 
-            if (event.touches.length === 2) {
+            if (
+              event.touches.length === 2
+            ) {
 
               const distance =
                 getDistance(
@@ -858,7 +937,10 @@
                 scale =
                   Math.max(
                     0.3,
-                    Math.min(4, scale)
+                    Math.min(
+                      4,
+                      scale
+                    )
                   );
 
 
@@ -881,13 +963,18 @@
             }
 
           },
-          { passive: false }
+          {
+            passive: false
+          }
         );
 
       });
 
 
-    function getDistance(touch1, touch2) {
+    function getDistance(
+      touch1,
+      touch2
+    ) {
 
       const dx =
         touch1.clientX -
@@ -896,6 +983,7 @@
       const dy =
         touch1.clientY -
         touch2.clientY;
+
 
       return Math.sqrt(
         dx * dx +
@@ -917,48 +1005,134 @@
 
     async function takePhoto() {
 
+
       if (
         !video.videoWidth ||
         !video.videoHeight
       ) {
 
-        alert("カメラがまだ準備できていません。");
+        alert(
+          "カメラがまだ準備できていません。"
+        );
 
         return;
+      }
+
+
+      /*
+       * ======================================
+       * ここが今回の重要部分
+       *
+       * 「画面に見えているカメラ映像」
+       * と同じ縦横比のCanvasを作る
+       * ======================================
+       */
+
+      const screenWidth =
+        window.innerWidth;
+
+      const screenHeight =
+        window.innerHeight;
+
+
+      const screenRatio =
+        screenWidth /
+        screenHeight;
+
+
+      const canvas =
+        document.createElement(
+          "canvas"
+        );
+
+
+      /*
+       * カメラの元映像ではなく、
+       * 画面表示と同じ比率にする
+       */
+
+      let outputWidth =
+        video.videoWidth;
+
+      let outputHeight =
+        Math.round(
+          outputWidth /
+          screenRatio
+        );
+
+
+      /*
+       * 縦が元映像より大きくなる場合は
+       * 高さを基準にする
+       */
+
+      if (
+        outputHeight >
+        video.videoHeight
+      ) {
+
+        outputHeight =
+          video.videoHeight;
+
+        outputWidth =
+          Math.round(
+            outputHeight *
+            screenRatio
+          );
 
       }
 
 
-      const canvas =
-        document.createElement("canvas");
-
-
       canvas.width =
-        video.videoWidth;
+        outputWidth;
 
       canvas.height =
-        video.videoHeight;
+        outputHeight;
 
 
       const ctx =
-        canvas.getContext("2d");
+        canvas.getContext(
+          "2d"
+        );
 
 
-      /* -------------------------
-         カメラ映像
-      ------------------------- */
+      /*
+       * ======================================
+       * カメラ映像を正確にcover描画
+       * ======================================
+       */
 
-      drawVideoCover(
-        ctx,
+      const crop =
+        getCoverCrop(
+          video.videoWidth,
+          video.videoHeight,
+          canvas.width,
+          canvas.height
+        );
+
+
+      ctx.drawImage(
+
         video,
+
+        crop.sx,
+        crop.sy,
+        crop.sw,
+        crop.sh,
+
+        0,
+        0,
         canvas.width,
         canvas.height
+
       );
 
 
-      /* -------------------------
-         3Dキャラクター
-      ------------------------- */
+      /*
+       * ======================================
+       * 3Dモデルを合成
+       * ======================================
+       */
 
       await drawCharactersToCanvas(
         ctx,
@@ -966,9 +1140,11 @@
       );
 
 
-      /* -------------------------
-         フレーム
-      ------------------------- */
+      /*
+       * ======================================
+       * フレーム
+       * ======================================
+       */
 
       if (frameEnabled) {
 
@@ -981,9 +1157,11 @@
       }
 
 
-      /* -------------------------
-         JPEG化
-      ------------------------- */
+      /*
+       * ======================================
+       * JPEG化
+       * ======================================
+       */
 
       const imageData =
         canvas.toDataURL(
@@ -1000,7 +1178,6 @@
         "flex";
 
 
-      /* 保存用 */
       savePhotoButton.dataset.image =
         imageData;
 
@@ -1008,72 +1185,100 @@
 
 
     /* =========================================
-       カメラ映像をcoverで描画
+       object-fit: cover の切り抜き計算
     ========================================= */
 
-    function drawVideoCover(
-      ctx,
-      video,
-      width,
-      height
+    function getCoverCrop(
+
+      sourceWidth,
+      sourceHeight,
+
+      targetWidth,
+      targetHeight
+
     ) {
 
-      const videoRatio =
-        video.videoWidth /
-        video.videoHeight;
 
-      const canvasRatio =
-        width / height;
+      const sourceRatio =
+        sourceWidth /
+        sourceHeight;
+
+
+      const targetRatio =
+        targetWidth /
+        targetHeight;
 
 
       let sx = 0;
       let sy = 0;
 
       let sw =
-        video.videoWidth;
+        sourceWidth;
 
       let sh =
-        video.videoHeight;
+        sourceHeight;
 
 
-      if (videoRatio > canvasRatio) {
+      /*
+       * 横長映像
+       */
+
+      if (
+        sourceRatio >
+        targetRatio
+      ) {
 
         sw =
-          video.videoHeight *
-          canvasRatio;
+          sourceHeight *
+          targetRatio;
+
 
         sx =
-          (video.videoWidth - sw) / 2;
-
-      } else {
-
-        sh =
-          video.videoWidth /
-          canvasRatio;
-
-        sy =
-          (video.videoHeight - sh) / 2;
+          (
+            sourceWidth -
+            sw
+          ) / 2;
 
       }
 
 
-      ctx.drawImage(
-        video,
+      /*
+       * 縦長映像
+       */
+
+      else if (
+        sourceRatio <
+        targetRatio
+      ) {
+
+        sh =
+          sourceWidth /
+          targetRatio;
+
+
+        sy =
+          (
+            sourceHeight -
+            sh
+          ) / 2;
+
+      }
+
+
+      return {
+
         sx,
         sy,
         sw,
-        sh,
-        0,
-        0,
-        width,
-        height
-      );
+        sh
+
+      };
 
     }
 
 
     /* =========================================
-       3DモデルをCanvasに合成
+       3DモデルをCanvasへ合成
     ========================================= */
 
     async function drawCharactersToCanvas(
@@ -1081,18 +1286,51 @@
       canvas
     ) {
 
+
       const characters =
         document.querySelectorAll(
           ".character"
         );
 
 
-      for (const character of characters) {
+      /*
+       * 実際にカメラが表示されている
+       * 画面領域
+       */
+
+      const videoRect =
+        video.getBoundingClientRect();
+
+
+      /*
+       * 画面のcoverとCanvasのcoverを
+       * 同じ比率で計算
+       */
+
+      const crop =
+        getCoverCrop(
+
+          video.videoWidth,
+          video.videoHeight,
+
+          canvas.width,
+          canvas.height
+
+        );
+
+
+      for (
+        const character of characters
+      ) {
+
 
         if (
-          character.style.display !== "block"
+          character.style.display !==
+          "block"
         ) {
+
           continue;
+
         }
 
 
@@ -1107,6 +1345,10 @@
         }
 
 
+        /*
+         * model-viewer内部Canvas
+         */
+
         const shadow =
           modelViewer.shadowRoot;
 
@@ -1117,7 +1359,9 @@
 
 
         const modelCanvas =
-          shadow.querySelector("canvas");
+          shadow.querySelector(
+            "canvas"
+          );
 
 
         if (!modelCanvas) {
@@ -1125,45 +1369,71 @@
         }
 
 
+        /*
+         * 画面上でのモデル位置
+         */
+
         const rect =
           character.getBoundingClientRect();
 
 
-        const videoRect =
-          video.getBoundingClientRect();
-
+        /*
+         * 画面上の座標を
+         * カメラ映像の座標へ変換
+         *
+         * まず画面のcover領域を
+         * Canvas座標へ変換
+         */
 
         const scaleX =
           canvas.width /
           videoRect.width;
+
 
         const scaleY =
           canvas.height /
           videoRect.height;
 
 
-        const x =
-          (rect.left - videoRect.left) *
+        let x =
+          (
+            rect.left -
+            videoRect.left
+          ) *
           scaleX;
 
-        const y =
-          (rect.top - videoRect.top) *
+
+        let y =
+          (
+            rect.top -
+            videoRect.top
+          ) *
           scaleY;
 
 
-        const width =
-          rect.width * scaleX;
+        let width =
+          rect.width *
+          scaleX;
 
-        const height =
-          rect.height * scaleY;
 
+        let height =
+          rect.height *
+          scaleY;
+
+
+        /*
+         * model-viewerのCanvasを描画
+         */
 
         ctx.drawImage(
+
           modelCanvas,
+
           x,
           y,
           width,
           height
+
         );
 
       }
@@ -1181,13 +1451,20 @@
       height
     ) {
 
-      const frameSize =
-        Math.min(width, height) * 0.045;
-
-
-      /* 外側のオレンジ枠 */
 
       ctx.save();
+
+
+      const frameSize =
+        Math.min(
+          width,
+          height
+        ) * 0.045;
+
+
+      /*
+       * 外側オレンジ
+       */
 
       ctx.lineWidth =
         frameSize;
@@ -1195,15 +1472,21 @@
       ctx.strokeStyle =
         "#ff7a00";
 
+
       ctx.strokeRect(
+
         frameSize / 2,
         frameSize / 2,
+
         width - frameSize,
         height - frameSize
+
       );
 
 
-      /* 内側の黒枠 */
+      /*
+       * 内側黒
+       */
 
       ctx.lineWidth =
         frameSize * 0.35;
@@ -1211,36 +1494,47 @@
       ctx.strokeStyle =
         "#241326";
 
+
       ctx.strokeRect(
+
         frameSize * 1.1,
         frameSize * 1.1,
-        width - frameSize * 2.2,
-        height - frameSize * 2.2
+
+        width -
+        frameSize * 2.2,
+
+        height -
+        frameSize * 2.2
+
       );
 
 
-      /* 上部タイトル背景 */
+      /*
+       * 上部タイトル
+       */
 
       const titleHeight =
         height * 0.105;
 
 
       ctx.fillStyle =
-        "rgba(35, 12, 45, 0.82)";
+        "rgba(35,12,45,0.82)";
 
 
       ctx.fillRect(
+
         0,
         0,
+
         width,
         titleHeight
+
       );
 
 
-      /* タイトル */
-
       ctx.fillStyle =
         "#ffffff";
+
 
       ctx.textAlign =
         "center";
@@ -1249,7 +1543,7 @@
         "middle";
 
 
-      let titleFont =
+      const titleFont =
         Math.max(
           28,
           width * 0.055
@@ -1261,27 +1555,37 @@
 
 
       ctx.fillText(
+
         "🎃 HAPPY HALLOWEEN!",
+
         width / 2,
         titleHeight / 2
+
       );
 
 
-      /* 下部 */
+      /*
+       * 下部
+       */
 
       const bottomHeight =
         height * 0.075;
 
 
       ctx.fillStyle =
-        "rgba(35, 12, 45, 0.82)";
+        "rgba(35,12,45,0.82)";
 
 
       ctx.fillRect(
+
         0,
-        height - bottomHeight,
+
+        height -
+        bottomHeight,
+
         width,
         bottomHeight
+
       );
 
 
@@ -1289,7 +1593,7 @@
         "#ffffff";
 
 
-      let bottomFont =
+      const bottomFont =
         Math.max(
           20,
           width * 0.032
@@ -1301,43 +1605,66 @@
 
 
       ctx.fillText(
+
         "🐾 岐阜県動物愛護センター 🐾",
+
         width / 2,
-        height - bottomHeight / 2
+
+        height -
+        bottomHeight / 2
+
       );
 
 
-      /* 四隅のかぼちゃ風飾り */
+      /*
+       * 四隅のかぼちゃ
+       */
 
       drawPumpkinDecoration(
+
         ctx,
+
         width * 0.055,
         height * 0.055,
+
         width * 0.025
+
       );
 
 
       drawPumpkinDecoration(
+
         ctx,
+
         width * 0.945,
         height * 0.055,
+
         width * 0.025
+
       );
 
 
       drawPumpkinDecoration(
+
         ctx,
+
         width * 0.055,
         height * 0.945,
+
         width * 0.025
+
       );
 
 
       drawPumpkinDecoration(
+
         ctx,
+
         width * 0.945,
         height * 0.945,
+
         width * 0.025
+
       );
 
 
@@ -1357,10 +1684,13 @@
       r
     ) {
 
+
       ctx.save();
 
 
-      /* 本体 */
+      /*
+       * 本体
+       */
 
       ctx.fillStyle =
         "#ff8c00";
@@ -1368,40 +1698,60 @@
 
       ctx.beginPath();
 
-      ctx.arc(
-        x - r * 0.45,
-        y,
-        r * 0.75,
-        0,
-        Math.PI * 2
-      );
 
       ctx.arc(
-        x + r * 0.45,
+
+        x - r * 0.45,
         y,
+
         r * 0.75,
+
         0,
         Math.PI * 2
+
       );
+
+
+      ctx.arc(
+
+        x + r * 0.45,
+        y,
+
+        r * 0.75,
+
+        0,
+        Math.PI * 2
+
+      );
+
 
       ctx.fill();
 
 
-      /* ヘタ */
+      /*
+       * ヘタ
+       */
 
       ctx.fillStyle =
         "#3c8a3c";
 
 
       ctx.fillRect(
+
         x - r * 0.18,
+
         y - r * 1.1,
+
         r * 0.36,
+
         r * 0.45
+
       );
 
 
-      /* 目 */
+      /*
+       * 目
+       */
 
       ctx.fillStyle =
         "#241326";
@@ -1409,20 +1759,30 @@
 
       ctx.beginPath();
 
+
       ctx.moveTo(
+
         x - r * 0.65,
         y - r * 0.15
+
       );
 
+
       ctx.lineTo(
+
         x - r * 0.25,
         y - r * 0.15
+
       );
 
+
       ctx.lineTo(
+
         x - r * 0.45,
         y + r * 0.25
+
       );
+
 
       ctx.closePath();
 
@@ -1430,41 +1790,63 @@
 
 
       ctx.beginPath();
+
 
       ctx.moveTo(
+
         x + r * 0.25,
         y - r * 0.15
+
       );
 
+
       ctx.lineTo(
+
         x + r * 0.65,
         y - r * 0.15
+
       );
 
+
       ctx.lineTo(
+
         x + r * 0.45,
         y + r * 0.25
+
       );
+
 
       ctx.closePath();
 
       ctx.fill();
 
 
-      /* 口 */
+      /*
+       * 口
+       */
 
       ctx.lineWidth =
-        Math.max(2, r * 0.18);
+        Math.max(
+          2,
+          r * 0.18
+        );
+
 
       ctx.beginPath();
 
+
       ctx.arc(
+
         x,
         y + r * 0.1,
+
         r * 0.4,
+
         0,
         Math.PI
+
       );
+
 
       ctx.stroke();
 
@@ -1479,8 +1861,11 @@
     ========================================= */
 
     savePhotoButton.addEventListener(
+
       "click",
+
       () => {
+
 
         const image =
           savePhotoButton.dataset.image;
@@ -1496,33 +1881,45 @@
 
 
         const filename =
+
           "halloween-ar-" +
+
           now.getFullYear() +
+
           String(
             now.getMonth() + 1
           ).padStart(2, "0") +
+
           String(
             now.getDate()
           ).padStart(2, "0") +
+
           "-" +
+
           String(
             now.getHours()
           ).padStart(2, "0") +
+
           String(
             now.getMinutes()
           ).padStart(2, "0") +
+
           String(
             now.getSeconds()
           ).padStart(2, "0") +
+
           ".jpg";
 
 
         const link =
-          document.createElement("a");
+          document.createElement(
+            "a"
+          );
 
 
         link.href =
           image;
+
 
         link.download =
           filename;
@@ -1531,6 +1928,7 @@
         link.click();
 
       }
+
     );
 
 
@@ -1539,13 +1937,16 @@
     ========================================= */
 
     retakePhotoButton.addEventListener(
+
       "click",
+
       () => {
 
         photoPreview.style.display =
           "none";
 
       }
+
     );
 
   </script>
