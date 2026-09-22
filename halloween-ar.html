@@ -1,482 +1,293 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<meta charset="UTF-8">
+    <title>🎃 ハロウィンAR</title>
 
-<meta name="viewport"
-      content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: sans-serif;
+            touch-action: none;
+        }
 
-<title>🎃 ハロウィンARフォトスポット</title>
+        canvas {
+            display: block;
+        }
 
+        /* -----------------------------------------
+           上部タイトル
+        ----------------------------------------- */
 
-<style>
+        #title {
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
 
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
+            z-index: 20;
 
+            padding: 8px 16px;
 
-html,
-body {
+            border-radius: 20px;
 
-    margin: 0;
-    padding: 0;
+            background: rgba(0,0,0,0.55);
+            color: white;
 
-    width: 100%;
-    height: 100%;
+            font-size: 16px;
+            font-weight: bold;
 
-    overflow: hidden;
+            pointer-events: none;
+        }
 
-    background: #000;
+        /* -----------------------------------------
+           説明
+        ----------------------------------------- */
 
-    font-family: sans-serif;
+        #message {
+            position: fixed;
+            top: 58px;
+            left: 50%;
+            transform: translateX(-50%);
 
-    touch-action: none;
-}
+            z-index: 20;
 
+            color: white;
+            background: rgba(0,0,0,0.5);
 
-/* =========================================================
-   UI
-========================================================= */
+            padding: 6px 12px;
+            border-radius: 15px;
 
-#ui {
+            font-size: 13px;
 
-    position: fixed;
+            pointer-events: none;
+        }
 
-    inset: 0;
+        /* -----------------------------------------
+           下部ボタン
+        ----------------------------------------- */
 
-    z-index: 10;
+        #bottom-area {
+            position: fixed;
 
-    pointer-events: none;
-}
+            left: 50%;
+            bottom: 15px;
 
+            transform: translateX(-50%);
 
-/* =========================================================
-   タイトル
-========================================================= */
+            z-index: 30;
 
-#title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-    position: absolute;
+            gap: 7px;
 
-    top: 14px;
-    left: 50%;
+            width: calc(100% - 16px);
 
-    transform: translateX(-50%);
+            pointer-events: auto;
+        }
 
-    padding: 8px 16px;
+        .model-button {
+            width: 64px;
+            height: 64px;
 
-    border-radius: 20px;
+            border: none;
+            border-radius: 16px;
 
-    color: white;
+            background: rgba(255,255,255,0.92);
 
-    background: rgba(0, 0, 0, 0.45);
+            font-size: 26px;
 
-    font-size: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
 
-    font-weight: bold;
+            cursor: pointer;
 
-    white-space: nowrap;
-}
+            box-shadow:
+                0 2px 8px rgba(0,0,0,0.35);
 
+            padding: 0;
+        }
 
-/* =========================================================
-   操作説明
-========================================================= */
+        .model-button span {
+            font-size: 10px;
+            margin-top: 2px;
+            color: #333;
+            font-weight: bold;
+        }
 
-#help {
+        .model-button.active {
+            background: #ffcc33;
+            transform: scale(1.05);
+        }
 
-    position: absolute;
+        /* -----------------------------------------
+           撮影ボタン
+        ----------------------------------------- */
 
-    top: 55px;
-    left: 50%;
+        #photo-button {
+            width: 64px;
+            height: 64px;
 
-    transform: translateX(-50%);
+            border-radius: 50%;
 
-    padding: 6px 12px;
+            border: 5px solid white;
 
-    border-radius: 15px;
+            background: rgba(255,255,255,0.95);
 
-    color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-    background: rgba(0, 0, 0, 0.35);
+            font-size: 27px;
 
-    font-size: 12px;
+            cursor: pointer;
 
-    white-space: nowrap;
-}
+            padding: 0;
 
+            margin-left: 2px;
 
-/* =========================================================
-   下部操作エリア
-========================================================= */
+            box-shadow:
+                0 2px 10px rgba(0,0,0,0.35);
+        }
 
-#bottom-area {
+        /* -----------------------------------------
+           撮影メッセージ
+        ----------------------------------------- */
 
-    position: absolute;
+        #photo-message {
+            position: fixed;
 
-    left: 50%;
-    bottom: 16px;
+            left: 50%;
+            top: 50%;
 
-    transform: translateX(-50%);
+            transform: translate(-50%, -50%);
 
-    display: flex;
+            z-index: 100;
 
-    align-items: center;
+            background: rgba(0,0,0,0.75);
+            color: white;
 
-    gap: 10px;
+            padding: 15px 20px;
 
-    padding: 10px 12px;
+            border-radius: 12px;
 
-    border-radius: 25px;
+            font-size: 15px;
 
-    background: rgba(0, 0, 0, 0.48);
+            opacity: 0;
 
-    pointer-events: auto;
-}
+            pointer-events: none;
 
+            transition: opacity 0.2s;
+        }
 
-/* =========================================================
-   キャラクターボタン
-========================================================= */
+        #photo-message.show {
+            opacity: 1;
+        }
 
-.model-button {
+        /* -----------------------------------------
+           WebXR開始ボタン
+        ----------------------------------------- */
 
-    width: 58px;
-    height: 58px;
+        .xr-button {
+            z-index: 50 !important;
+        }
+    </style>
 
-    border: 2px solid rgba(255,255,255,0.65);
 
-    border-radius: 17px;
-
-    background: rgba(255,255,255,0.14);
-
-    color: white;
-
-    font-size: 26px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    cursor: pointer;
-
-    padding: 0;
-}
-
-
-.model-button span {
-
-    font-size: 9px;
-
-    margin-top: 2px;
-
-}
-
-
-.model-button.active {
-
-    background: rgba(255, 170, 40, 0.78);
-
-    border-color: white;
-
-    transform: scale(1.05);
-}
-
-
-.model-button:active {
-
-    transform: scale(0.93);
-}
-
-
-/* =========================================================
-   写真撮影ボタン
-========================================================= */
-
-#photo-button {
-
-    width: 68px;
-    height: 68px;
-
-    border-radius: 50%;
-
-    border: 5px solid white;
-
-    background: rgba(255,255,255,0.95);
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    font-size: 29px;
-
-    cursor: pointer;
-
-    padding: 0;
-
-    margin-left: 4px;
-
-    box-shadow:
-        0 2px 10px rgba(0,0,0,0.35);
-}
-
-
-#photo-button:active {
-
-    transform: scale(0.90);
-}
-
-
-/* =========================================================
-   読み込み
-========================================================= */
-
-#loading {
-
-    position: absolute;
-
-    top: 50%;
-    left: 50%;
-
-    transform: translate(-50%, -50%);
-
-    padding: 14px 22px;
-
-    border-radius: 20px;
-
-    color: white;
-
-    background: rgba(0,0,0,0.65);
-
-    font-size: 15px;
-
-    text-align: center;
-}
-
-
-#loading.hidden {
-
-    display: none;
-}
-
-
-/* =========================================================
-   メッセージ
-========================================================= */
-
-#message {
-
-    position: absolute;
-
-    top: 50%;
-    left: 50%;
-
-    transform: translate(-50%, -50%);
-
-    width: 85%;
-
-    padding: 20px;
-
-    border-radius: 20px;
-
-    background: rgba(0,0,0,0.78);
-
-    color: white;
-
-    text-align: center;
-
-    display: none;
-
-    line-height: 1.6;
-}
-
-
-#message.show {
-
-    display: block;
-}
-
-
-/* =========================================================
-   撮影メッセージ
-========================================================= */
-
-#photo-message {
-
-    position: absolute;
-
-    left: 50%;
-    top: 50%;
-
-    transform: translate(-50%, -50%);
-
-    padding: 12px 20px;
-
-    border-radius: 20px;
-
-    background: rgba(0,0,0,0.65);
-
-    color: white;
-
-    font-size: 16px;
-
-    display: none;
-
-    white-space: nowrap;
-}
-
-
-#photo-message.show {
-
-    display: block;
-}
-
-</style>
-
-
-<script type="importmap">
-{
-    "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    <!-- Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+        }
     }
-}
-</script>
+    </script>
 
 </head>
 
 
 <body>
 
-
-<!-- =====================================================
-     UI
-===================================================== -->
-
-<div id="ui">
-
-
     <div id="title">
+        🎃 ハロウィンAR 🎃
+    </div>
 
-        🎃 ハロウィンARフォトスポット
-
+    <div id="message">
+        AR開始後、好きなキャラクターを選んでね
     </div>
 
 
-    <div id="help">
-
-        1本指：移動　2本指：拡大・縮小・回転
-
-    </div>
-
+    <!-- 下部ボタン -->
 
     <div id="bottom-area">
-
 
         <button
             class="model-button"
             data-model="ghost">
-
             👻
             <span>おばけ</span>
-
         </button>
-
 
         <button
             class="model-button"
             data-model="pumpkin">
-
             🎃
             <span>かぼちゃ</span>
-
         </button>
-
 
         <button
             class="model-button"
             data-model="witch">
-
             🧙
             <span>帽子</span>
-
         </button>
-
 
         <button
             class="model-button"
             data-model="bat">
-
             🦇
             <span>コウモリ</span>
-
         </button>
-
-
-        <!-- 写真撮影 -->
 
         <button
             id="photo-button"
             aria-label="写真撮影">
-
             📸
-
         </button>
 
-
     </div>
 
 
-    <div id="loading">
-
-        3Dモデルを読み込んでいます…
-
-    </div>
-
-
-    <div id="message"></div>
-
-
-    <div id="photo-message">
-
-        📸 撮影準備中…
-
-    </div>
-
-
-</div>
+    <div id="photo-message"></div>
 
 
 <script type="module">
 
-
-import * as THREE
-    from "three";
-
+import * as THREE from "three";
 
 import { GLTFLoader }
     from "three/addons/loaders/GLTFLoader.js";
-
 
 import { ARButton }
     from "three/addons/webxr/ARButton.js";
 
 
-// =========================================================
-// Scene
-// =========================================================
+/* =========================================================
+   基本設定
+========================================================= */
 
 const scene =
     new THREE.Scene();
@@ -485,34 +296,27 @@ const scene =
 const camera =
     new THREE.PerspectiveCamera(
         70,
-        window.innerWidth /
-        window.innerHeight,
+        window.innerWidth / window.innerHeight,
         0.01,
-        100
+        20
     );
 
 
-// =========================================================
-// Renderer
-// =========================================================
+/* =========================================================
+   Renderer
+========================================================= */
 
 const renderer =
     new THREE.WebGLRenderer({
-
         antialias: true,
-
-        alpha: true
-
+        alpha: true,
+        preserveDrawingBuffer: true
     });
 
 
 renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
+    Math.min(window.devicePixelRatio, 2)
 );
-
 
 renderer.setSize(
     window.innerWidth,
@@ -523,11 +327,13 @@ renderer.setSize(
 renderer.xr.enabled = true;
 
 
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
+/*
+ * WebXRでDOMを重ねる
+ */
 
-
-renderer.shadowMap.enabled = true;
+renderer.xr.setReferenceSpaceType(
+    "local"
+);
 
 
 document.body.appendChild(
@@ -535,9 +341,9 @@ document.body.appendChild(
 );
 
 
-// =========================================================
-// Lighting
-// =========================================================
+/* =========================================================
+   光
+========================================================= */
 
 const ambientLight =
     new THREE.HemisphereLight(
@@ -545,7 +351,6 @@ const ambientLight =
         0x444444,
         2.5
     );
-
 
 scene.add(
     ambientLight
@@ -558,46 +363,43 @@ const directionalLight =
         2
     );
 
-
 directionalLight.position.set(
     2,
     4,
     2
 );
 
-
-directionalLight.castShadow =
-    true;
-
-
 scene.add(
     directionalLight
 );
 
 
-// =========================================================
-// AR Button
-// =========================================================
+/* =========================================================
+   WebXR開始ボタン
+========================================================= */
 
 const arButton =
     ARButton.createButton(
         renderer,
         {
-
             requiredFeatures: [
+                "hit-test"
+            ],
+
+            optionalFeatures: [
                 "dom-overlay"
             ],
 
             domOverlay: {
                 root: document.body
             }
-
         }
     );
 
 
-arButton.style.bottom =
-    "100px";
+arButton.classList.add(
+    "xr-button"
+);
 
 
 document.body.appendChild(
@@ -605,143 +407,109 @@ document.body.appendChild(
 );
 
 
-// =========================================================
-// Models
-// 初期サイズを0.4に変更
-// =========================================================
+/* =========================================================
+   GLB
+========================================================= */
 
 const loader =
     new GLTFLoader();
 
 
+/* =========================================================
+   キャラクター設定
+=========================================================
+
+   ★ここがサイズ設定です
+
+   前回：0.4
+
+   今回：0.25
+
+   かなり小さくしています。
+========================================================= */
+
 const models = {
 
-
     ghost: {
-
         file: "./ghost.glb",
-
         name: "おばけ",
-
         object: null,
-
         visible: false,
-
-        scale: 0.4
-
+        scale: 0.25
     },
-
 
     pumpkin: {
-
         file: "./pumpkin.glb",
-
         name: "かぼちゃ",
-
         object: null,
-
         visible: false,
-
-        scale: 0.4
-
+        scale: 0.25
     },
-
 
     witch: {
-
         file: "./witch-hat.glb",
-
         name: "帽子",
-
         object: null,
-
         visible: false,
-
-        scale: 0.4
-
+        scale: 0.25
     },
 
-
     bat: {
-
         file: "./bat.glb",
-
         name: "コウモリ",
-
         object: null,
-
         visible: false,
-
-        scale: 0.4
-
+        scale: 0.25
     }
 
 };
 
 
-const modelKeys =
-    Object.keys(models);
-
-
-let loadedCount = 0;
-
-
-// =========================================================
-// Load models
-// =========================================================
+/* =========================================================
+   GLB読み込み
+========================================================= */
 
 for (
-    const key of modelKeys
+    const key of Object.keys(models)
 ) {
-
 
     const data =
         models[key];
 
-
     loader.load(
-
         data.file,
 
-
-        (gltf) => {
-
+        function(gltf) {
 
             const object =
                 gltf.scene;
 
-
-            object.visible =
-                false;
-
+            /*
+             * 初期サイズ
+             */
 
             object.scale.setScalar(
                 data.scale
             );
 
 
-            object.traverse(
-                (child) => {
+            /*
+             * 最初は非表示
+             */
+
+            object.visible =
+                false;
 
 
-                    if (
-                        child.isMesh
-                    ) {
+            /*
+             * モデルを少し上に
+             */
 
-                        child.castShadow =
-                            true;
-
-                        child.receiveShadow =
-                            true;
-
-                    }
-
-                }
+            object.position.set(
+                0,
+                0,
+                -1
             );
-
-
-            data.object =
-                object;
 
 
             scene.add(
@@ -749,628 +517,416 @@ for (
             );
 
 
-            loadedCount++;
+            data.object =
+                object;
 
 
-            updateLoading();
+            console.log(
+                data.name + " 読み込み完了"
+            );
 
         },
 
-
         undefined,
 
-
-        (error) => {
-
+        function(error) {
 
             console.error(
-                "モデル読み込みエラー:",
-                data.file,
+                data.name + " 読み込みエラー",
                 error
             );
 
-
-            loadedCount++;
-
-
-            updateLoading();
-
-        }
-
-    );
-
-}
-
-
-// =========================================================
-// Loading
-// =========================================================
-
-function updateLoading() {
-
-
-    const loading =
-        document.getElementById(
-            "loading"
-        );
-
-
-    if (
-        loadedCount >=
-        modelKeys.length
-    ) {
-
-
-        loading.classList.add(
-            "hidden"
-        );
-
-
-    } else {
-
-
-        loading.textContent =
-            `3Dモデルを読み込んでいます… ${loadedCount}/${modelKeys.length}`;
-
-    }
-
-}
-
-
-// =========================================================
-// Place model in front of camera
-// =========================================================
-
-function placeInFront(
-    object
-) {
-
-
-    if (!object) return;
-
-
-    const direction =
-        new THREE.Vector3();
-
-
-    camera.getWorldDirection(
-        direction
-    );
-
-
-    const cameraPosition =
-        new THREE.Vector3();
-
-
-    camera.getWorldPosition(
-        cameraPosition
-    );
-
-
-    /*
-     * カメラから約1.5m
-     */
-
-    object.position.copy(
-        cameraPosition
-    );
-
-
-    object.position.add(
-        direction.multiplyScalar(
-            1.5
-        )
-    );
-
-
-    /*
-     * 少し下
-     */
-
-    object.position.y -=
-        0.05;
-
-
-    /*
-     * カメラ方向を向く
-     */
-
-    object.rotation.set(
-        0,
-        camera.rotation.y,
-        0
-    );
-
-}
-
-
-// =========================================================
-// Character buttons
-// =========================================================
-
-document
-    .querySelectorAll(
-        ".model-button"
-    )
-    .forEach(
-        (button) => {
-
-
-            button.addEventListener(
-                "click",
-                () => {
-
-
-                    const key =
-                        button.dataset.model;
-
-
-                    toggleModel(
-                        key
-                    );
-
-                }
-            );
-
         }
     );
-
-
-// =========================================================
-// Toggle model
-// =========================================================
-
-function toggleModel(
-    key
-) {
-
-
-    const data =
-        models[key];
-
-
-    if (
-        !data ||
-        !data.object
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-     * 表示中なら消す
-     */
-
-    if (
-        data.visible
-    ) {
-
-
-        data.object.visible =
-            false;
-
-
-        data.visible =
-            false;
-
-
-        document
-            .querySelector(
-                `[data-model="${key}"]`
-            )
-            .classList.remove(
-                "active"
-            );
-
-
-        return;
-
-    }
-
-
-    /*
-     * 表示する
-     */
-
-    placeInFront(
-        data.object
-    );
-
-
-    data.object.visible =
-        true;
-
-
-    data.visible =
-        true;
-
-
-    document
-        .querySelector(
-            `[data-model="${key}"]`
-        )
-        .classList.add(
-            "active"
-        );
-
 }
 
 
-// =========================================================
-// Raycaster
-// =========================================================
+/* =========================================================
+   AR配置用
+========================================================= */
 
-const raycaster =
-    new THREE.Raycaster();
+let hitTestSource = null;
+
+let hitTestSourceRequested = false;
+
+let reticle;
 
 
-const pointer =
-    new THREE.Vector2();
+/* =========================================================
+   レティクル
+========================================================= */
 
+const ringGeometry =
+    new THREE.RingGeometry(
+        0.08,
+        0.1,
+        32
+    );
+
+ringGeometry.rotateX(
+    -Math.PI / 2
+);
+
+
+const ringMaterial =
+    new THREE.MeshBasicMaterial({
+        color: 0xffffff
+    });
+
+
+reticle =
+    new THREE.Mesh(
+        ringGeometry,
+        ringMaterial
+    );
+
+
+reticle.matrixAutoUpdate =
+    false;
+
+
+reticle.visible =
+    false;
+
+
+scene.add(
+    reticle
+);
+
+
+/* =========================================================
+   現在選択中のモデル
+========================================================= */
 
 let selectedObject =
     null;
 
 
-// =========================================================
-// 1本指ドラッグ
-// =========================================================
+/* =========================================================
+   ARセッション開始
+========================================================= */
 
-let lastX = 0;
-let lastY = 0;
+renderer.xr.addEventListener(
+    "sessionstart",
+    () => {
 
-
-// =========================================================
-// 2本指
-// =========================================================
-
-let pinchStartDistance =
-    0;
-
-
-let pinchStartScale =
-    1;
-
-
-let rotateStartAngle =
-    0;
-
-
-let rotateStartY =
-    0;
-
-
-// =========================================================
-// Visible models
-// =========================================================
-
-function getVisibleObjects() {
-
-
-    const result = [];
-
-
-    for (
-        const key of modelKeys
-    ) {
-
-
-        const data =
-            models[key];
-
-
-        if (
-            data.object &&
-            data.visible
-        ) {
-
-
-            result.push(
-                data.object
-            );
-
-        }
+        document.getElementById(
+            "message"
+        ).textContent =
+            "キャラクターを選んでね 👻🎃";
 
     }
+);
 
 
-    return result;
+/* =========================================================
+   ARセッション終了
+========================================================= */
 
-}
+renderer.xr.addEventListener(
+    "sessionend",
+    () => {
 
+        hitTestSourceRequested =
+            false;
 
-// =========================================================
-// Select object
-// =========================================================
+        hitTestSource =
+            null;
 
-function selectObject(
-    x,
-    y
-) {
+        reticle.visible =
+            false;
 
-
-    pointer.x =
-        (x /
-        window.innerWidth) *
-        2 - 1;
-
-
-    pointer.y =
-        -(y /
-        window.innerHeight) *
-        2 + 1;
+    }
+);
 
 
-    raycaster.setFromCamera(
-        pointer,
-        camera
-    );
+/* =========================================================
+   モデルボタン
+========================================================= */
+
+document
+    .querySelectorAll(".model-button")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const key =
+                    button.dataset.model;
+
+                const data =
+                    models[key];
 
 
-    const objects =
-        getVisibleObjects();
+                /*
+                 * 読み込み前
+                 */
+
+                if (!data.object) {
+
+                    return;
+
+                }
 
 
-    const intersects =
-        raycaster.intersectObjects(
-            objects,
-            true
+                /*
+                 * 表示・非表示切り替え
+                 */
+
+                data.visible =
+                    !data.visible;
+
+
+                data.object.visible =
+                    data.visible;
+
+
+                /*
+                 * ボタン表示
+                 */
+
+                button.classList.toggle(
+                    "active",
+                    data.visible
+                );
+
+
+                /*
+                 * 表示したモデルを選択対象にする
+                 */
+
+                if (data.visible) {
+
+                    selectedObject =
+                        data.object;
+
+                }
+
+
+                /*
+                 * 全部消えたら選択解除
+                 */
+
+                const anyVisible =
+                    Object.values(models)
+                        .some(
+                            item => item.visible
+                        );
+
+
+                if (!anyVisible) {
+
+                    selectedObject =
+                        null;
+
+                }
+
+            }
         );
 
-
-    if (
-        intersects.length === 0
-    ) {
-
-        return null;
-
-    }
+    });
 
 
-    let object =
-        intersects[0].object;
+/* =========================================================
+   タッチ操作
+========================================================= */
+
+let startX = 0;
+let startY = 0;
+
+let startDistance = 0;
+let startAngle = 0;
+
+let startScale = 0.25;
+let startRotation = 0;
+
+let dragging = false;
 
 
-    /*
-     * Meshから親モデルへ
-     */
-
-    while (
-        object.parent &&
-        !objects.includes(object)
-    ) {
-
-
-        object =
-            object.parent;
-
-    }
-
-
-    return object;
-
-}
-
-
-// =========================================================
-// Touch start
-// =========================================================
+/* =========================================================
+   1本指
+   → 移動
+========================================================= */
 
 renderer.domElement.addEventListener(
-
     "touchstart",
+    event => {
 
-    (event) => {
+        if (!selectedObject) {
+            return;
+        }
 
+        if (event.touches.length === 1) {
 
-        event.preventDefault();
+            dragging = true;
 
+            startX =
+                event.touches[0].clientX;
 
-        const touches =
-            event.touches;
-
-
-        /*
-         * 1本指
-         */
-
-        if (
-            touches.length === 1
-        ) {
-
-
-            const touch =
-                touches[0];
-
-
-            selectedObject =
-                selectObject(
-                    touch.clientX,
-                    touch.clientY
-                );
-
-
-            lastX =
-                touch.clientX;
-
-
-            lastY =
-                touch.clientY;
+            startY =
+                event.touches[0].clientY;
 
         }
 
-
-        /*
-         * 2本指
-         */
-
-        if (
-            touches.length === 2 &&
-            selectedObject
+        else if (
+            event.touches.length === 2
         ) {
 
-
-            const t1 =
-                touches[0];
+            dragging = false;
 
 
-            const t2 =
-                touches[1];
+            const dx =
+                event.touches[0].clientX -
+                event.touches[1].clientX;
+
+            const dy =
+                event.touches[0].clientY -
+                event.touches[1].clientY;
 
 
-            pinchStartDistance =
-                getDistance(
-                    t1,
-                    t2
+            startDistance =
+                Math.sqrt(
+                    dx * dx +
+                    dy * dy
                 );
 
 
-            pinchStartScale =
+            startAngle =
+                Math.atan2(
+                    dy,
+                    dx
+                );
+
+
+            startScale =
                 selectedObject.scale.x;
 
 
-            rotateStartAngle =
-                getAngle(
-                    t1,
-                    t2
-                );
-
-
-            rotateStartY =
+            startRotation =
                 selectedObject.rotation.y;
 
         }
 
     },
-
     {
         passive: false
     }
-
 );
 
 
-// =========================================================
-// Touch move
-// =========================================================
+/* =========================================================
+   タッチ移動
+========================================================= */
 
 renderer.domElement.addEventListener(
-
     "touchmove",
+    event => {
 
-    (event) => {
+        if (!selectedObject) {
+            return;
+        }
 
 
         event.preventDefault();
 
 
-        if (
-            !selectedObject
-        ) {
-
-            return;
-
-        }
-
-
-        const touches =
-            event.touches;
-
-
-        /*
-         * =====================================
-         * 1本指 → 移動
-         * =====================================
-         */
+        /* -----------------------------------------
+           1本指
+        ----------------------------------------- */
 
         if (
-            touches.length === 1
+            event.touches.length === 1 &&
+            dragging
         ) {
 
+            const x =
+                event.touches[0].clientX;
 
-            const touch =
-                touches[0];
+            const y =
+                event.touches[0].clientY;
 
 
             const dx =
-                touch.clientX -
-                lastX;
-
+                x - startX;
 
             const dy =
-                touch.clientY -
-                lastY;
+                y - startY;
 
 
-            moveObjectByScreen(
-                selectedObject,
-                dx,
-                dy
-            );
+            /*
+             * 画面移動量を3D空間へ変換
+             */
+
+            selectedObject.position.x +=
+                dx * 0.002;
 
 
-            lastX =
-                touch.clientX;
+            selectedObject.position.y -=
+                dy * 0.002;
 
 
-            lastY =
-                touch.clientY;
+            startX = x;
+            startY = y;
 
         }
 
 
-        /*
-         * =====================================
-         * 2本指
-         * =====================================
-         */
+        /* -----------------------------------------
+           2本指
+        ----------------------------------------- */
 
-        if (
-            touches.length === 2
+        else if (
+            event.touches.length === 2
         ) {
 
+            const dx =
+                event.touches[0].clientX -
+                event.touches[1].clientX;
 
-            const t1 =
-                touches[0];
+            const dy =
+                event.touches[0].clientY -
+                event.touches[1].clientY;
 
-
-            const t2 =
-                touches[1];
-
-
-            /*
-             * 拡大・縮小
-             */
 
             const distance =
-                getDistance(
-                    t1,
-                    t2
+                Math.sqrt(
+                    dx * dx +
+                    dy * dy
                 );
 
 
-            if (
-                pinchStartDistance > 0
-            ) {
+            /*
+             * ピンチ
+             */
 
+            if (startDistance > 0) {
 
                 const ratio =
                     distance /
-                    pinchStartDistance;
+                    startDistance;
 
 
                 let newScale =
-                    pinchStartScale *
-                    ratio;
+                    startScale * ratio;
 
+
+                /*
+                 * サイズ上限・下限
+                 *
+                 * 最初は0.25
+                 *
+                 * 小さすぎない
+                 * 大きすぎない
+                 */
 
                 newScale =
-                    THREE.MathUtils.clamp(
-                        newScale,
+                    Math.max(
                         0.08,
-                        2.5
+                        Math.min(
+                            newScale,
+                            0.7
+                        )
                     );
 
 
@@ -1386,206 +942,48 @@ renderer.domElement.addEventListener(
              */
 
             const angle =
-                getAngle(
-                    t1,
-                    t2
+                Math.atan2(
+                    dy,
+                    dx
                 );
 
 
-            const angleDelta =
+            const rotationDelta =
                 angle -
-                rotateStartAngle;
+                startAngle;
 
 
             selectedObject.rotation.y =
-                rotateStartY -
-                angleDelta;
+                startRotation +
+                rotationDelta;
 
         }
 
     },
-
     {
         passive: false
     }
-
 );
 
 
-// =========================================================
-// Touch end
-// =========================================================
+/* =========================================================
+   タッチ終了
+========================================================= */
 
 renderer.domElement.addEventListener(
-
     "touchend",
+    () => {
 
-    (event) => {
+        dragging =
+            false;
 
-
-        event.preventDefault();
-
-
-        if (
-            event.touches.length === 0
-        ) {
-
-
-            selectedObject =
-                null;
-
-
-            pinchStartDistance =
-                0;
-
-        }
-
-    },
-
-    {
-        passive: false
     }
-
 );
 
 
-// =========================================================
-// Distance
-// =========================================================
-
-function getDistance(
-    a,
-    b
-) {
-
-
-    const dx =
-        a.clientX -
-        b.clientX;
-
-
-    const dy =
-        a.clientY -
-        b.clientY;
-
-
-    return Math.sqrt(
-        dx * dx +
-        dy * dy
-    );
-
-}
-
-
-// =========================================================
-// Angle
-// =========================================================
-
-function getAngle(
-    a,
-    b
-) {
-
-
-    return Math.atan2(
-
-        b.clientY -
-        a.clientY,
-
-        b.clientX -
-        a.clientX
-
-    );
-
-}
-
-
-// =========================================================
-// Move object
-// =========================================================
-
-function moveObjectByScreen(
-    object,
-    dx,
-    dy
-) {
-
-
-    const cameraPosition =
-        new THREE.Vector3();
-
-
-    camera.getWorldPosition(
-        cameraPosition
-    );
-
-
-    const distance =
-        cameraPosition.distanceTo(
-            object.position
-        );
-
-
-    /*
-     * 画面右方向
-     */
-
-    const right =
-        new THREE.Vector3();
-
-
-    right.setFromMatrixColumn(
-        camera.matrixWorld,
-        0
-    );
-
-
-    /*
-     * 画面上方向
-     */
-
-    const up =
-        new THREE.Vector3();
-
-
-    up.setFromMatrixColumn(
-        camera.matrixWorld,
-        1
-    );
-
-
-    /*
-     * ドラッグ感度
-     */
-
-    const scale =
-        distance *
-        0.0015;
-
-
-    object.position.add(
-
-        right.multiplyScalar(
-            dx * scale
-        )
-
-    );
-
-
-    object.position.add(
-
-        up.multiplyScalar(
-            -dy * scale
-        )
-
-    );
-
-}
-
-
-// =========================================================
-// 写真撮影
-// =========================================================
+/* =========================================================
+   写真ボタン
+========================================================= */
 
 const photoButton =
     document.getElementById(
@@ -1593,220 +991,60 @@ const photoButton =
     );
 
 
-photoButton.addEventListener(
-    "click",
-    takePhoto
-);
-
-
-// =========================================================
-// 画面キャプチャによる撮影
-// =========================================================
-
-async function takePhoto() {
-
-
-    const message =
-        document.getElementById(
-            "photo-message"
-        );
-
-
-    /*
-     * まず案内
-     */
-
-    message.textContent =
-        "📸 画面を撮影します…";
-
-
-    message.classList.add(
-        "show"
+const photoMessage =
+    document.getElementById(
+        "photo-message"
     );
 
 
-    try {
-
-
-        /*
-         * ブラウザの画面共有を利用
-         */
-
-        const stream =
-            await navigator.mediaDevices
-                .getDisplayMedia({
-
-                    video: {
-                        frameRate: 30
-                    },
-
-                    audio: false
-
-                });
-
-
-        const video =
-            document.createElement(
-                "video"
-            );
-
-
-        video.srcObject =
-            stream;
-
-
-        video.muted =
-            true;
-
-
-        await video.play();
-
+photoButton.addEventListener(
+    "click",
+    () => {
 
         /*
-         * 少し待ってフレームを取得
+         * WebXRのカメラ映像そのものを
+         * JavaScriptからCanvasへ取得することは
+         * Android Chromeでは安定してできません。
+         *
+         * そのため今回は
+         * 「端末のスクリーンショットを使う」
+         * 方式にしています。
          */
 
-        await new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    300
-                )
+        photoMessage.textContent =
+            "📸 この画面をスマホのスクリーンショットで撮影してください";
+
+        photoMessage.classList.add(
+            "show"
         );
-
-
-        const canvas =
-            document.createElement(
-                "canvas"
-            );
-
-
-        canvas.width =
-            video.videoWidth;
-
-
-        canvas.height =
-            video.videoHeight;
-
-
-        const ctx =
-            canvas.getContext(
-                "2d"
-            );
-
-
-        ctx.drawImage(
-            video,
-            0,
-            0
-        );
-
-
-        /*
-         * 停止
-         */
-
-        stream
-            .getTracks()
-            .forEach(
-                track =>
-                    track.stop()
-            );
-
-
-        video.srcObject =
-            null;
-
-
-        /*
-         * 画像化
-         */
-
-        const image =
-            canvas.toDataURL(
-                "image/png"
-            );
-
-
-        /*
-         * ダウンロード
-         */
-
-        const link =
-            document.createElement(
-                "a"
-            );
-
-
-        link.href =
-            image;
-
-
-        link.download =
-            "halloween-ar-photo.png";
-
-
-        link.click();
-
-
-        message.textContent =
-            "📸 写真を保存しました！";
 
 
         setTimeout(
             () => {
 
-                message.classList.remove(
+                photoMessage.classList.remove(
                     "show"
                 );
 
             },
-            1800
-        );
-
-
-    } catch (error) {
-
-
-        console.error(
-            "撮影エラー:",
-            error
-        );
-
-
-        message.textContent =
-            "📱 画面キャプチャをキャンセルしました";
-
-
-        setTimeout(
-            () => {
-
-                message.classList.remove(
-                    "show"
-                );
-
-            },
-            1800
+            3000
         );
 
     }
+);
 
-}
 
-
-// =========================================================
-// Resize
-// =========================================================
+/* =========================================================
+   リサイズ
+========================================================= */
 
 window.addEventListener(
     "resize",
     () => {
 
-
         camera.aspect =
             window.innerWidth /
             window.innerHeight;
-
 
         camera.updateProjectionMatrix();
 
@@ -1820,134 +1058,193 @@ window.addEventListener(
 );
 
 
-// =========================================================
-// XR session
-// =========================================================
+/* =========================================================
+   WebXRフレーム処理
+========================================================= */
 
-renderer.xr.addEventListener(
-    "sessionstart",
-    () => {
+renderer.setAnimationLoop(
+    (timestamp, frame) => {
 
+        if (frame) {
 
-        console.log(
-            "AR session started"
-        );
-
-    }
-);
+            const session =
+                renderer.xr.getSession();
 
 
-// =========================================================
-// XR終了
-// =========================================================
-
-renderer.xr.addEventListener(
-    "sessionend",
-    () => {
+            const referenceSpace =
+                renderer.xr.getReferenceSpace();
 
 
-        for (
-            const key of modelKeys
-        ) {
-
-
-            const data =
-                models[key];
-
+            /*
+             * Hit Testの準備
+             */
 
             if (
-                data.object
+                !hitTestSourceRequested
             ) {
 
+                session
+                    .requestReferenceSpace(
+                        "viewer"
+                    )
+                    .then(
+                        referenceSpace => {
 
-                data.object.visible =
-                    false;
+                            return session
+                                .requestHitTestSource({
+                                    space:
+                                        referenceSpace
+                                });
+
+                        }
+                    )
+                    .then(
+                        source => {
+
+                            hitTestSource =
+                                source;
+
+                        }
+                    );
+
+
+                session.addEventListener(
+                    "end",
+                    () => {
+
+                        hitTestSourceRequested =
+                            false;
+
+                        hitTestSource =
+                            null;
+
+                    }
+                );
+
+
+                hitTestSourceRequested =
+                    true;
 
             }
 
 
-            data.visible =
-                false;
+            /*
+             * 床・地面を検出
+             */
+
+            if (hitTestSource) {
+
+                const hitTestResults =
+                    frame.getHitTestResults(
+                        hitTestSource
+                    );
 
 
-            const button =
-                document.querySelector(
-                    `[data-model="${key}"]`
-                );
+                if (
+                    hitTestResults.length > 0
+                ) {
+
+                    const hit =
+                        hitTestResults[0];
 
 
-            if (
-                button
-            ) {
+                    const pose =
+                        hit.getPose(
+                            referenceSpace
+                        );
 
 
-                button.classList.remove(
-                    "active"
-                );
+                    reticle.visible =
+                        true;
+
+
+                    reticle.matrix.fromArray(
+                        pose.transform.matrix
+                    );
+
+                }
+
+                else {
+
+                    reticle.visible =
+                        false;
+
+                }
 
             }
 
         }
 
+
+        renderer.render(
+            scene,
+            camera
+        );
+
     }
 );
 
 
-// =========================================================
-// Animation
-// =========================================================
+/* =========================================================
+   画面タップでモデルをレティクル位置へ配置
+========================================================= */
 
-const clock =
-    new THREE.Clock();
+renderer.domElement.addEventListener(
+    "click",
+    event => {
 
+        /*
+         * 下部ボタンなどのクリックは除外
+         */
 
-function animate() {
+        if (
+            event.clientY >
+            window.innerHeight - 110
+        ) {
 
+            return;
 
-    /*
-     * モデルそのものの位置を
-     * 毎フレーム変更しない
-     *
-     * → ユーザーが動かした位置を維持
-     */
-
-    renderer.render(
-        scene,
-        camera
-    );
-
-}
+        }
 
 
-renderer.setAnimationLoop(
-    animate
-);
+        if (
+            !selectedObject ||
+            !reticle.visible
+        ) {
+
+            return;
+
+        }
 
 
-// =========================================================
-// WebXRチェック
-// =========================================================
+        /*
+         * レティクル位置へ移動
+         */
 
-if (
-    !navigator.xr
-) {
+        const position =
+            new THREE.Vector3();
 
 
-    const message =
-        document.getElementById(
-            "message"
+        position.setFromMatrixPosition(
+            reticle.matrix
         );
 
 
-    message.innerHTML =
-        "この端末・ブラウザではARを利用できません。<br><br>AndroidではChromeをお試しください。";
+        selectedObject.position.copy(
+            position
+        );
 
 
-    message.classList.add(
-        "show"
-    );
+        /*
+         * 少し浮かせる
+         */
 
-}
+        selectedObject.position.y +=
+            0.02;
+
+    }
+);
+
 
 </script>
 
