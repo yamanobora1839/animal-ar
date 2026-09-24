@@ -2,6 +2,7 @@
 <html lang="ja">
 
 <head>
+
 <meta charset="UTF-8">
 
 <meta
@@ -14,7 +15,12 @@
 
 <title>🎃 ハロウィン顔出しAR</title>
 
+
 <style>
+
+/* =========================================================
+   基本
+========================================================= */
 
 * {
     box-sizing: border-box;
@@ -22,53 +28,67 @@
 
 html,
 body {
+
     margin: 0;
     padding: 0;
+
     width: 100%;
     height: 100%;
+
     overflow: hidden;
+
     background: #000;
+
     font-family:
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
+
+    touch-action: none;
 }
 
 
 /* =========================================================
-   AR画面
+   AR本体
 ========================================================= */
 
 #ar-container {
+
     position: fixed;
+
     inset: 0;
+
     width: 100%;
     height: 100%;
+
     overflow: hidden;
+
+    z-index: 1;
 }
 
 
-/* Three.js canvas */
-
 canvas {
+
     position: fixed !important;
+
     inset: 0 !important;
+
     width: 100% !important;
     height: 100% !important;
+
 }
 
 
 /* =========================================================
-   AR画像を置く場所
+   画像レイヤー
 ========================================================= */
 
-#image-layer {
+#object-layer {
 
     position: fixed;
 
-    left: 0;
-    top: 0;
+    inset: 0;
 
     width: 100%;
     height: 100%;
@@ -80,10 +100,10 @@ canvas {
 
 
 /* =========================================================
-   AR画像
+   配置する画像
 ========================================================= */
 
-.ar-image {
+.ar-object {
 
     position: absolute;
 
@@ -106,52 +126,29 @@ canvas {
 
     pointer-events: auto;
 
+    object-fit: contain;
+
     cursor: move;
+
 }
 
 
-/* 選択中 */
+/* =========================================================
+   選択中
+========================================================= */
 
-.ar-image.selected {
+.ar-object.selected {
 
     outline: 3px solid white;
 
     outline-offset: 3px;
 
     filter:
-        drop-shadow(0 0 3px rgba(0,0,0,0.8));
+        drop-shadow(
+            0 0 4px
+            rgba(0,0,0,0.9)
+        );
 
-}
-
-
-/* =========================================================
-   固定フレーム
-========================================================= */
-
-#frame-layer {
-
-    position: fixed;
-
-    left: 0;
-    top: 0;
-
-    width: 100%;
-    height: 100%;
-
-    pointer-events: none;
-
-    z-index: 30;
-}
-
-
-#frame-image {
-
-    width: 100%;
-    height: 100%;
-
-    object-fit: fill;
-
-    display: none;
 }
 
 
@@ -163,22 +160,26 @@ canvas {
 
     position: fixed;
 
-    top: 12px;
+    top: 10px;
+
     left: 50%;
 
-    transform: translateX(-50%);
+    transform:
+        translateX(-50%);
 
     z-index: 100;
 
     color: white;
 
-    background: rgba(0,0,0,0.55);
+    background:
+        rgba(0,0,0,0.55);
 
-    padding: 8px 16px;
+    padding:
+        7px 14px;
 
     border-radius: 20px;
 
-    font-size: 16px;
+    font-size: 15px;
 
     white-space: nowrap;
 
@@ -187,26 +188,67 @@ canvas {
 
 
 /* =========================================================
-   操作ボタン
+   操作説明
 ========================================================= */
+
+#photo-guide {
+
+    position: fixed;
+
+    top: 52px;
+
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    z-index: 100;
+
+    color: white;
+
+    background:
+        rgba(0,0,0,0.45);
+
+    padding:
+        5px 11px;
+
+    border-radius: 15px;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   下部操作エリア
+========================================================= */
+
+/*
+   STOP ARと重ならないように
+   画面下から十分離す
+*/
 
 #controls {
 
     position: fixed;
 
     left: 0;
-     bottom: 70px;
+
+    bottom: 72px;
 
     width: 100%;
 
     padding:
-        10px
-        8px
-        calc(10px + env(safe-area-inset-bottom));
+        6px 8px;
 
     display: flex;
 
     justify-content: center;
+
+    align-items: center;
 
     gap: 6px;
 
@@ -214,14 +256,14 @@ canvas {
 
     z-index: 200;
 
-    background:
-        linear-gradient(
-            to top,
-            rgba(0,0,0,0.75),
-            rgba(0,0,0,0)
-        );
+    pointer-events: auto;
+
 }
 
+
+/* =========================================================
+   操作ボタン
+========================================================= */
 
 .control-button {
 
@@ -229,26 +271,31 @@ canvas {
 
     border-radius: 14px;
 
-    padding: 10px 13px;
+    padding:
+        9px 12px;
 
-    background: rgba(40,40,40,0.88);
+    background:
+        rgba(30,30,30,0.90);
 
     color: white;
 
-    font-size: 14px;
+    font-size: 13px;
 
     font-weight: bold;
 
     box-shadow:
-        0 2px 8px rgba(0,0,0,0.35);
+        0 2px 8px
+        rgba(0,0,0,0.4);
 
     touch-action: manipulation;
+
 }
 
 
 .control-button:active {
 
-    transform: scale(0.94);
+    transform:
+        scale(0.94);
 
 }
 
@@ -266,18 +313,18 @@ canvas {
 
     width: 100%;
 
-    max-height: 48vh;
+    max-height: 55vh;
 
     overflow-y: auto;
 
-    z-index: 300;
+    z-index: 500;
 
     display: none;
 
     padding: 12px;
 
     background:
-        rgba(20,20,20,0.96);
+        rgba(20,20,20,0.97);
 
     border-radius:
         18px
@@ -285,23 +332,34 @@ canvas {
         0
         0;
 
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling:
+        touch;
+
 }
 
+
+/* =========================================================
+   パネルタイトル
+========================================================= */
 
 #picker-title {
 
     color: white;
 
+    text-align: center;
+
     font-weight: bold;
 
-    text-align: center;
+    font-size: 16px;
 
     margin-bottom: 10px;
 
-    font-size: 16px;
 }
 
+
+/* =========================================================
+   サムネイル
+========================================================= */
 
 #picker-grid {
 
@@ -311,6 +369,7 @@ canvas {
         repeat(5, 1fr);
 
     gap: 8px;
+
 }
 
 
@@ -331,15 +390,21 @@ canvas {
     border: 2px solid transparent;
 
     touch-action: manipulation;
+
 }
 
 
 .thumbnail:active {
 
-    transform: scale(0.94);
+    transform:
+        scale(0.94);
 
 }
 
+
+/* =========================================================
+   閉じる
+========================================================= */
 
 .close-picker {
 
@@ -362,37 +427,7 @@ canvas {
     font-size: 15px;
 
     font-weight: bold;
-}
 
-
-/* =========================================================
-   撮影案内
-========================================================= */
-
-#photo-guide {
-
-    position: fixed;
-
-    left: 50%;
-    top: 62px;
-
-    transform: translateX(-50%);
-
-    z-index: 90;
-
-    color: white;
-
-    background: rgba(0,0,0,0.55);
-
-    padding: 7px 13px;
-
-    border-radius: 18px;
-
-    font-size: 13px;
-
-    white-space: nowrap;
-
-    pointer-events: none;
 }
 
 
@@ -408,14 +443,6 @@ canvas {
 
     z-index: 1000;
 
-    background:
-        linear-gradient(
-            135deg,
-            #16001f,
-            #3d063d,
-            #12001b
-        );
-
     display: flex;
 
     align-items: center;
@@ -424,14 +451,24 @@ canvas {
 
     padding: 20px;
 
+    background:
+        linear-gradient(
+            135deg,
+            #16001f,
+            #3d063d,
+            #12001b
+        );
+
 }
 
 
 #start-box {
 
-    width: min(90vw, 420px);
+    width:
+        min(90vw, 420px);
 
-    background: rgba(0,0,0,0.72);
+    background:
+        rgba(0,0,0,0.75);
 
     color: white;
 
@@ -442,28 +479,28 @@ canvas {
     text-align: center;
 
     box-shadow:
-        0 10px 40px rgba(0,0,0,0.5);
+        0 10px 40px
+        rgba(0,0,0,0.5);
+
 }
 
 
 #start-box h1 {
 
+    margin:
+        0 0 15px;
+
     font-size: 24px;
 
-    margin:
-        0
-        0
-        15px;
 }
 
 
 #start-box p {
 
-    line-height: 1.7;
-
     font-size: 14px;
 
-    margin-bottom: 20px;
+    line-height: 1.7;
+
 }
 
 
@@ -473,7 +510,8 @@ canvas {
 
     border-radius: 18px;
 
-    padding: 14px 25px;
+    padding:
+        14px 25px;
 
     background: #ff7a00;
 
@@ -493,20 +531,11 @@ canvas {
     font-size: 12px;
 
     opacity: 0.8;
-}
-
-
-/* =========================================================
-   ARボタン
-========================================================= */
-
-button {
-
-    font-family: inherit;
 
 }
 
 </style>
+
 </head>
 
 
@@ -514,37 +543,22 @@ button {
 
 
 <!-- =======================================================
-     AR本体
-======================================================== -->
+     AR
+======================================================= -->
 
 <div id="ar-container"></div>
 
 
 <!-- =======================================================
-     AR画像レイヤー
-======================================================== -->
+     配置画像
+======================================================= -->
 
-<div id="image-layer"></div>
-
-
-<!-- =======================================================
-     固定フレーム
-======================================================== -->
-
-<div id="frame-layer">
-
-    <img
-        id="frame-image"
-        src=""
-        alt=""
-    >
-
-</div>
+<div id="object-layer"></div>
 
 
 <!-- =======================================================
      タイトル
-======================================================== -->
+======================================================= -->
 
 <div id="top-title">
 
@@ -555,14 +569,14 @@ button {
 
 <div id="photo-guide">
 
-    📱 完成したらスクリーンショット！
+    👆移動　✌️拡大・縮小・回転　📱完成したらスクショ！
 
 </div>
 
 
 <!-- =======================================================
      操作ボタン
-======================================================== -->
+======================================================= -->
 
 <div id="controls">
 
@@ -573,6 +587,7 @@ button {
         🎃 画像
     </button>
 
+
     <button
         class="control-button"
         id="frame-button"
@@ -580,12 +595,14 @@ button {
         🖼️ フレーム
     </button>
 
+
     <button
         class="control-button"
         id="delete-button"
     >
         🗑️ 1枚削除
     </button>
+
 
     <button
         class="control-button"
@@ -599,7 +616,7 @@ button {
 
 <!-- =======================================================
      画像選択パネル
-======================================================== -->
+======================================================= -->
 
 <div id="picker">
 
@@ -607,7 +624,9 @@ button {
         🎃 追加する画像を選んでください
     </div>
 
+
     <div id="picker-grid"></div>
+
 
     <button
         class="close-picker"
@@ -621,7 +640,7 @@ button {
 
 <!-- =======================================================
      スタート画面
-======================================================== -->
+======================================================= -->
 
 <div id="start-screen">
 
@@ -631,22 +650,39 @@ button {
             🎃 ハロウィン顔出しAR
         </h1>
 
+
         <p>
+
             カメラを起動して、<br>
-            好きな画像を顔のまわりに配置しよう！
+
+            好きな画像を顔のまわりに
+            配置して遊ぼう！
+
             <br><br>
+
             👆 1本指：移動<br>
+
             ✌️ 2本指：拡大・縮小・回転
+
             <br><br>
-            同じ画像も何枚でも追加できます。
+
+            同じ画像も何枚でも
+            追加できます。
+
         </p>
 
+
         <button id="start-button">
+
             📷 ARをはじめる
+
         </button>
 
+
         <div id="start-note">
+
             ※ カメラの使用を許可してください
+
         </div>
 
     </div>
@@ -656,17 +692,19 @@ button {
 
 <!-- =======================================================
      Three.js
-======================================================== -->
+======================================================= -->
 
 <script type="importmap">
 
 {
     "imports": {
+
         "three":
         "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
 
         "three/addons/":
         "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+
     }
 }
 
@@ -675,14 +713,17 @@ button {
 
 <script type="module">
 
-import * as THREE from "three";
+import * as THREE
+    from "three";
 
-import { ARButton }
-    from "three/addons/webxr/ARButton.js";
+import {
+    ARButton
+}
+from "three/addons/webxr/ARButton.js";
 
 
 /* =========================================================
-   画像一覧
+   通常画像
 ========================================================= */
 
 const AR_IMAGES = [
@@ -728,7 +769,7 @@ const AR_IMAGES = [
 
 
 /* =========================================================
-   固定フレーム
+   フレーム
 ========================================================= */
 
 const FRAMES = [
@@ -755,7 +796,8 @@ const scene =
 const camera =
     new THREE.PerspectiveCamera(
         70,
-        window.innerWidth / window.innerHeight,
+        window.innerWidth /
+        window.innerHeight,
         0.01,
         20
     );
@@ -774,7 +816,10 @@ const renderer =
 
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
 );
 
 
@@ -789,7 +834,9 @@ renderer.xr.enabled = true;
 
 document
     .getElementById("ar-container")
-    .appendChild(renderer.domElement);
+    .appendChild(
+        renderer.domElement
+    );
 
 
 /* =========================================================
@@ -813,31 +860,28 @@ const arButton =
     );
 
 
-arButton.style.display = "none";
+/*
+   Three.jsのSTOP ARは画面最下部。
+   自作ボタンはその上に配置。
+*/
 
-document.body.appendChild(arButton);
+arButton.style.position =
+    "fixed";
 
+arButton.style.bottom =
+    "10px";
 
-/* =========================================================
-   リサイズ
-========================================================= */
+arButton.style.left =
+    "50%";
 
-window.addEventListener(
-    "resize",
-    () => {
+arButton.style.transform =
+    "translateX(-50%)";
 
-        camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
+arButton.style.zIndex =
+    "400";
 
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
-        );
-
-    }
+document.body.appendChild(
+    arButton
 );
 
 
@@ -857,15 +901,9 @@ const startButton =
     );
 
 
-const imageLayer =
+const objectLayer =
     document.getElementById(
-        "image-layer"
-    );
-
-
-const frameImage =
-    document.getElementById(
-        "frame-image"
+        "object-layer"
     );
 
 
@@ -921,74 +959,165 @@ const closePicker =
    状態
 ========================================================= */
 
-let selectedImage = null;
+let selectedObject = null;
 
-let pickerMode = "image";
+let objectCounter = 0;
 
-let imageCounter = 0;
+let currentMode = "image";
 
 
 /* =========================================================
    画像追加
 ========================================================= */
 
-function addImage(filename) {
+function addObject(
+    filename,
+    type = "image"
+) {
 
     const img =
-        document.createElement("img");
+        document.createElement(
+            "img"
+        );
+
 
     img.src = filename;
 
-    img.className = "ar-image";
+
+    img.className =
+        "ar-object";
+
 
     img.draggable = false;
 
-    img.dataset.x = "50";
-    img.dataset.y = "50";
 
-    img.dataset.scale = "1";
-    img.dataset.rotation = "0";
+    img.dataset.type =
+        type;
+
+
+    img.dataset.x =
+        "50";
+
+
+    img.dataset.y =
+        type === "frame"
+            ? "50"
+            : "50";
+
+
+    img.dataset.scale =
+        type === "frame"
+            ? "1"
+            : "1";
+
+
+    img.dataset.rotation =
+        "0";
+
 
     img.dataset.id =
-        "image-" + imageCounter++;
+        "object-" +
+        objectCounter++;
 
-    imageLayer.appendChild(img);
 
-    selectImage(img);
+    /*
+       フレームは少し大きめ
+    */
 
-    setupImageTouch(img);
+    if (type === "frame") {
+
+        img.style.width =
+            "90vw";
+
+    }
+    else {
+
+        img.style.width =
+            "180px";
+
+    }
+
+
+    objectLayer.appendChild(
+        img
+    );
+
+
+    /*
+       フレームは1枚だけ
+    */
+
+    if (type === "frame") {
+
+        document
+            .querySelectorAll(
+                '.ar-object[data-type="frame"]'
+            )
+            .forEach(
+                oldFrame => {
+
+                    if (
+                        oldFrame !== img
+                    ) {
+
+                        oldFrame.remove();
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    updateTransform(img);
+
+    selectObject(img);
+
+    setupTouch(img);
 
 }
 
 
 /* =========================================================
-   画像選択
+   選択
 ========================================================= */
 
-function selectImage(img) {
+function selectObject(
+    object
+) {
 
     document
-        .querySelectorAll(".ar-image")
-        .forEach(item => {
+        .querySelectorAll(
+            ".ar-object"
+        )
+        .forEach(
+            item => {
 
-            item.classList.remove(
-                "selected"
-            );
+                item.classList.remove(
+                    "selected"
+                );
 
-        });
-
-
-    selectedImage = img;
+            }
+        );
 
 
-    if (selectedImage) {
+    selectedObject =
+        object;
 
-        selectedImage.classList.add(
+
+    if (object) {
+
+        object.classList.add(
             "selected"
         );
 
-        selectedImage.style.zIndex =
-            String(50 + imageCounter);
+
+        object.style.zIndex =
+            String(
+                100 +
+                objectCounter
+            );
 
     }
 
@@ -996,32 +1125,47 @@ function selectImage(img) {
 
 
 /* =========================================================
-   画像位置更新
+   Transform
 ========================================================= */
 
-function updateTransform(img) {
+function updateTransform(
+    object
+) {
 
     const x =
-        parseFloat(img.dataset.x);
+        parseFloat(
+            object.dataset.x
+        );
+
 
     const y =
-        parseFloat(img.dataset.y);
+        parseFloat(
+            object.dataset.y
+        );
+
 
     const scale =
-        parseFloat(img.dataset.scale);
+        parseFloat(
+            object.dataset.scale
+        );
+
 
     const rotation =
-        parseFloat(img.dataset.rotation);
+        parseFloat(
+            object.dataset.rotation
+        );
 
 
-    img.style.left =
+    object.style.left =
         x + "%";
 
-    img.style.top =
+
+    object.style.top =
         y + "%";
 
 
-    img.style.transform =
+    object.style.transform =
+
         `
         translate(-50%, -50%)
         scale(${scale})
@@ -1035,7 +1179,9 @@ function updateTransform(img) {
    タッチ操作
 ========================================================= */
 
-function setupImageTouch(img) {
+function setupTouch(
+    object
+) {
 
     const pointers =
         new Map();
@@ -1044,96 +1190,123 @@ function setupImageTouch(img) {
     let startX = 0;
     let startY = 0;
 
-    let startImgX = 0;
-    let startImgY = 0;
+
+    let startObjectX = 0;
+    let startObjectY = 0;
+
 
     let startDistance = 0;
+
     let startAngle = 0;
 
+
     let startScale = 1;
+
     let startRotation = 0;
 
 
-    img.addEventListener(
+    /* -----------------------------------------------------
+       pointer down
+    ----------------------------------------------------- */
+
+    object.addEventListener(
         "pointerdown",
         event => {
 
             event.preventDefault();
 
-            selectImage(img);
+            event.stopPropagation();
 
-            img.setPointerCapture(
+
+            selectObject(
+                object
+            );
+
+
+            object.setPointerCapture(
                 event.pointerId
             );
+
 
             pointers.set(
                 event.pointerId,
                 {
-                    x: event.clientX,
-                    y: event.clientY
+
+                    x:
+                        event.clientX,
+
+                    y:
+                        event.clientY
+
                 }
             );
 
 
-            /* -----------------------------------------
+            /* ---------------------------------------------
                1本指
-            ----------------------------------------- */
+            --------------------------------------------- */
 
-            if (pointers.size === 1) {
+            if (
+                pointers.size === 1
+            ) {
 
                 startX =
                     event.clientX;
+
 
                 startY =
                     event.clientY;
 
 
-                startImgX =
+                startObjectX =
                     parseFloat(
-                        img.dataset.x
+                        object.dataset.x
                     );
 
-                startImgY =
+
+                startObjectY =
                     parseFloat(
-                        img.dataset.y
+                        object.dataset.y
                     );
 
             }
 
 
-            /* -----------------------------------------
+            /* ---------------------------------------------
                2本指
-            ----------------------------------------- */
+            --------------------------------------------- */
 
-            if (pointers.size === 2) {
+            if (
+                pointers.size === 2
+            ) {
 
-                const pts =
+                const points =
                     [...pointers.values()];
 
 
                 startDistance =
-                    distance(
-                        pts[0],
-                        pts[1]
+                    getDistance(
+                        points[0],
+                        points[1]
                     );
 
 
                 startAngle =
-                    angle(
-                        pts[0],
-                        pts[1]
+                    getAngle(
+                        points[0],
+                        points[1]
                     );
 
 
                 startScale =
                     parseFloat(
-                        img.dataset.scale
+                        object.dataset.scale
                     );
 
 
                 startRotation =
                     parseFloat(
-                        img.dataset.rotation
+                        object.dataset.rotation
                     );
 
             }
@@ -1142,7 +1315,11 @@ function setupImageTouch(img) {
     );
 
 
-    img.addEventListener(
+    /* -----------------------------------------------------
+       pointer move
+    ----------------------------------------------------- */
+
+    object.addEventListener(
         "pointermove",
         event => {
 
@@ -1151,28 +1328,41 @@ function setupImageTouch(img) {
                     event.pointerId
                 )
             ) {
+
                 return;
+
             }
+
+
+            event.preventDefault();
 
 
             pointers.set(
                 event.pointerId,
                 {
-                    x: event.clientX,
-                    y: event.clientY
+
+                    x:
+                        event.clientX,
+
+                    y:
+                        event.clientY
+
                 }
             );
 
 
-            /* -----------------------------------------
+            /* ---------------------------------------------
                1本指：移動
-            ----------------------------------------- */
+            --------------------------------------------- */
 
-            if (pointers.size === 1) {
+            if (
+                pointers.size === 1
+            ) {
 
                 const dx =
                     event.clientX -
                     startX;
+
 
                 const dy =
                     event.clientY -
@@ -1191,48 +1381,54 @@ function setupImageTouch(img) {
                     100;
 
 
-                img.dataset.x =
+                object.dataset.x =
                     String(
-                        startImgX +
+                        startObjectX +
                         percentX
                     );
 
 
-                img.dataset.y =
+                object.dataset.y =
                     String(
-                        startImgY +
+                        startObjectY +
                         percentY
                     );
 
 
-                updateTransform(img);
+                updateTransform(
+                    object
+                );
 
             }
 
 
-            /* -----------------------------------------
-               2本指：拡大縮小＋回転
-            ----------------------------------------- */
+            /* ---------------------------------------------
+               2本指
+            --------------------------------------------- */
 
-            if (pointers.size === 2) {
+            if (
+                pointers.size === 2
+            ) {
 
-                const pts =
+                const points =
                     [...pointers.values()];
 
 
                 const currentDistance =
-                    distance(
-                        pts[0],
-                        pts[1]
+                    getDistance(
+                        points[0],
+                        points[1]
                     );
 
 
                 const currentAngle =
-                    angle(
-                        pts[0],
-                        pts[1]
+                    getAngle(
+                        points[0],
+                        points[1]
                     );
 
+
+                /* 拡大縮小 */
 
                 if (
                     startDistance > 0
@@ -1248,7 +1444,7 @@ function setupImageTouch(img) {
 
                     newScale =
                         Math.max(
-                            0.2,
+                            0.15,
                             Math.min(
                                 5,
                                 newScale
@@ -1256,25 +1452,31 @@ function setupImageTouch(img) {
                         );
 
 
-                    img.dataset.scale =
-                        String(newScale);
+                    object.dataset.scale =
+                        String(
+                            newScale
+                        );
 
                 }
 
+
+                /* 回転 */
 
                 const angleDifference =
                     currentAngle -
                     startAngle;
 
 
-                img.dataset.rotation =
+                object.dataset.rotation =
                     String(
                         startRotation +
                         angleDifference
                     );
 
 
-                updateTransform(img);
+                updateTransform(
+                    object
+                );
 
             }
 
@@ -1282,7 +1484,11 @@ function setupImageTouch(img) {
     );
 
 
-    img.addEventListener(
+    /* -----------------------------------------------------
+       pointer up
+    ----------------------------------------------------- */
+
+    object.addEventListener(
         "pointerup",
         event => {
 
@@ -1294,7 +1500,11 @@ function setupImageTouch(img) {
     );
 
 
-    img.addEventListener(
+    /* -----------------------------------------------------
+       pointer cancel
+    ----------------------------------------------------- */
+
+    object.addEventListener(
         "pointercancel",
         event => {
 
@@ -1306,13 +1516,21 @@ function setupImageTouch(img) {
     );
 
 
-    img.addEventListener(
+    /* -----------------------------------------------------
+       click
+    ----------------------------------------------------- */
+
+    object.addEventListener(
         "click",
         event => {
 
+            event.preventDefault();
+
             event.stopPropagation();
 
-            selectImage(img);
+            selectObject(
+                object
+            );
 
         }
     );
@@ -1324,7 +1542,10 @@ function setupImageTouch(img) {
    2点間距離
 ========================================================= */
 
-function distance(a, b) {
+function getDistance(
+    a,
+    b
+) {
 
     return Math.hypot(
         b.x - a.x,
@@ -1338,28 +1559,39 @@ function distance(a, b) {
    2点間角度
 ========================================================= */
 
-function angle(a, b) {
+function getAngle(
+    a,
+    b
+) {
 
-    return Math.atan2(
-        b.y - a.y,
-        b.x - a.x
-    ) * 180 / Math.PI;
+    return (
+        Math.atan2(
+            b.y - a.y,
+            b.x - a.x
+        ) *
+        180 /
+        Math.PI
+    );
 
 }
 
 
 /* =========================================================
-   画像選択パネル生成
+   画像選択画面
 ========================================================= */
 
 function showImagePicker() {
 
-    pickerMode = "image";
+    currentMode =
+        "image";
+
 
     pickerTitle.textContent =
         "🎃 追加する画像を選んでください";
 
-    pickerGrid.innerHTML = "";
+
+    pickerGrid.innerHTML =
+        "";
 
 
     AR_IMAGES.forEach(
@@ -1370,7 +1602,10 @@ function showImagePicker() {
                     "img"
                 );
 
-            img.src = filename;
+
+            img.src =
+                filename;
+
 
             img.className =
                 "thumbnail";
@@ -1380,15 +1615,21 @@ function showImagePicker() {
                 "click",
                 () => {
 
-                    addImage(filename);
+                    addObject(
+                        filename,
+                        "image"
+                    );
 
-                    closePickerPanel();
+
+                    closePicker();
 
                 }
             );
 
 
-            pickerGrid.appendChild(img);
+            pickerGrid.appendChild(
+                img
+            );
 
         }
     );
@@ -1401,17 +1642,21 @@ function showImagePicker() {
 
 
 /* =========================================================
-   フレーム選択パネル
+   フレーム選択
 ========================================================= */
 
 function showFramePicker() {
 
-    pickerMode = "frame";
+    currentMode =
+        "frame";
+
 
     pickerTitle.textContent =
         "🖼️ フレームを選んでください";
 
-    pickerGrid.innerHTML = "";
+
+    pickerGrid.innerHTML =
+        "";
 
 
     FRAMES.forEach(
@@ -1422,7 +1667,10 @@ function showFramePicker() {
                     "img"
                 );
 
-            img.src = filename;
+
+            img.src =
+                filename;
+
 
             img.className =
                 "thumbnail";
@@ -1432,19 +1680,21 @@ function showFramePicker() {
                 "click",
                 () => {
 
-                    frameImage.src =
-                        filename;
+                    addObject(
+                        filename,
+                        "frame"
+                    );
 
-                    frameImage.style.display =
-                        "block";
 
-                    closePickerPanel();
+                    closePicker();
 
                 }
             );
 
 
-            pickerGrid.appendChild(img);
+            pickerGrid.appendChild(
+                img
+            );
 
         }
     );
@@ -1460,7 +1710,7 @@ function showFramePicker() {
    パネルを閉じる
 ========================================================= */
 
-function closePickerPanel() {
+function closePicker() {
 
     picker.style.display =
         "none";
@@ -1497,14 +1747,16 @@ frameButton.addEventListener(
 
 
 /* =========================================================
-   1枚削除
+   選択中1枚削除
 ========================================================= */
 
 deleteButton.addEventListener(
     "click",
     () => {
 
-        if (!selectedImage) {
+        if (
+            !selectedObject
+        ) {
 
             alert(
                 "削除する画像をタップして選択してください。"
@@ -1515,9 +1767,10 @@ deleteButton.addEventListener(
         }
 
 
-        selectedImage.remove();
+        selectedObject.remove();
 
-        selectedImage = null;
+        selectedObject =
+            null;
 
     }
 );
@@ -1531,46 +1784,56 @@ clearButton.addEventListener(
     "click",
     () => {
 
-        const images =
-            document.querySelectorAll(
-                ".ar-image"
+        document
+            .querySelectorAll(
+                ".ar-object"
+            )
+            .forEach(
+                object => {
+
+                    object.remove();
+
+                }
             );
 
 
-        images.forEach(
-            img => img.remove()
-        );
-
-
-        selectedImage = null;
+        selectedObject =
+            null;
 
     }
 );
 
 
 /* =========================================================
-   閉じる
+   パネル閉じる
 ========================================================= */
 
 closePicker.addEventListener(
     "click",
-    closePickerPanel
+    () => {
+
+        closePicker();
+
+    }
 );
 
 
 /* =========================================================
-   画像レイヤーをタップしたとき
+   背景をタップ
 ========================================================= */
 
-imageLayer.addEventListener(
+objectLayer.addEventListener(
     "pointerdown",
     event => {
 
         if (
-            event.target === imageLayer
+            event.target ===
+            objectLayer
         ) {
 
-            selectImage(null);
+            selectObject(
+                null
+            );
 
         }
 
@@ -1589,6 +1852,11 @@ startButton.addEventListener(
         startScreen.style.display =
             "none";
 
+
+        /*
+           ARButtonをクリック
+        */
+
         arButton.click();
 
     }
@@ -1596,7 +1864,7 @@ startButton.addEventListener(
 
 
 /* =========================================================
-   Three.jsループ
+   Three.js描画
 ========================================================= */
 
 renderer.setAnimationLoop(
@@ -1612,14 +1880,31 @@ renderer.setAnimationLoop(
 
 
 /* =========================================================
-   最初の表示
+   リサイズ
 ========================================================= */
 
-frameImage.style.display =
-    "none";
+window.addEventListener(
+    "resize",
+    () => {
 
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+    }
+);
 
 </script>
 
 </body>
+
 </html>
