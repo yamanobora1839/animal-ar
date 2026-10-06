@@ -21,18 +21,12 @@
 ========================= */
 
 * {
-
   box-sizing: border-box;
-
-  -webkit-tap-highlight-color:
-    transparent;
-
+  -webkit-tap-highlight-color: transparent;
 }
-
 
 html,
 body {
-
   margin: 0;
   padding: 0;
 
@@ -44,7 +38,6 @@ body {
   background: #000;
 
   font-family: sans-serif;
-
 }
 
 
@@ -53,7 +46,6 @@ body {
 ========================= */
 
 #camera {
-
   position: fixed;
 
   inset: 0;
@@ -66,7 +58,6 @@ body {
   z-index: 1;
 
   background: #000;
-
 }
 
 
@@ -75,14 +66,12 @@ body {
 ========================= */
 
 #panel {
-
   position: fixed;
 
   left: 50%;
   top: 50%;
 
   width: 90vw;
-
   max-width: 700px;
 
   transform:
@@ -91,61 +80,114 @@ body {
     scale(1)
     rotate(0deg);
 
-  transform-origin:
-    center center;
+  transform-origin: center center;
 
   z-index: 2;
 
   user-select: none;
-
   -webkit-user-select: none;
 
   touch-action: none;
 
   pointer-events: auto;
-
 }
 
 
 /* =========================
-   説明
+   上部説明
 ========================= */
 
 #help {
-
   position: fixed;
 
   top: 12px;
   left: 50%;
 
-  transform:
-    translateX(-50%);
+  transform: translateX(-50%);
 
   z-index: 10;
 
-  padding:
-    8px 14px;
+  padding: 8px 14px;
 
   border-radius: 20px;
 
-  background:
-    rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.55);
 
   color: white;
 
   font-size: 13px;
 
   white-space: nowrap;
-
 }
 
 
 /* =========================
-   撮影ボタン
+   パネル切り替えボタン
+========================= */
+
+#panelButtons {
+  position: fixed;
+
+  left: 0;
+  right: 0;
+
+  bottom: 78px;
+
+  z-index: 10;
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 8px;
+}
+
+
+/* =========================
+   通常ボタン
+========================= */
+
+button {
+  border: none;
+
+  border-radius: 28px;
+
+  padding: 11px 15px;
+
+  background: rgba(255,255,255,0.92);
+
+  color: #222;
+
+  font-size: 14px;
+
+  font-weight: bold;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.35);
+}
+
+
+button:active {
+  transform: scale(0.95);
+}
+
+
+/* 選択中 */
+
+.panelButton.active {
+  background: #222;
+
+  color: white;
+}
+
+
+/* =========================
+   操作ボタン
 ========================= */
 
 #controls {
-
   position: fixed;
 
   left: 0;
@@ -162,40 +204,6 @@ body {
   gap: 10px;
 
   padding: 0 10px;
-
-}
-
-
-button {
-
-  border: none;
-
-  border-radius: 28px;
-
-  padding:
-    12px 18px;
-
-  background:
-    rgba(255,255,255,0.92);
-
-  color: #222;
-
-  font-size: 15px;
-
-  font-weight: bold;
-
-  box-shadow:
-    0 2px 8px
-    rgba(0,0,0,0.35);
-
-}
-
-
-button:active {
-
-  transform:
-    scale(0.95);
-
 }
 
 
@@ -204,9 +212,7 @@ button:active {
 ========================= */
 
 #photoCanvas {
-
   display: none;
-
 }
 
 
@@ -229,7 +235,6 @@ button:active {
   align-items: center;
 
   justify-content: center;
-
 }
 
 
@@ -242,11 +247,9 @@ button:active {
   display: block;
 
   width: 100%;
-
   height: 100%;
 
   object-fit: contain;
-
 }
 
 
@@ -269,49 +272,17 @@ button:active {
 
   gap: 12px;
 
-  padding:
-    0 12px;
-
+  padding: 0 12px;
 }
 
-
-/* =========================
-   撮影後ボタン
-========================= */
 
 #previewControls button {
 
   min-width: 120px;
 
-  padding:
-    14px 20px;
+  padding: 14px 20px;
 
   font-size: 16px;
-
-}
-
-
-/* =========================
-   保存ボタン
-========================= */
-
-#saveBtn {
-
-  background:
-    rgba(255,255,255,0.95);
-
-}
-
-
-/* =========================
-   撮り直しボタン
-========================= */
-
-#retakeBtn {
-
-  background:
-    rgba(255,255,255,0.95);
-
 }
 
 </style>
@@ -350,14 +321,48 @@ button:active {
 
 <div id="help">
 
-  1本指：移動　
-  2本指：拡大・縮小・回転
+  1本指：移動　2本指：拡大・縮小・回転
 
 </div>
 
 
 <!-- =========================
-     通常操作ボタン
+     パネル切り替え
+========================= -->
+
+<div id="panelButtons">
+
+  <button
+    class="panelButton active"
+    data-image="flame50.png">
+
+    🐶🐱 犬・猫
+
+  </button>
+
+
+  <button
+    class="panelButton"
+    data-image="flame51.png">
+
+    🐶 犬
+
+  </button>
+
+
+  <button
+    class="panelButton"
+    data-image="flame52.png">
+
+    🐱 猫
+
+  </button>
+
+</div>
+
+
+<!-- =========================
+     操作ボタン
 ========================= -->
 
 <div id="controls">
@@ -365,6 +370,7 @@ button:active {
   <button id="resetBtn">
     ↩ リセット
   </button>
+
 
   <button id="photoBtn">
     📷 撮影
@@ -374,7 +380,7 @@ button:active {
 
 
 <!-- =========================
-     撮影用Canvas
+     Canvas
 ========================= -->
 
 <canvas id="photoCanvas"></canvas>
@@ -387,15 +393,11 @@ button:active {
 <div id="previewScreen">
 
 
-  <!-- 撮影した写真 -->
-
   <img
     id="previewImage"
     alt="撮影した写真"
   >
 
-
-  <!-- ボタン -->
 
   <div id="previewControls">
 
@@ -403,12 +405,12 @@ button:active {
       ↩ 撮り直す
     </button>
 
+
     <button id="saveBtn">
       💾 保存
     </button>
 
   </div>
-
 
 </div>
 
@@ -422,44 +424,36 @@ button:active {
 ========================= */
 
 const video =
-  document.getElementById(
-    "camera"
-  );
+  document.getElementById("camera");
 
 
 const panel =
-  document.getElementById(
-    "panel"
-  );
+  document.getElementById("panel");
 
 
 const canvas =
-  document.getElementById(
-    "photoCanvas"
-  );
+  document.getElementById("photoCanvas");
 
 
 const previewScreen =
-  document.getElementById(
-    "previewScreen"
-  );
+  document.getElementById("previewScreen");
 
 
 const previewImage =
-  document.getElementById(
-    "previewImage"
-  );
+  document.getElementById("previewImage");
 
 
 const saveBtn =
-  document.getElementById(
-    "saveBtn"
-  );
+  document.getElementById("saveBtn");
 
 
 const retakeBtn =
-  document.getElementById(
-    "retakeBtn"
+  document.getElementById("retakeBtn");
+
+
+const panelButtons =
+  document.querySelectorAll(
+    ".panelButton"
   );
 
 
@@ -474,6 +468,14 @@ let posY = 0;
 let scale = 1;
 
 let rotation = 0;
+
+
+/* =========================
+   現在のパネル
+========================= */
+
+let currentPanel =
+  "flame50.png";
 
 
 /* =========================
@@ -501,8 +503,7 @@ async function startCamera() {
 
   try {
 
-
-    /* 既存ストリームを停止 */
+    /* 既存カメラを停止 */
 
     if (video.srcObject) {
 
@@ -549,13 +550,11 @@ async function startCamera() {
 
     await video.play();
 
-
   }
 
   catch (error) {
 
     console.error(error);
-
 
     alert(
       "カメラを起動できませんでした。\n\n" +
@@ -573,15 +572,75 @@ async function startCamera() {
 
 function updatePanel() {
 
-
   panel.style.transform =
-
     `translate(-50%, -50%)
      translate(${posX}px, ${posY}px)
      scale(${scale})
      rotate(${rotation}deg)`;
 
 }
+
+
+/* =========================
+   パネル切り替え
+========================= */
+
+panelButtons.forEach(
+  button => {
+
+    button.addEventListener(
+      "click",
+      function() {
+
+        const image =
+          this.dataset.image;
+
+
+        currentPanel =
+          image;
+
+
+        panel.src =
+          "face-panel/" +
+          image;
+
+
+        /* 選択状態 */
+
+        panelButtons.forEach(
+          btn => {
+
+            btn.classList.remove(
+              "active"
+            );
+
+          }
+        );
+
+
+        this.classList.add(
+          "active"
+        );
+
+      }
+    );
+
+  }
+);
+
+
+/* =========================
+   パネル画像読み込み待ち
+========================= */
+
+panel.addEventListener(
+  "load",
+  function() {
+
+    updatePanel();
+
+  }
+);
 
 
 /* =========================
@@ -594,18 +653,14 @@ panel.addEventListener(
 
   function(event) {
 
-
     event.preventDefault();
 
 
-    /* =====================
-       1本指
-    ===================== */
+    /* 1本指 */
 
     if (
       event.touches.length === 1
     ) {
-
 
       const touch =
         event.touches[0];
@@ -621,18 +676,14 @@ panel.addEventListener(
     }
 
 
-    /* =====================
-       2本指
-    ===================== */
+    /* 2本指 */
 
     else if (
       event.touches.length === 2
     ) {
 
-
       const t1 =
         event.touches[0];
-
 
       const t2 =
         event.touches[1];
@@ -680,18 +731,14 @@ panel.addEventListener(
 
   function(event) {
 
-
     event.preventDefault();
 
 
-    /* =====================
-       1本指
-    ===================== */
+    /* 1本指 */
 
     if (
       event.touches.length === 1
     ) {
-
 
       const touch =
         event.touches[0];
@@ -710,18 +757,14 @@ panel.addEventListener(
     }
 
 
-    /* =====================
-       2本指
-    ===================== */
+    /* 2本指 */
 
     else if (
       event.touches.length === 2
     ) {
 
-
       const t1 =
         event.touches[0];
-
 
       const t2 =
         event.touches[1];
@@ -785,7 +828,7 @@ panel.addEventListener(
 
 
 /* =========================
-   2本指の距離
+   指2本の距離
 ========================= */
 
 function getDistance(
@@ -793,11 +836,9 @@ function getDistance(
   t2
 ) {
 
-
   const dx =
     t2.clientX -
     t1.clientX;
-
 
   const dy =
     t2.clientY -
@@ -813,14 +854,13 @@ function getDistance(
 
 
 /* =========================
-   2本指の角度
+   指2本の角度
 ========================= */
 
 function getAngle(
   t1,
   t2
 ) {
-
 
   return Math.atan2(
 
@@ -844,15 +884,12 @@ function getAngle(
 ========================= */
 
 document
-  .getElementById(
-    "resetBtn"
-  )
+  .getElementById("resetBtn")
   .addEventListener(
 
     "click",
 
     function() {
-
 
       posX = 0;
 
@@ -861,7 +898,6 @@ document
       scale = 1;
 
       rotation = 0;
-
 
       updatePanel();
 
@@ -875,15 +911,10 @@ document
 ========================= */
 
 document
-  .getElementById(
-    "photoBtn"
-  )
+  .getElementById("photoBtn")
   .addEventListener(
-
     "click",
-
     takePhoto
-
   );
 
 
@@ -893,23 +924,14 @@ document
 
 function takePhoto() {
 
-
-  /* =====================
-     カメラ確認
-  ===================== */
-
   if (
-
     !video.videoWidth ||
     !video.videoHeight
-
   ) {
-
 
     alert(
       "カメラの準備ができていません。"
     );
-
 
     return;
 
@@ -922,7 +944,6 @@ function takePhoto() {
 
   const viewWidth =
     window.innerWidth;
-
 
   const viewHeight =
     window.innerHeight;
@@ -940,7 +961,6 @@ function takePhoto() {
   const videoWidth =
     video.videoWidth;
 
-
   const videoHeight =
     video.videoHeight;
 
@@ -952,7 +972,6 @@ function takePhoto() {
 
   /* =====================
      object-fit: cover
-     の切り取り範囲
   ===================== */
 
   let sourceX = 0;
@@ -970,11 +989,9 @@ function takePhoto() {
     videoAspect > viewAspect
   ) {
 
-
     sourceWidth =
       videoHeight *
       viewAspect;
-
 
     sourceX =
       (
@@ -984,16 +1001,13 @@ function takePhoto() {
 
   }
 
-
   else if (
     videoAspect < viewAspect
   ) {
 
-
     sourceHeight =
       videoWidth /
       viewAspect;
-
 
     sourceY =
       (
@@ -1012,7 +1026,6 @@ function takePhoto() {
     Math.round(
       sourceWidth
     );
-
 
   canvas.height =
     Math.round(
@@ -1056,7 +1069,6 @@ function takePhoto() {
   const panelWidth =
     panel.offsetWidth;
 
-
   const panelHeight =
     panel.offsetHeight;
 
@@ -1069,20 +1081,18 @@ function takePhoto() {
     viewWidth / 2 +
     posX;
 
-
   const panelCenterY =
     viewHeight / 2 +
     posY;
 
 
   /* =====================
-     画面→写真変換
+     画面 → 写真
   ===================== */
 
   const scaleX =
     canvas.width /
     viewWidth;
-
 
   const scaleY =
     canvas.height /
@@ -1093,7 +1103,6 @@ function takePhoto() {
     panelCenterX *
     scaleX;
 
-
   const photoCenterY =
     panelCenterY *
     scaleY;
@@ -1103,7 +1112,6 @@ function takePhoto() {
     panelWidth *
     scale *
     scaleX;
-
 
   const photoHeight =
     panelHeight *
@@ -1119,19 +1127,15 @@ function takePhoto() {
 
 
   ctx.translate(
-
     photoCenterX,
     photoCenterY
-
   );
 
 
   ctx.rotate(
-
     rotation *
     Math.PI /
     180
-
   );
 
 
@@ -1157,25 +1161,18 @@ function takePhoto() {
 
   const image =
     canvas.toDataURL(
-
       "image/jpeg",
-
       0.95
-
     );
 
 
   /* =====================
-     撮影画像を表示
+     撮影画像表示
   ===================== */
 
   previewImage.src =
     image;
 
-
-  /* =====================
-     撮影画面へ切り替え
-  ===================== */
 
   previewScreen.style.display =
     "flex";
@@ -1187,15 +1184,11 @@ function takePhoto() {
 
   if (video.srcObject) {
 
-
     video.srcObject
       .getTracks()
       .forEach(
-
         track => track.stop()
-
       );
-
 
   }
 
@@ -1211,7 +1204,6 @@ saveBtn.addEventListener(
   "click",
 
   function() {
-
 
     const link =
       document.createElement(
@@ -1256,14 +1248,9 @@ retakeBtn.addEventListener(
 
   async function() {
 
-
-    /* 撮影画面を隠す */
-
     previewScreen.style.display =
       "none";
 
-
-    /* カメラ再起動 */
 
     await startCamera();
 
@@ -1277,7 +1264,6 @@ retakeBtn.addEventListener(
 ========================= */
 
 startCamera();
-
 
 </script>
 
