@@ -1,1 +1,677 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
+<title>顔出しフォトパネル</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: sans-serif;
+}
+
+/* カメラ */
+#camera {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  background: #000;
+}
+
+/* 顔出しパネル */
+#panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+
+  width: 90vw;
+  max-width: 700px;
+
+  transform:
+    translate(-50%, -50%)
+    translate(0px, 0px)
+    scale(1)
+    rotate(0deg);
+
+  transform-origin: center center;
+
+  z-index: 2;
+
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+
+  pointer-events: auto;
+}
+
+/* 上部説明 */
+#help {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  z-index: 10;
+
+  padding: 8px 14px;
+
+  border-radius: 20px;
+
+  background: rgba(0,0,0,0.55);
+  color: white;
+
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ボタン */
+#controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+
+  z-index: 10;
+
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 0 10px;
+}
+
+button {
+  border: none;
+  border-radius: 28px;
+
+  padding: 12px 18px;
+
+  background: rgba(255,255,255,0.92);
+  color: #222;
+
+  font-size: 15px;
+  font-weight: bold;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+/* 撮影用Canvas */
+#photoCanvas {
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- スマホのカメラ -->
+<video id="camera" autoplay playsinline></video>
+
+<!-- 顔出しパネル -->
+<img
+  id="panel"
+  src="face-panel/flame50.png"
+  alt="顔出しパネル"
+>
+
+<!-- 説明 -->
+<div id="help">
+  1本指：移動　2本指：拡大・縮小・回転
+</div>
+
+<!-- 操作ボタン -->
+<div id="controls">
+  <button id="resetBtn">↩ リセット</button>
+  <button id="photoBtn">📷 撮影</button>
+</div>
+
+<canvas id="photoCanvas"></canvas>
+
+<script>
+
+const video = document.getElementById("camera");
+const panel = document.getElementById("panel");
+const canvas = document.getElementById("photoCanvas");
+
+/* =========================
+   パネルの状態
+========================= */
+
+let posX = 0;
+let posY = 0;
+
+let scale = 1;
+let rotation = 0;
+
+
+/* =========================
+   タッチ操作用
+========================= */
+
+let startX = 0;
+let startY = 0;
+
+let startDistance = 0;
+let startAngle = 0;
+
+let startScale = 1;
+let startRotation = 0;
+
+
+/* =========================
+   カメラ起動
+========================= */
+
+async function startCamera() {
+
+  try {
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+
+        video: {
+          facingMode: {
+            ideal: "environment"
+          },
+
+          width: {
+            ideal: 1920
+          },
+
+          height: {
+            ideal: 1080
+          }
+        },
+
+        audio: false
+      });
+
+    video.srcObject = stream;
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "カメラを起動できませんでした。\n\n" +
+      "ブラウザのカメラ使用を許可してください。"
+    );
+  }
+}
+
+
+/* =========================
+   パネル更新
+========================= */
+
+function updatePanel() {
+
+  panel.style.transform =
+    `translate(-50%, -50%)
+     translate(${posX}px, ${posY}px)
+     scale(${scale})
+     rotate(${rotation}deg)`;
+}
+
+
+/* =========================
+   1本指・2本指操作
+========================= */
+
+panel.addEventListener(
+  "touchstart",
+  function(event) {
+
+    event.preventDefault();
+
+    if (event.touches.length === 1) {
+
+      const touch = event.touches[0];
+
+      startX =
+        touch.clientX - posX;
+
+      startY =
+        touch.clientY - posY;
+
+    }
+
+    else if (event.touches.length === 2) {
+
+      const t1 = event.touches[0];
+      const t2 = event.touches[1];
+
+      startDistance =
+        getDistance(t1, t2);
+
+      startAngle =
+        getAngle(t1, t2);
+
+      startScale =
+        scale;
+
+      startRotation =
+        rotation;
+    }
+
+  },
+  { passive: false }
+);
+
+
+/* =========================
+   タッチ移動
+========================= */
+
+panel.addEventListener(
+  "touchmove",
+  function(event) {
+
+    event.preventDefault();
+
+    /* 1本指：移動 */
+
+    if (event.touches.length === 1) {
+
+      const touch =
+        event.touches[0];
+
+      posX =
+        touch.clientX - startX;
+
+      posY =
+        touch.clientY - startY;
+
+      updatePanel();
+    }
+
+
+    /* 2本指：拡大縮小＋回転 */
+
+    else if (event.touches.length === 2) {
+
+      const t1 = event.touches[0];
+      const t2 = event.touches[1];
+
+      const currentDistance =
+        getDistance(t1, t2);
+
+      const currentAngle =
+        getAngle(t1, t2);
+
+
+      /* 拡大縮小 */
+
+      scale =
+        startScale *
+        (currentDistance / startDistance);
+
+      scale =
+        Math.max(
+          0.25,
+          Math.min(scale, 4)
+        );
+
+
+      /* 回転 */
+
+      rotation =
+        startRotation +
+        (currentAngle - startAngle);
+
+
+      updatePanel();
+    }
+
+  },
+  { passive: false }
+);
+
+
+/* =========================
+   指2本の距離
+========================= */
+
+function getDistance(t1, t2) {
+
+  const dx =
+    t2.clientX - t1.clientX;
+
+  const dy =
+    t2.clientY - t1.clientY;
+
+  return Math.sqrt(
+    dx * dx + dy * dy
+  );
+}
+
+
+/* =========================
+   指2本の角度
+========================= */
+
+function getAngle(t1, t2) {
+
+  return Math.atan2(
+    t2.clientY - t1.clientY,
+    t2.clientX - t1.clientX
+  ) * 180 / Math.PI;
+}
+
+
+/* =========================
+   リセット
+========================= */
+
+document
+  .getElementById("resetBtn")
+  .addEventListener(
+    "click",
+    function() {
+
+      posX = 0;
+      posY = 0;
+
+      scale = 1;
+
+      rotation = 0;
+
+      updatePanel();
+    }
+  );
+
+
+/* =========================
+   写真撮影
+========================= */
+
+document
+  .getElementById("photoBtn")
+  .addEventListener(
+    "click",
+    takePhoto
+  );
+
+
+function takePhoto() {
+
+  if (
+    !video.videoWidth ||
+    !video.videoHeight
+  ) {
+
+    alert(
+      "カメラの準備ができていません。"
+    );
+
+    return;
+  }
+
+
+  const videoWidth =
+    video.videoVideoWidth ||
+    video.videoWidth;
+
+  const videoHeight =
+    video.videoHeight;
+
+
+  canvas.width =
+    videoWidth;
+
+  canvas.height =
+    videoHeight;
+
+
+  const ctx =
+    canvas.getContext("2d");
+
+
+  /*
+   * カメラ映像
+   *
+   * videoはobject-fit:coverなので、
+   * 実際の表示領域と映像の比率が違う場合を
+   * 考慮する。
+   */
+
+  const viewWidth =
+    window.innerWidth;
+
+  const viewHeight =
+    window.innerHeight;
+
+
+  const videoAspect =
+    videoWidth / videoHeight;
+
+  const viewAspect =
+    viewWidth / viewHeight;
+
+
+  let drawWidth;
+  let drawHeight;
+  let offsetX = 0;
+  let offsetY = 0;
+
+
+  if (videoAspect > viewAspect) {
+
+    drawHeight =
+      viewHeight;
+
+    drawWidth =
+      drawHeight * videoAspect;
+
+    offsetX =
+      (viewWidth - drawWidth) / 2;
+
+  } else {
+
+    drawWidth =
+      viewWidth;
+
+    drawHeight =
+      drawWidth / videoAspect;
+
+    offsetY =
+      (viewHeight - drawHeight) / 2;
+  }
+
+
+  /*
+   * カメラ映像をCanvasへ
+   */
+
+  ctx.drawImage(
+    video,
+    0,
+    0,
+    videoWidth,
+    videoHeight
+  );
+
+
+  /*
+   * パネルの現在位置を取得
+   */
+
+  const rect =
+    panel.getBoundingClientRect();
+
+
+  const panelCenterX =
+    rect.left +
+    rect.width / 2;
+
+  const panelCenterY =
+    rect.top +
+    rect.height / 2;
+
+
+  /*
+   * 画面座標 → 写真座標
+   */
+
+  const photoX =
+    (panelCenterX - offsetX) *
+    (videoWidth / drawWidth);
+
+  const photoY =
+    (panelCenterY - offsetY) *
+    (videoHeight / drawHeight);
+
+
+  const photoWidth =
+    rect.width *
+    (videoWidth / drawWidth);
+
+  const photoHeight =
+    rect.height *
+    (videoHeight / drawHeight);
+
+
+  /*
+   * パネル描画
+   */
+
+  ctx.save();
+
+  ctx.translate(
+    photoX,
+    photoY
+  );
+
+  ctx.rotate(
+    rotation *
+    Math.PI / 180
+  );
+
+
+  ctx.drawImage(
+    panel,
+    -photoWidth / 2,
+    -photoHeight / 2,
+    photoWidth,
+    photoHeight
+  );
+
+  ctx.restore();
+
+
+  /*
+   * JPEG化
+   */
+
+  const image =
+    canvas.toDataURL(
+      "image/jpeg",
+      0.95
+    );
+
+
+  /*
+   * 写真表示
+   */
+
+  const photoWindow =
+    window.open(
+      "",
+      "_blank"
+    );
+
+
+  if (!photoWindow) {
+
+    alert(
+      "写真を表示できませんでした。\n\n" +
+      "ブラウザのポップアップを許可してください。"
+    );
+
+    return;
+  }
+
+
+  photoWindow.document.write(`
+
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0">
+
+<title>撮影した写真</title>
+
+</head>
+
+<body style="
+  margin:0;
+  background:#000;
+  text-align:center;
+">
+
+<img
+  src="${image}"
+  style="
+    display:block;
+    width:100%;
+    height:auto;
+  "
+>
+
+<div style="
+  color:white;
+  padding:12px;
+  font-family:sans-serif;
+  font-size:14px;
+">
+
+写真を長押しして保存してください
+
+</div>
+
+</body>
+
+</html>
+
+  `);
+
+  photoWindow.document.close();
+}
+
+
+/* =========================
+   起動
+========================= */
+
+startCamera();
+
+</script>
+
+</body>
+</html>
