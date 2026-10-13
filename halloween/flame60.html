@@ -5,13 +5,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>岐阜県動物愛護センター ハロウィン顔出しフォト</title>
+<title>ハロウィン顔出しフォト</title>
 
 <style>
 :root {
   color-scheme: dark;
   --accent: #ff9d32;
-  --text: #ffffff;
 }
 
 * {
@@ -19,20 +18,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body {
+html, body {
   margin: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
   background: #000;
-  color: var(--text);
+  color: #fff;
   font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
   overscroll-behavior: none;
-}
-
-body {
-  min-height: 100dvh;
 }
 
 button {
@@ -49,8 +43,7 @@ button {
 }
 
 button:disabled {
-  opacity: 0.4;
-  cursor: default;
+  opacity: .4;
 }
 
 button.secondary {
@@ -58,12 +51,10 @@ button.secondary {
   color: #fff;
 }
 
-button:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 2px;
+.hidden {
+  display: none !important;
 }
 
-/* 画面全体 */
 .app {
   position: relative;
   width: 100%;
@@ -72,7 +63,6 @@ button:focus-visible {
   background: #000;
 }
 
-/* タイトル */
 header {
   position: absolute;
   z-index: 10;
@@ -94,7 +84,6 @@ h1 {
   font-size: 12px;
 }
 
-/* カメラ表示領域 */
 .stage-wrap {
   position: absolute;
   inset: 0;
@@ -110,13 +99,10 @@ h1 {
   overflow: hidden;
   background: #000;
   isolation: isolate;
-
-  /* ブラウザのピンチ操作で画面が拡大されるのを防ぐ */
   touch-action: none;
   overscroll-behavior: none;
 }
 
-/* カメラ映像は固定 */
 #video {
   position: absolute;
   inset: 0;
@@ -126,18 +112,15 @@ h1 {
   object-position: center center;
   background: #000;
   z-index: 1;
-
   pointer-events: none;
   touch-action: none;
 }
 
-/* 撮影した画像 */
 #photoCanvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: fill;
   visibility: hidden;
   pointer-events: none;
   z-index: 2;
@@ -151,7 +134,6 @@ h1 {
   visibility: visible;
 }
 
-/* パネルと衣装 */
 .layer {
   position: absolute;
   display: block;
@@ -164,18 +146,10 @@ h1 {
   -webkit-user-drag: none;
 }
 
-/*
- * 重要：
- * 顔出しパネルがタッチ操作を受け取るようにする。
- * カメラ映像ではなく、この画像にピンチ処理を割り当てる。
- */
 .panel-layer {
   z-index: 3;
   pointer-events: auto;
   touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
 }
 
 .body-layer {
@@ -183,16 +157,12 @@ h1 {
   display: none;
   pointer-events: auto;
   touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
 }
 
 .stage.show-photo .body-layer {
   display: block;
 }
 
-/* カメラ起動前の案内 */
 .empty {
   position: absolute;
   z-index: 5;
@@ -209,18 +179,12 @@ h1 {
   pointer-events: none;
 }
 
-.empty.hidden {
-  display: none;
-}
-
-/* 操作ボタン */
 .controls {
   position: absolute;
   z-index: 20;
   left: 10px;
   right: 10px;
   bottom: max(10px, env(safe-area-inset-bottom));
-  width: auto;
   padding: 8px;
   display: flex;
   flex-wrap: wrap;
@@ -238,20 +202,19 @@ h1 {
   padding: 10px 8px;
 }
 
-/* 撮影後の衣装選択 */
+/* 衣装選択一覧 */
 .section {
   position: absolute;
   z-index: 30;
   left: 8px;
   right: 8px;
   bottom: calc(env(safe-area-inset-bottom) + 72px);
-  width: auto;
   max-height: 45dvh;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  background: rgb(25 25 25 / 94%);
+  background: rgb(25 25 25 / 96%);
   border: 1px solid rgb(255 255 255 / 16%);
   border-radius: 12px;
   padding: 10px;
@@ -292,7 +255,6 @@ h1 {
   color: #171717;
 }
 
-/* 衣装一覧 */
 .body-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -335,7 +297,6 @@ h1 {
   margin: 0;
 }
 
-/* 状態表示 */
 .status {
   position: absolute;
   z-index: 40;
@@ -350,11 +311,6 @@ h1 {
   pointer-events: none;
 }
 
-.hidden {
-  display: none !important;
-}
-
-/* 横向き */
 @media (orientation: landscape) {
   header {
     text-align: left;
@@ -372,7 +328,7 @@ h1 {
     left: 10px;
     right: 10px;
     bottom: max(8px, env(safe-area-inset-bottom));
-    width: min(440px, calc(100% - 20px));
+    width: min(520px, calc(100% - 20px));
     margin: 0 auto;
   }
 
@@ -437,19 +393,8 @@ h1 {
       <video id="video" autoplay playsinline muted></video>
       <canvas id="photoCanvas"></canvas>
 
-      <img
-        id="panelLayer"
-        class="layer panel-layer"
-        alt=""
-        draggable="false"
-      >
-
-      <img
-        id="bodyLayer"
-        class="layer body-layer"
-        alt=""
-        draggable="false"
-      >
+      <img id="panelLayer" class="layer panel-layer" alt="" draggable="false">
+      <img id="bodyLayer" class="layer body-layer" alt="" draggable="false">
 
       <div class="empty" id="emptyMessage">
         「撮影を開始」を押して、カメラを起動してください。
@@ -460,16 +405,14 @@ h1 {
   <div class="controls">
     <button id="startButton">撮影を開始</button>
     <button id="captureButton" disabled>撮影</button>
+    <button id="reselectButton" class="secondary hidden">衣装を選び直す</button>
     <button id="retakeButton" class="secondary hidden">撮り直す</button>
     <button id="saveButton" class="hidden">写真を保存</button>
   </div>
 
   <section class="section hidden" id="bodySection">
     <h2>衣装を選ぶ</h2>
-    <p class="hint">
-      衣装を選んだら、写真の上で指を動かして位置を調整できます。
-      衣装は2本指で拡大・縮小・回転できます。
-    </p>
+    <p class="hint">衣装を選ぶと一覧が閉じます。写真全体を見ながら位置や大きさを調整できます。</p>
 
     <div class="categories" id="categories">
       <button class="active" data-category="mahoutukai">魔法使い</button>
@@ -479,9 +422,7 @@ h1 {
 
     <div class="body-grid" id="bodyGrid"></div>
 
-    <p class="small">
-      保存される画像はPNG形式です。撮影画像とパネル・衣装を合成して保存します。
-    </p>
+    <p class="small">衣装は1本指で移動、2本指で拡大・縮小・回転できます。</p>
   </section>
 
   <div class="status" id="status" role="status" aria-live="polite"></div>
@@ -490,7 +431,6 @@ h1 {
 <script>
 "use strict";
 
-/* flame60.htmlと画像は同じhalloweenフォルダ内 */
 const ASSET_DIR = "./";
 const PANEL_SRC = "./halloween_face_panel.png";
 
@@ -518,10 +458,13 @@ const photoCanvas = document.getElementById("photoCanvas");
 const panelLayer = document.getElementById("panelLayer");
 const bodyLayer = document.getElementById("bodyLayer");
 const emptyMessage = document.getElementById("emptyMessage");
+
 const startButton = document.getElementById("startButton");
 const captureButton = document.getElementById("captureButton");
+const reselectButton = document.getElementById("reselectButton");
 const retakeButton = document.getElementById("retakeButton");
 const saveButton = document.getElementById("saveButton");
+
 const bodySection = document.getElementById("bodySection");
 const categoriesElement = document.getElementById("categories");
 const bodyGrid = document.getElementById("bodyGrid");
@@ -552,8 +495,11 @@ let bodyTransform = {
   height: 0
 };
 
-let activePointers = new Map();
-let gestureStart = null;
+const panelPointers = new Map();
+let panelGestureStart = null;
+
+const bodyPointers = new Map();
+let bodyGestureStart = null;
 
 let previousStageSize = {
   width: 0,
@@ -569,26 +515,22 @@ function loadImage(src) {
     const image = new Image();
 
     image.onload = () => resolve(image);
-    image.onerror = () => {
-      reject(new Error("画像を読み込めません: " + src));
-    };
-
+    image.onerror = () => reject(new Error("画像を読み込めません: " + src));
     image.src = src;
   });
 }
 
-/* 顔出しパネルの初期サイズ */
+/* 顔出しパネル */
 function calculatePanelSize() {
   if (!panelImage.complete || !panelImage.naturalWidth) return;
 
-  const stageWidth = stage.clientWidth;
-  const stageHeight = stage.clientHeight;
-
-  if (!stageWidth || !stageHeight) return;
+  const w = stage.clientWidth;
+  const h = stage.clientHeight;
+  if (!w || !h) return;
 
   const ratio = Math.min(
-    stageWidth * 0.98 / panelImage.naturalWidth,
-    stageHeight * 0.98 / panelImage.naturalHeight
+    w * 0.98 / panelImage.naturalWidth,
+    h * 0.98 / panelImage.naturalHeight
   );
 
   panelBase.width = panelImage.naturalWidth * ratio;
@@ -611,26 +553,17 @@ function layoutPanelInitial() {
   applyPanelPosition();
 }
 
-/*
- * 顔出しパネル専用の2本指操作
- * ここではパネルの大きさだけを変更する。
- * videoやstageの拡大縮小は行わない。
- */
-const panelPointers = new Map();
-let panelGestureStart = null;
-
 function panelPointerCenter() {
   const points = Array.from(panelPointers.values());
 
   return {
-    x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
-    y: points.reduce((sum, point) => sum + point.y, 0) / points.length
+    x: points.reduce((sum, p) => sum + p.x, 0) / points.length,
+    y: points.reduce((sum, p) => sum + p.y, 0) / points.length
   };
 }
 
 function panelPointerDistance() {
   const points = Array.from(panelPointers.values());
-
   if (points.length < 2) return 0;
 
   return Math.hypot(
@@ -657,7 +590,6 @@ function startPanelGesture() {
 
 panelLayer.addEventListener("pointerdown", (event) => {
   event.preventDefault();
-
   panelLayer.setPointerCapture(event.pointerId);
 
   const rect = stage.getBoundingClientRect();
@@ -685,16 +617,13 @@ panelLayer.addEventListener("pointermove", (event) => {
   if (!panelGestureStart || panelPointers.size < 2) return;
   if (panelGestureStart.distance <= 0) return;
 
-  const distance = panelPointerDistance();
   const center = panelPointerCenter();
-
-  const ratio = distance / panelGestureStart.distance;
+  const ratio = panelPointerDistance() / panelGestureStart.distance;
   const scale = Math.max(0.3, Math.min(4, ratio));
 
   const newWidth = panelGestureStart.width * scale;
   const newHeight = panelGestureStart.height * scale;
 
-  /* 指の中間点を基準にパネルを拡大・縮小 */
   panelBase.width = newWidth;
   panelBase.height = newHeight;
 
@@ -725,7 +654,7 @@ panelLayer.addEventListener("pointerup", endPanelGesture);
 panelLayer.addEventListener("pointercancel", endPanelGesture);
 panelLayer.addEventListener("lostpointercapture", endPanelGesture);
 
-/* 画面回転・サイズ変更 */
+/* 画面サイズ変更 */
 function handleResize() {
   const oldWidth = previousStageSize.width;
   const oldHeight = previousStageSize.height;
@@ -740,7 +669,6 @@ function handleResize() {
 
   const width = stage.clientWidth;
   const height = stage.clientHeight;
-
   if (!width || !height) return;
 
   if (!captured && panelImage.complete && panelImage.naturalWidth) {
@@ -760,7 +688,7 @@ function handleResize() {
   previousStageSize = { width, height };
 }
 
-/* 背面カメラを起動 */
+/* 背面カメラ */
 async function startCamera() {
   if (cameraStarted) return;
 
@@ -804,19 +732,17 @@ async function startCamera() {
   } catch (error) {
     console.error(error);
 
-    if (error.name === "NotAllowedError") {
-      setStatus("カメラの使用が許可されていません。ブラウザの設定を確認してください。");
-    } else if (error.name === "NotFoundError") {
-      setStatus("利用できるカメラが見つかりませんでした。");
-    } else {
-      setStatus("カメラを起動できませんでした。カメラの使用許可を確認してください。");
-    }
+    setStatus(
+      error.name === "NotAllowedError"
+        ? "カメラの使用が許可されていません。ブラウザの設定を確認してください。"
+        : "カメラを起動できませんでした。カメラの使用許可を確認してください。"
+    );
 
     startButton.disabled = false;
   }
 }
 
-/* 表示中のカメラ映像と同じ範囲を描画 */
+/* 画面表示と同じ範囲でカメラ画像を切り抜く */
 function drawVideoCover(ctx, outputWidth, outputHeight) {
   const sourceWidth = video.videoWidth;
   const sourceHeight = video.videoHeight;
@@ -857,7 +783,6 @@ function capturePhoto() {
 
   const width = stage.clientWidth;
   const height = stage.clientHeight;
-
   if (!width || !height) return;
 
   const stageRatio = width / height;
@@ -893,14 +818,15 @@ function capturePhoto() {
   stage.classList.add("show-photo");
 
   captureButton.classList.add("hidden");
+  reselectButton.classList.remove("hidden");
   retakeButton.classList.remove("hidden");
   saveButton.classList.remove("hidden");
+
   bodySection.classList.remove("hidden");
-
   bodyLayer.style.display = "none";
-  renderBodyChoices(currentCategory);
 
-  setStatus("衣装を選んで位置を調整してください。");
+  setStatus("衣装を選んでください。選ぶと一覧が自動的に閉じます。");
+  renderBodyChoices(currentCategory);
 }
 
 /* 衣装一覧 */
@@ -959,7 +885,14 @@ function renderBodyChoices(category) {
         applyBodyTransform();
         renderBodyChoices(category);
 
-        setStatus("衣装を配置しました。指で位置や大きさを調整してください。");
+        /*
+         * 重要：衣装を選択したら一覧を閉じる。
+         * 写真全体を見ながら衣装を調整できる。
+         */
+        bodySection.classList.add("hidden");
+        reselectButton.classList.remove("hidden");
+
+        setStatus("衣装を調整できます。選び直す場合は「衣装を選び直す」を押してください。");
       } catch (error) {
         console.error(error);
         setStatus("衣装画像を読み込めませんでした: " + filename);
@@ -1000,38 +933,52 @@ function applyBodyTransform() {
   bodyLayer.style.transform = "rotate(" + bodyTransform.rotation + "rad)";
 }
 
-function pointerCenter(points) {
-  const values = Array.from(points.values());
+function bodyPointerCenter() {
+  const points = Array.from(bodyPointers.values());
 
   return {
-    x: values.reduce((sum, point) => sum + point.x, 0) / values.length,
-    y: values.reduce((sum, point) => sum + point.y, 0) / values.length
+    x: points.reduce((sum, p) => sum + p.x, 0) / points.length,
+    y: points.reduce((sum, p) => sum + p.y, 0) / points.length
   };
 }
 
-function pointerDistance(points) {
-  const values = Array.from(points.values());
-
-  if (values.length < 2) return 0;
+function bodyPointerDistance() {
+  const points = Array.from(bodyPointers.values());
+  if (points.length < 2) return 0;
 
   return Math.hypot(
-    values[0].x - values[1].x,
-    values[0].y - values[1].y
+    points[0].x - points[1].x,
+    points[0].y - points[1].y
   );
 }
 
-function pointerAngle(points) {
-  const values = Array.from(points.values());
-
-  if (values.length < 2) return 0;
+function bodyPointerAngle() {
+  const points = Array.from(bodyPointers.values());
+  if (points.length < 2) return 0;
 
   return Math.atan2(
-    values[1].y - values[0].y,
-    values[1].x - values[0].x
+    points[1].y - points[0].y,
+    points[1].x - points[0].x
   );
 }
 
-/* 衣装を指で操作 */
+function startBodyGesture() {
+  if (bodyPointers.size === 0) {
+    bodyGestureStart = null;
+    return;
+  }
+
+  bodyGestureStart = {
+    x: bodyTransform.x,
+    y: bodyTransform.y,
+    scale: bodyTransform.scale,
+    rotation: bodyTransform.rotation,
+    center: bodyPointerCenter(),
+    distance: bodyPointerDistance(),
+    angle: bodyPointerAngle()
+  };
+}
+
 bodyLayer.addEventListener("pointerdown", (event) => {
   if (!captured || !selectedBodyImage) return;
 
@@ -1040,91 +987,113 @@ bodyLayer.addEventListener("pointerdown", (event) => {
 
   const rect = stage.getBoundingClientRect();
 
-  activePointers.set(event.pointerId, {
+  bodyPointers.set(event.pointerId, {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top
   });
 
-  gestureStart = {
-    x: bodyTransform.x,
-    y: bodyTransform.y,
-    scale: bodyTransform.scale,
-    rotation: bodyTransform.rotation,
-    center: pointerCenter(activePointers),
-    distance: pointerDistance(activePointers),
-    angle: pointerAngle(activePointers)
-  };
+  startBodyGesture();
 });
 
 bodyLayer.addEventListener("pointermove", (event) => {
-  if (!activePointers.has(event.pointerId) || !gestureStart) return;
+  if (!bodyPointers.has(event.pointerId) || !bodyGestureStart) return;
 
   event.preventDefault();
 
   const rect = stage.getBoundingClientRect();
 
-  activePointers.set(event.pointerId, {
+  bodyPointers.set(event.pointerId, {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top
   });
 
-  const center = pointerCenter(activePointers);
+  const center = bodyPointerCenter();
 
-  if (activePointers.size === 1) {
+  if (bodyPointers.size === 1) {
     bodyTransform.x =
-      gestureStart.x + center.x - gestureStart.center.x;
+      bodyGestureStart.x + center.x - bodyGestureStart.center.x;
 
     bodyTransform.y =
-      gestureStart.y + center.y - gestureStart.center.y;
+      bodyGestureStart.y + center.y - bodyGestureStart.center.y;
   } else {
-    const distance = pointerDistance(activePointers);
-    const angle = pointerAngle(activePointers);
+    const distance = bodyPointerDistance();
+    const angle = bodyPointerAngle();
 
-    if (gestureStart.distance > 0) {
+    if (bodyGestureStart.distance > 0) {
       bodyTransform.scale = Math.max(
         0.15,
         Math.min(
           5,
-          gestureStart.scale * distance / gestureStart.distance
+          bodyGestureStart.scale * distance / bodyGestureStart.distance
         )
       );
     }
 
     bodyTransform.rotation =
-      gestureStart.rotation + angle - gestureStart.angle;
+      bodyGestureStart.rotation + angle - bodyGestureStart.angle;
 
     bodyTransform.x =
-      gestureStart.x + center.x - gestureStart.center.x;
+      bodyGestureStart.x + center.x - bodyGestureStart.center.x;
 
     bodyTransform.y =
-      gestureStart.y + center.y - gestureStart.center.y;
+      bodyGestureStart.y + center.y - bodyGestureStart.center.y;
   }
 
   applyBodyTransform();
 });
 
-function endPointer(event) {
-  activePointers.delete(event.pointerId);
-
-  if (activePointers.size === 0) {
-    gestureStart = null;
-    return;
-  }
-
-  gestureStart = {
-    x: bodyTransform.x,
-    y: bodyTransform.y,
-    scale: bodyTransform.scale,
-    rotation: bodyTransform.rotation,
-    center: pointerCenter(activePointers),
-    distance: pointerDistance(activePointers),
-    angle: pointerAngle(activePointers)
-  };
+function endBodyGesture(event) {
+  bodyPointers.delete(event.pointerId);
+  startBodyGesture();
 }
 
-bodyLayer.addEventListener("pointerup", endPointer);
-bodyLayer.addEventListener("pointercancel", endPointer);
-bodyLayer.addEventListener("lostpointercapture", endPointer);
+bodyLayer.addEventListener("pointerup", endBodyGesture);
+bodyLayer.addEventListener("pointercancel", endBodyGesture);
+bodyLayer.addEventListener("lostpointercapture", endBodyGesture);
+
+/* 衣装一覧を再表示 */
+function showBodyChoices() {
+  if (!captured) return;
+
+  bodySection.classList.remove("hidden");
+  reselectButton.classList.add("hidden");
+
+  setStatus("衣装を選び直してください。選択すると一覧が閉じます。");
+}
+
+/* 撮り直し */
+function retakePhoto() {
+  captured = false;
+  selectedBodyImage = null;
+  selectedBodyName = "";
+
+  bodyTransform = {
+    x: 0,
+    y: 0,
+    scale: 1,
+    rotation: 0,
+    width: 0,
+    height: 0
+  };
+
+  bodyPointers.clear();
+  bodyGestureStart = null;
+
+  stage.classList.remove("show-photo");
+
+  bodyLayer.removeAttribute("src");
+  bodyLayer.style.display = "none";
+
+  bodySection.classList.add("hidden");
+  reselectButton.classList.add("hidden");
+  retakeButton.classList.add("hidden");
+  saveButton.classList.add("hidden");
+
+  captureButton.classList.remove("hidden");
+  captureButton.disabled = !cameraStarted;
+
+  setStatus("位置を確認して、もう一度撮影してください。");
+}
 
 /* パネルと衣装を合成してPNG保存 */
 async function savePhoto() {
@@ -1154,7 +1123,7 @@ async function savePhoto() {
     const scaleX = exportCanvas.width / stage.clientWidth;
     const scaleY = exportCanvas.height / stage.clientHeight;
 
-    /* 顔出しパネルを合成 */
+    /* 顔出しパネル */
     if (panelImage.complete && panelImage.naturalWidth > 0) {
       ctx.drawImage(
         panelImage,
@@ -1165,7 +1134,7 @@ async function savePhoto() {
       );
     }
 
-    /* 衣装を合成 */
+    /* 衣装 */
     const centerX =
       (bodyTransform.x +
        bodyTransform.width * bodyTransform.scale / 2) * scaleX;
@@ -1196,11 +1165,8 @@ async function savePhoto() {
 
     const blob = await new Promise((resolve, reject) => {
       exportCanvas.toBlob((result) => {
-        if (result) {
-          resolve(result);
-        } else {
-          reject(new Error("PNG画像を作成できませんでした。"));
-        }
+        if (result) resolve(result);
+        else reject(new Error("PNG画像を作成できませんでした。"));
       }, "image/png");
     });
 
@@ -1234,49 +1200,14 @@ async function savePhoto() {
   }
 }
 
-/* 撮り直し */
-function retakePhoto() {
-  captured = false;
-  selectedBodyImage = null;
-  selectedBodyName = "";
-
-  bodyTransform = {
-    x: 0,
-    y: 0,
-    scale: 1,
-    rotation: 0,
-    width: 0,
-    height: 0
-  };
-
-  activePointers.clear();
-  gestureStart = null;
-
-  stage.classList.remove("show-photo");
-
-  bodyLayer.removeAttribute("src");
-  bodyLayer.style.display = "none";
-  bodySection.classList.add("hidden");
-
-  captureButton.classList.remove("hidden");
-  captureButton.disabled = !cameraStarted;
-
-  retakeButton.classList.add("hidden");
-  saveButton.classList.add("hidden");
-
-  emptyMessage.classList.add("hidden");
-
-  handleResize();
-  setStatus("位置を確認して、もう一度撮影してください。");
-}
-
 /* ボタン */
 startButton.addEventListener("click", startCamera);
 captureButton.addEventListener("click", capturePhoto);
+reselectButton.addEventListener("click", showBodyChoices);
 retakeButton.addEventListener("click", retakePhoto);
 saveButton.addEventListener("click", savePhoto);
 
-/* 顔出しパネル画像の読み込み */
+/* パネル画像読み込み */
 panelImage.onload = () => {
   panelLayer.src = PANEL_SRC;
   layoutPanelInitial();
@@ -1287,14 +1218,9 @@ panelImage.onerror = () => {
   setStatus("顔出しパネル画像を読み込めません。ファイル名と配置を確認してください。");
 };
 
-panelLayer.onerror = () => {
-  setStatus("画面表示用の顔出しパネル画像を読み込めません。");
-};
-
 panelImage.src = PANEL_SRC;
 panelLayer.src = PANEL_SRC;
 
-/* 画面サイズ・向きの変更 */
 window.addEventListener("resize", handleResize);
 
 window.addEventListener("orientationchange", () => {
