@@ -897,14 +897,13 @@ function attachGestures(element, type) {
 }
 
 /* センター名と日付もドラッグ・ピンチ・回転可能 */
+
 (function attachLogoGestures() {
   const pointers = new Map();
   let start = null;
 
   function begin() {
     const center = centerOf(pointers);
-    const distance = distanceOf(pointers);
-    const angle = angleOf(pointers);
 
     start = {
       x: logoTransform.x,
@@ -912,8 +911,8 @@ function attachGestures(element, type) {
       scale: logoTransform.scale,
       rotation: logoTransform.rotation,
       center,
-      distance,
-      angle
+      distance: distanceOf(pointers),
+      angle: angleOf(pointers)
     };
   }
 
@@ -933,16 +932,20 @@ function attachGestures(element, type) {
     const center = centerOf(pointers);
 
     if (pointers.size === 1) {
+      // 指1本：上下左右に移動
       logoTransform.x = start.x + center.x - start.center.x;
       logoTransform.y = start.y + center.y - start.center.y;
     } else {
+      // 指2本：拡大・縮小・回転
       const distance = distanceOf(pointers);
+
       if (start.distance > 0) {
         logoTransform.scale = Math.max(
           0.4,
           Math.min(3, start.scale * distance / start.distance)
         );
       }
+
       logoTransform.rotation =
         start.rotation + angleOf(pointers) - start.angle;
     }
@@ -952,6 +955,7 @@ function attachGestures(element, type) {
 
   function endPointer(event) {
     if (!pointers.has(event.pointerId)) return;
+
     pointers.delete(event.pointerId);
 
     if (pointers.size === 0) {
@@ -966,6 +970,7 @@ function attachGestures(element, type) {
   logoLayer.addEventListener("pointercancel", endPointer);
   logoLayer.addEventListener("lostpointercapture", endPointer);
 })();
+
 
 attachGestures(panelLayer, "panel");
 attachGestures(bodyLayer, "body");
