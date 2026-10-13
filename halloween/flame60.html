@@ -1,49 +1,55 @@
-
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#171717">
+<meta name="theme-color" content="#000000">
 <title>岐阜県動物愛護センター ハロウィン顔出しフォト</title>
 
 <style>
 :root {
   color-scheme: dark;
-  --bg: #171717;
-  --panel: #262626;
   --accent: #ff9d32;
   --text: #ffffff;
-  --muted: #cccccc;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   margin: 0;
   width: 100%;
-  min-height: 100%;
-  background: var(--bg);
+  height: 100%;
+  overflow: hidden;
+  background: #000000;
   color: var(--text);
   font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
 }
 
-body { min-height: 100dvh; }
+body {
+  min-height: 100dvh;
+}
 
 button {
   border: 0;
   border-radius: 10px;
-  padding: 12px 15px;
+  padding: 10px 14px;
   min-height: 44px;
   background: var(--accent);
   color: #171717;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   touch-action: manipulation;
 }
 
-button:disabled { opacity: 0.4; cursor: default; }
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
 
 button.secondary {
   background: #454545;
@@ -55,50 +61,64 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+/* アプリ全体をスマホ画面いっぱいにする */
 .app {
+  position: relative;
   width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  height: 100dvh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000000;
 }
 
-header { text-align: center; }
+/* タイトルをカメラ映像の上に重ねる */
+header {
+  position: absolute;
+  z-index: 10;
+  top: max(8px, env(safe-area-inset-top));
+  left: 8px;
+  right: 8px;
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 2px 5px #000000;
+}
 
 h1 {
   margin: 0;
-  font-size: clamp(18px, 4vw, 25px);
+  font-size: clamp(16px, 4vw, 23px);
 }
 
 .description {
-  margin: 5px 0 0;
-  font-size: 13px;
-  color: var(--muted);
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: #ffffff;
 }
 
+/* カメラ領域を画面全体に広げる */
 .stage-wrap {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 0;
+  height: 100%;
+  display: block;
 }
 
 .stage {
-  position: relative;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  max-width: 560px;
-  aspect-ratio: 3 / 4;
-  max-height: 68dvh;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
   overflow: hidden;
   background: #000000;
-  border-radius: 12px;
   isolation: isolate;
 }
 
-/* カメラはステージ全体を埋める */
+/* 背面カメラの映像 */
 #video {
   position: absolute;
   inset: 0;
@@ -110,6 +130,7 @@ h1 {
   z-index: 1;
 }
 
+/* 撮影した画像 */
 #photoCanvas {
   position: absolute;
   inset: 0;
@@ -121,10 +142,15 @@ h1 {
   z-index: 2;
 }
 
-.stage.show-photo #video { visibility: hidden; }
-.stage.show-photo #photoCanvas { visibility: visible; }
+.stage.show-photo #video {
+  visibility: hidden;
+}
 
-/* パネルは実際の画像サイズに合わせてJSで配置 */
+.stage.show-photo #photoCanvas {
+  visibility: visible;
+}
+
+/* パネル・衣装の画像 */
 .layer {
   position: absolute;
   display: block;
@@ -148,8 +174,11 @@ h1 {
   -webkit-user-drag: none;
 }
 
-.stage.show-photo .body-layer { display: block; }
+.stage.show-photo .body-layer {
+  display: block;
+}
 
+/* カメラ起動前の案内 */
 .empty {
   position: absolute;
   z-index: 5;
@@ -161,53 +190,87 @@ h1 {
   text-align: center;
   color: #ffffff;
   font-size: 15px;
-  background: rgb(0 0 0 / 35%);
+  line-height: 1.6;
+  background: rgb(0 0 0 / 40%);
   pointer-events: none;
 }
 
-.empty.hidden { display: none; }
-
-.controls, .section {
-  width: 100%;
-  background: var(--panel);
-  border-radius: 12px;
-  padding: 12px;
+.empty.hidden {
+  display: none;
 }
 
+/* 操作ボタンを映像の下部に重ねる */
 .controls {
+  position: absolute;
+  z-index: 20;
+  left: 10px;
+  right: 10px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  width: auto;
+  padding: 8px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
+  background: rgb(0 0 0 / 58%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 14px;
 }
 
-.controls button { flex: 1 1 140px; }
+.controls button {
+  flex: 1 1 100px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 8px;
+}
 
+/* 撮影後の衣装選択パネル */
 .section {
+  position: absolute;
+  z-index: 30;
+  left: 8px;
+  right: 8px;
+  bottom: calc(env(safe-area-inset-bottom) + 72px);
+  width: auto;
+  max-height: 45dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: rgb(25 25 25 / 94%);
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.section h2 { font-size: 16px; margin: 0; }
+.section h2 {
+  font-size: 15px;
+  margin: 0;
+}
 
 .hint {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
-  color: var(--muted);
+  color: #dddddd;
   margin: 0;
 }
 
 .categories {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 5px;
 }
 
 .categories button {
+  flex: 1 1 auto;
+  padding: 8px;
+  min-height: 36px;
+  font-size: 12px;
   background: #454545;
   color: #ffffff;
-  flex: 1 1 auto;
 }
 
 .categories button.active {
@@ -215,146 +278,140 @@ h1 {
   color: #171717;
 }
 
+/* 衣装一覧 */
 .body-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 .body-option {
   min-width: 0;
-  padding: 5px;
+  padding: 4px;
   border: 2px solid transparent;
   border-radius: 8px;
   background: #383838;
   cursor: pointer;
 }
 
-.body-option.active { border-color: var(--accent); }
+.body-option.active {
+  border-color: var(--accent);
+}
 
 .body-option img {
   display: block;
   width: 100%;
-  height: 100px;
+  height: 64px;
   object-fit: contain;
   pointer-events: none;
 }
 
 .body-option span {
   display: block;
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: 3px;
+  font-size: 11px;
+  text-align: center;
   overflow-wrap: anywhere;
 }
 
-.status {
-  min-height: 20px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.hidden { display: none !important; }
-
 .small {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.5;
+  font-size: 11px;
+  color: #cccccc;
+  line-height: 1.4;
+  margin: 0;
 }
 
-/* 横向き：カメラを左、操作を右に配置 */
-@media (orientation: landscape) and (max-height: 700px) {
-  .app {
-    max-width: none;
-    min-height: 100dvh;
-    padding: 8px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(230px, 34vw);
-    grid-template-rows: auto auto minmax(0, 1fr);
-    align-items: start;
-    gap: 8px;
-  }
+/* 状態表示は画面上部に小さく表示 */
+.status {
+  position: absolute;
+  z-index: 40;
+  top: max(58px, calc(env(safe-area-inset-top) + 50px));
+  left: 8px;
+  right: 8px;
+  min-height: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #ffffff;
+  text-shadow: 0 1px 4px #000000;
+  pointer-events: none;
+}
 
+.hidden {
+  display: none !important;
+}
+
+/* 横向きでは衣装一覧を少しコンパクトにする */
+@media (orientation: landscape) {
   header {
-    grid-column: 1 / -1;
-    grid-row: 1;
     text-align: left;
+    right: 8px;
   }
 
-  .description { display: none; }
-
-  .stage-wrap {
-    grid-column: 1;
-    grid-row: 2 / 4;
-    min-height: 0;
-    align-self: center;
+  h1 {
+    font-size: 17px;
   }
 
-  .stage {
-    width: auto;
-    height: min(76dvh, 620px);
-    max-height: 76dvh;
-    max-width: 100%;
-    aspect-ratio: 4 / 3;
+  .description {
+    display: none;
   }
 
   .controls {
-    grid-column: 2;
-    grid-row: 2;
-    padding: 8px;
-    gap: 6px;
+    left: 10px;
+    right: 10px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: min(440px, calc(100% - 20px));
+    margin: 0 auto;
   }
 
   .controls button {
-    flex: 1 1 100%;
-    min-height: 40px;
-    padding: 9px;
-    font-size: 14px;
+    flex: 1 1 100px;
+    min-height: 42px;
+    font-size: 13px;
   }
 
   .section {
-    grid-column: 2;
-    grid-row: 3;
-    min-height: 0;
-    padding: 8px;
-    gap: 7px;
+    left: 8px;
+    right: 8px;
+    bottom: calc(env(safe-area-inset-bottom) + 64px);
+    max-height: 42dvh;
   }
 
   .body-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 5px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
-  .body-option { padding: 3px; }
-  .body-option img { height: 64px; }
-
-  .categories { gap: 5px; }
-
-  .categories button {
-    padding: 8px;
-    min-height: 36px;
-    font-size: 12px;
+  .body-option img {
+    height: 48px;
   }
 
   .status {
-    grid-column: 1 / -1;
-    grid-row: 4;
-    text-align: left;
-  }
-}
-
-@media (orientation: portrait) {
-  .stage {
-    width: 100%;
-    max-width: min(560px, 100%);
-    max-height: 68dvh;
+    top: 36px;
+    text-align: center;
   }
 }
 
 @media (max-width: 380px) and (orientation: portrait) {
-  .app { padding: 8px; gap: 8px; }
-  .body-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .body-option img { height: 84px; }
+  .controls {
+    left: 6px;
+    right: 6px;
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .controls button {
+    flex: 1 1 82px;
+    padding: 8px 5px;
+    font-size: 12px;
+  }
+
+  .body-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .body-option img {
+    height: 60px;
+  }
 }
 </style>
 </head>
@@ -401,6 +458,7 @@ h1 {
 
   <section class="section hidden" id="bodySection">
     <h2>衣装を選ぶ</h2>
+
     <p class="hint">
       衣装を選んだら、写真の上で指を動かして位置を調整できます。
       2本指で拡大・縮小・回転できます。
@@ -430,9 +488,21 @@ const ASSET_DIR = "./";
 const PANEL_SRC = "./halloween_face_panel.png";
 
 const CATEGORIES = {
-  mahoutukai: { label: "魔法使い", prefix: "body_mahoutukai", count: 8 },
-  majo: { label: "魔女", prefix: "body_majo", count: 8 },
-  mahou_child: { label: "魔法の子ども", prefix: "body_mahou_child", count: 6 }
+  mahoutukai: {
+    label: "魔法使い",
+    prefix: "body_mahoutukai",
+    count: 8
+  },
+  majo: {
+    label: "魔女",
+    prefix: "body_majo",
+    count: 8
+  },
+  mahou_child: {
+    label: "魔法の子ども",
+    prefix: "body_mahou_child",
+    count: 6
+  }
 };
 
 const stage = document.getElementById("stage");
@@ -461,15 +531,28 @@ let selectedBodyName = "";
 
 const panelImage = new Image();
 
-let panelBase = { x: 0, y: 0, width: 0, height: 0 };
+let panelBase = {
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0
+};
 
 let bodyTransform = {
-  x: 0, y: 0, scale: 1, rotation: 0, width: 0, height: 0
+  x: 0,
+  y: 0,
+  scale: 1,
+  rotation: 0,
+  width: 0,
+  height: 0
 };
 
 let activePointers = new Map();
 let gestureStart = null;
-let previousStageSize = { width: 0, height: 0 };
+let previousStageSize = {
+  width: 0,
+  height: 0
+};
 
 function setStatus(message) {
   statusElement.textContent = message;
@@ -478,21 +561,25 @@ function setStatus(message) {
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const image = new Image();
+
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("画像を読み込めません: " + src));
+    image.onerror = () => {
+      reject(new Error("画像を読み込めません: " + src));
+    };
+
     image.src = src;
   });
 }
 
-/*
- * パネル画像の表示サイズを計算。
- * 表示用imgと保存用canvasで同じサイズ・座標を使用します。
- */
+/* パネル画像のサイズを計算 */
 function calculatePanelSize() {
-  if (!panelImage.complete || !panelImage.naturalWidth) return;
+  if (!panelImage.complete || !panelImage.naturalWidth) {
+    return;
+  }
 
   const stageWidth = stage.clientWidth;
   const stageHeight = stage.clientHeight;
+
   if (!stageWidth || !stageHeight) return;
 
   const ratio = Math.min(
@@ -514,23 +601,31 @@ function applyPanelPosition() {
 function layoutPanelInitial() {
   calculatePanelSize();
 
-  panelBase.x = (stage.clientWidth - panelBase.width) / 2;
-  panelBase.y = (stage.clientHeight - panelBase.height) / 2;
+  panelBase.x =
+    (stage.clientWidth - panelBase.width) / 2;
+
+  panelBase.y =
+    (stage.clientHeight - panelBase.height) / 2;
 
   applyPanelPosition();
 }
 
+/* 画面回転・サイズ変更への対応 */
 function handleResize() {
   const oldWidth = previousStageSize.width;
   const oldHeight = previousStageSize.height;
 
   const centerX = oldWidth
-    ? (panelBase.x + panelBase.width / 2) / oldWidth : 0.5;
+    ? (panelBase.x + panelBase.width / 2) / oldWidth
+    : 0.5;
+
   const centerY = oldHeight
-    ? (panelBase.y + panelBase.height / 2) / oldHeight : 0.5;
+    ? (panelBase.y + panelBase.height / 2) / oldHeight
+    : 0.5;
 
   const width = stage.clientWidth;
   const height = stage.clientHeight;
+
   if (!width || !height) return;
 
   if (!captured && panelImage.complete && panelImage.naturalWidth) {
@@ -547,7 +642,10 @@ function handleResize() {
     applyPanelPosition();
   }
 
-  previousStageSize = { width, height };
+  previousStageSize = {
+    width,
+    height
+  };
 }
 
 /* 背面カメラを起動 */
@@ -566,9 +664,15 @@ async function startCamera() {
     cameraStream = await navigator.mediaDevices.getUserMedia({
       audio: false,
       video: {
-        facingMode: { ideal: "environment" },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
+        facingMode: {
+          ideal: "environment"
+        },
+        width: {
+          ideal: 1920
+        },
+        height: {
+          ideal: 1080
+        }
       }
     });
 
@@ -579,7 +683,9 @@ async function startCamera() {
         resolve();
       } else {
         video.onloadedmetadata = resolve;
-        video.onerror = () => reject(new Error("カメラ映像を読み込めません。"));
+        video.onerror = () => {
+          reject(new Error("カメラ映像を読み込めません。"));
+        };
       }
     });
 
@@ -590,7 +696,8 @@ async function startCamera() {
     emptyMessage.classList.add("hidden");
 
     handleResize();
-    setStatus("カメラを起動しました。位置を確認して撮影してください。");
+
+    setStatus("位置を確認して撮影してください。");
   } catch (error) {
     console.error(error);
 
@@ -606,7 +713,10 @@ async function startCamera() {
   }
 }
 
-/* object-fit: coverと同じ切り抜きで撮影する */
+/*
+ * object-fit: coverと同じ範囲でカメラ映像を描画する。
+ * 画面に表示される映像と保存画像の切り抜きを一致させる。
+ */
 function drawVideoCover(ctx, outputWidth, outputHeight) {
   const sourceWidth = video.videoWidth;
   const sourceHeight = video.videoHeight;
@@ -618,8 +728,10 @@ function drawVideoCover(ctx, outputWidth, outputHeight) {
   const sourceRatio = sourceWidth / sourceHeight;
   const outputRatio = outputWidth / outputHeight;
 
-  let sx = 0, sy = 0;
-  let sw = sourceWidth, sh = sourceHeight;
+  let sx = 0;
+  let sy = 0;
+  let sw = sourceWidth;
+  let sh = sourceHeight;
 
   if (sourceRatio > outputRatio) {
     sw = sourceHeight * outputRatio;
@@ -631,8 +743,14 @@ function drawVideoCover(ctx, outputWidth, outputHeight) {
 
   ctx.drawImage(
     video,
-    sx, sy, sw, sh,
-    0, 0, outputWidth, outputHeight
+    sx,
+    sy,
+    sw,
+    sh,
+    0,
+    0,
+    outputWidth,
+    outputHeight
   );
 }
 
@@ -645,12 +763,14 @@ function capturePhoto() {
 
   const width = stage.clientWidth;
   const height = stage.clientHeight;
+
   if (!width || !height) return;
 
   const stageRatio = width / height;
   const sourceRatio = video.videoWidth / video.videoHeight;
 
-  let outputWidth, outputHeight;
+  let outputWidth;
+  let outputHeight;
 
   if (sourceRatio > stageRatio) {
     outputHeight = video.videoHeight;
@@ -686,6 +806,7 @@ function capturePhoto() {
   bodyLayer.style.display = "none";
 
   renderBodyChoices(currentCategory);
+
   setStatus("衣装を選んで位置を調整してください。");
 }
 
@@ -697,7 +818,9 @@ function renderBodyChoices(category) {
   const data = CATEGORIES[category];
 
   for (let i = 1; i <= data.count; i++) {
-    const filename = data.prefix + String(i).padStart(2, "0") + ".png";
+    const filename =
+      data.prefix + String(i).padStart(2, "0") + ".png";
+
     const src = ASSET_DIR + filename;
 
     const button = document.createElement("button");
@@ -716,7 +839,9 @@ function renderBodyChoices(category) {
 
     button.append(image, label);
 
-    if (selectedBodyName === filename) button.classList.add("active");
+    if (selectedBodyName === filename) {
+      button.classList.add("active");
+    }
 
     button.addEventListener("click", async () => {
       try {
@@ -727,6 +852,7 @@ function renderBodyChoices(category) {
 
         const stageWidth = stage.clientWidth;
         const stageHeight = stage.clientHeight;
+
         const targetHeight = stageHeight * 0.72;
         const scale = targetHeight / loadedImage.naturalHeight;
 
@@ -734,14 +860,17 @@ function renderBodyChoices(category) {
         bodyTransform.height = loadedImage.naturalHeight * scale;
         bodyTransform.scale = 1;
         bodyTransform.rotation = 0;
-        bodyTransform.x = (stageWidth - bodyTransform.width) / 2;
-        bodyTransform.y = (stageHeight - bodyTransform.height) / 2;
+        bodyTransform.x =
+          (stageWidth - bodyTransform.width) / 2;
+        bodyTransform.y =
+          (stageHeight - bodyTransform.height) / 2;
 
         bodyLayer.src = src;
         bodyLayer.style.display = "block";
-        applyBodyTransform();
 
+        applyBodyTransform();
         renderBodyChoices(category);
+
         setStatus("衣装を配置しました。指で位置や大きさを調整してください。");
       } catch (error) {
         console.error(error);
@@ -753,11 +882,14 @@ function renderBodyChoices(category) {
   }
 }
 
+/* カテゴリー切り替え */
 categoriesElement.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-category]");
+
   if (!button) return;
 
   const category = button.dataset.category;
+
   if (!CATEGORIES[category]) return;
 
   categoriesElement.querySelectorAll("button").forEach((item) => {
@@ -767,17 +899,25 @@ categoriesElement.addEventListener("click", (event) => {
   renderBodyChoices(category);
 });
 
+/* 衣装の位置・大きさ・角度を画面に反映 */
 function applyBodyTransform() {
   bodyLayer.style.left = bodyTransform.x + "px";
   bodyLayer.style.top = bodyTransform.y + "px";
-  bodyLayer.style.width = bodyTransform.width * bodyTransform.scale + "px";
-  bodyLayer.style.height = bodyTransform.height * bodyTransform.scale + "px";
+
+  bodyLayer.style.width =
+    bodyTransform.width * bodyTransform.scale + "px";
+
+  bodyLayer.style.height =
+    bodyTransform.height * bodyTransform.scale + "px";
+
   bodyLayer.style.transformOrigin = "center center";
-  bodyLayer.style.transform = "rotate(" + bodyTransform.rotation + "rad)";
+  bodyLayer.style.transform =
+    "rotate(" + bodyTransform.rotation + "rad)";
 }
 
 function pointerCenter(points) {
   const values = Array.from(points.values());
+
   return {
     x: values.reduce((sum, point) => sum + point.x, 0) / values.length,
     y: values.reduce((sum, point) => sum + point.y, 0) / values.length
@@ -786,7 +926,9 @@ function pointerCenter(points) {
 
 function pointerDistance(points) {
   const values = Array.from(points.values());
+
   if (values.length < 2) return 0;
+
   return Math.hypot(
     values[0].x - values[1].x,
     values[0].y - values[1].y
@@ -795,20 +937,25 @@ function pointerDistance(points) {
 
 function pointerAngle(points) {
   const values = Array.from(points.values());
+
   if (values.length < 2) return 0;
+
   return Math.atan2(
     values[1].y - values[0].y,
     values[1].x - values[0].x
   );
 }
 
+/* 衣装を指で操作 */
 bodyLayer.addEventListener("pointerdown", (event) => {
   if (!captured || !selectedBodyImage) return;
 
   event.preventDefault();
+
   bodyLayer.setPointerCapture(event.pointerId);
 
   const rect = stage.getBoundingClientRect();
+
   activePointers.set(event.pointerId, {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top
@@ -831,6 +978,7 @@ bodyLayer.addEventListener("pointermove", (event) => {
   event.preventDefault();
 
   const rect = stage.getBoundingClientRect();
+
   activePointers.set(event.pointerId, {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top
@@ -839,8 +987,11 @@ bodyLayer.addEventListener("pointermove", (event) => {
   const center = pointerCenter(activePointers);
 
   if (activePointers.size === 1) {
-    bodyTransform.x = gestureStart.x + center.x - gestureStart.center.x;
-    bodyTransform.y = gestureStart.y + center.y - gestureStart.center.y;
+    bodyTransform.x =
+      gestureStart.x + center.x - gestureStart.center.x;
+
+    bodyTransform.y =
+      gestureStart.y + center.y - gestureStart.center.y;
   } else {
     const distance = pointerDistance(activePointers);
     const angle = pointerAngle(activePointers);
@@ -848,13 +999,21 @@ bodyLayer.addEventListener("pointermove", (event) => {
     if (gestureStart.distance > 0) {
       bodyTransform.scale = Math.max(
         0.15,
-        Math.min(5, gestureStart.scale * distance / gestureStart.distance)
+        Math.min(
+          5,
+          gestureStart.scale * distance / gestureStart.distance
+        )
       );
     }
 
-    bodyTransform.rotation = gestureStart.rotation + angle - gestureStart.angle;
-    bodyTransform.x = gestureStart.x + center.x - gestureStart.center.x;
-    bodyTransform.y = gestureStart.y + center.y - gestureStart.center.y;
+    bodyTransform.rotation =
+      gestureStart.rotation + angle - gestureStart.angle;
+
+    bodyTransform.x =
+      gestureStart.x + center.x - gestureStart.center.x;
+
+    bodyTransform.y =
+      gestureStart.y + center.y - gestureStart.center.y;
   }
 
   applyBodyTransform();
@@ -900,16 +1059,25 @@ async function savePhoto() {
 
   try {
     const exportCanvas = document.createElement("canvas");
+
     exportCanvas.width = photoCanvas.width;
     exportCanvas.height = photoCanvas.height;
 
     const ctx = exportCanvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("画像を作成できません。");
+    }
+
     ctx.drawImage(photoCanvas, 0, 0);
 
-    const scaleX = exportCanvas.width / stage.clientWidth;
-    const scaleY = exportCanvas.height / stage.clientHeight;
+    const scaleX =
+      exportCanvas.width / stage.clientWidth;
 
-    /* 顔出しパネルを撮影画像に合成 */
+    const scaleY =
+      exportCanvas.height / stage.clientHeight;
+
+    /* 顔出しパネルを合成 */
     if (panelImage.complete && panelImage.naturalWidth > 0) {
       ctx.drawImage(
         panelImage,
@@ -922,16 +1090,23 @@ async function savePhoto() {
 
     /* 衣装を合成 */
     const centerX =
-      (bodyTransform.x + bodyTransform.width * bodyTransform.scale / 2) * scaleX;
-    const centerY =
-      (bodyTransform.y + bodyTransform.height * bodyTransform.scale / 2) * scaleY;
+      (bodyTransform.x +
+       bodyTransform.width * bodyTransform.scale / 2) * scaleX;
 
-    const bodyWidth = bodyTransform.width * bodyTransform.scale * scaleX;
-    const bodyHeight = bodyTransform.height * bodyTransform.scale * scaleY;
+    const centerY =
+      (bodyTransform.y +
+       bodyTransform.height * bodyTransform.scale / 2) * scaleY;
+
+    const bodyWidth =
+      bodyTransform.width * bodyTransform.scale * scaleX;
+
+    const bodyHeight =
+      bodyTransform.height * bodyTransform.scale * scaleY;
 
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(bodyTransform.rotation);
+
     ctx.drawImage(
       selectedBodyImage,
       -bodyWidth / 2,
@@ -939,12 +1114,16 @@ async function savePhoto() {
       bodyWidth,
       bodyHeight
     );
+
     ctx.restore();
 
     const blob = await new Promise((resolve, reject) => {
       exportCanvas.toBlob((result) => {
-        if (result) resolve(result);
-        else reject(new Error("PNG画像を作成できませんでした。"));
+        if (result) {
+          resolve(result);
+        } else {
+          reject(new Error("PNG画像を作成できませんでした。"));
+        }
       }, "image/png");
     });
 
@@ -952,6 +1131,7 @@ async function savePhoto() {
     const link = document.createElement("a");
 
     const now = new Date();
+
     const stamp =
       now.getFullYear() +
       String(now.getMonth() + 1).padStart(2, "0") +
@@ -962,11 +1142,13 @@ async function savePhoto() {
 
     link.href = url;
     link.download = "halloween_photo_" + stamp + ".png";
+
     document.body.appendChild(link);
     link.click();
     link.remove();
 
     setTimeout(() => URL.revokeObjectURL(url), 10000);
+
     setStatus("写真を作成しました。保存先を確認してください。");
   } catch (error) {
     console.error(error);
@@ -983,25 +1165,34 @@ function retakePhoto() {
   selectedBodyName = "";
 
   bodyTransform = {
-    x: 0, y: 0, scale: 1, rotation: 0, width: 0, height: 0
+    x: 0,
+    y: 0,
+    scale: 1,
+    rotation: 0,
+    width: 0,
+    height: 0
   };
 
   activePointers.clear();
   gestureStart = null;
 
   stage.classList.remove("show-photo");
+
   bodyLayer.removeAttribute("src");
   bodyLayer.style.display = "none";
 
   bodySection.classList.add("hidden");
+
   captureButton.classList.remove("hidden");
   captureButton.disabled = !cameraStarted;
+
   retakeButton.classList.add("hidden");
   saveButton.classList.add("hidden");
 
   emptyMessage.classList.add("hidden");
 
   handleResize();
+
   setStatus("位置を確認して、もう一度撮影してください。");
 }
 
@@ -1011,11 +1202,7 @@ captureButton.addEventListener("click", capturePhoto);
 retakeButton.addEventListener("click", retakePhoto);
 saveButton.addEventListener("click", savePhoto);
 
-/*
- * 重要：
- * panelImageは保存用、panelLayerは画面表示用です。
- * 両方に同じ画像を設定し、読み込み完了後に配置します。
- */
+/* 顔出しパネル画像の読み込み */
 panelImage.onload = () => {
   panelLayer.src = PANEL_SRC;
   layoutPanelInitial();
@@ -1033,8 +1220,9 @@ panelLayer.onerror = () => {
 panelImage.src = PANEL_SRC;
 panelLayer.src = PANEL_SRC;
 
-/* 画面回転・サイズ変更 */
+/* 画面サイズ・向きの変更 */
 window.addEventListener("resize", handleResize);
+
 window.addEventListener("orientationchange", () => {
   setTimeout(handleResize, 250);
 });
@@ -1043,3 +1231,4 @@ handleResize();
 </script>
 </body>
 </html>
+```
