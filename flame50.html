@@ -7,7 +7,6 @@
       content="width=device-width, initial-scale=1.0,
                maximum-scale=1.0, user-scalable=no,
                viewport-fit=cover">
-
 <title>顔出しフォトパネル</title>
 
 <style>
@@ -61,11 +60,10 @@ html, body {
   z-index: 10;
   padding: 9px 13px;
   border-radius: 20px;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0,0,0,.65);
   color: white;
   font-size: 13px;
   white-space: nowrap;
-  text-align: center;
 }
 
 #panelButtons {
@@ -85,17 +83,21 @@ button {
   border: none;
   border-radius: 28px;
   padding: 11px 13px;
-  background: rgba(255,255,255,0.96);
+  background: rgba(255,255,255,.96);
   color: #222;
   font-size: 14px;
   font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  box-shadow: 0 2px 8px rgba(0,0,0,.35);
   cursor: pointer;
   touch-action: manipulation;
 }
 
 button:active {
-  opacity: 0.8;
+  opacity: .8;
+}
+
+button:disabled {
+  opacity: .5;
 }
 
 .panelButton.active {
@@ -164,7 +166,7 @@ button:active {
   bottom: calc(82px + env(safe-area-inset-bottom));
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgba(0,0,0,0.72);
+  background: rgba(0,0,0,.78);
   color: white;
   text-align: center;
   font-size: 13px;
@@ -206,7 +208,7 @@ button:active {
 <div id="previewScreen">
   <img id="previewImage" alt="撮影した写真">
 
-  <div id="saveHelp"></div>
+  <div id="saveHelp" role="status"></div>
 
   <div id="previewControls">
     <button id="retakeBtn">↩ 撮り直す</button>
@@ -229,7 +231,7 @@ const previewImage = document.getElementById("previewImage");
 const saveBtn = document.getElementById("saveBtn");
 const retakeBtn = document.getElementById("retakeBtn");
 const saveHelp = document.getElementById("saveHelp");
-
+const photoBtn = document.getElementById("photoBtn");
 const panelButtons = document.querySelectorAll(".panelButton");
 
 /* =========================
@@ -240,11 +242,10 @@ let posX = 0;
 let posY = 0;
 let scale = 1;
 let rotation = 0;
-
 let currentPanel = "flame50.png";
 
 /* =========================
-   カメラの状態
+   カメラ・写真の状態
 ========================= */
 
 let cameraStarting = false;
@@ -253,15 +254,18 @@ let savedObjectUrl = null;
 let saving = false;
 
 /* =========================
-   タッチ操作の状態
+   iPhone / iPad 判定
 ========================= */
 
-let startX = 0;
-let startY = 0;
-let startDistance = 0;
-let startAngle = 0;
-let startScale = 1;
-let startRotation = 0;
+function isAppleMobile() {
+  const ua = navigator.userAgent || "";
+
+  return /iPhone|iPad|iPod/i.test(ua) ||
+    (
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1
+    );
+}
 
 /* =========================
    カメラ起動
@@ -269,6 +273,7 @@ let startRotation = 0;
 
 async function startCamera() {
   if (cameraStarting) return;
+
   cameraStarting = true;
 
   try {
@@ -293,11 +298,13 @@ async function startCamera() {
 
   } catch (error) {
     console.error(error);
+
     alert(
       "カメラを起動できませんでした。\n\n" +
       "ブラウザのカメラ使用を許可してください。\n" +
-      "また、HTTPSのページから開いていることを確認してください。"
+      "HTTPSのページから開いていることも確認してください。"
     );
+
   } finally {
     cameraStarting = false;
   }
@@ -405,6 +412,7 @@ panel.addEventListener("touchmove", function(event) {
 function getDistance(t1, t2) {
   const dx = t2.clientX - t1.clientX;
   const dy = t2.clientY - t1.clientY;
+
   return Math.sqrt(dx * dx + dy * dy);
 }
 
@@ -424,20 +432,15 @@ document.getElementById("resetBtn").addEventListener("click", function() {
   posY = 0;
   scale = 1;
   rotation = 0;
+
   updatePanel();
 });
 
 /* =========================
-   撮影ボタン
+   撮影
 ========================= */
 
-document.getElementById("photoBtn").addEventListener("click", takePhoto);
-
-/* =========================
-   写真撮影
-   表示と同じ object-fit: cover の
-   範囲を計算して合成する
-========================= */
+photoBtn.addEventListener("click", takePhoto);
 
 function takePhoto() {
   if (!video.videoWidth || !video.videoHeight) {
@@ -457,9 +460,9 @@ function takePhoto() {
   const videoHeight = video.videoHeight;
 
   /*
-   * CSS object-fit: cover と同じ倍率で、
-   * 画面に見えているカメラ画像の範囲を求める。
+   * object-fit: cover と同じ表示範囲を計算
    */
+
   const coverScale = Math.max(
     viewWidth / videoWidth,
     viewHeight / videoHeight
@@ -471,10 +474,6 @@ function takePhoto() {
   const sourceX = (videoWidth - sourceWidth) / 2;
   const sourceY = (videoHeight - sourceHeight) / 2;
 
-  /*
-   * Canvasはカメラの元解像度をできるだけ維持。
-   * 表示座標とCanvas座標の変換倍率を共通化する。
-   */
   canvas.width = Math.max(1, Math.round(sourceWidth));
   canvas.height = Math.max(1, Math.round(sourceHeight));
 
@@ -486,8 +485,9 @@ function takePhoto() {
   }
 
   /*
-   * カメラ映像を表示範囲と同じ構図で描画。
+   * カメラ映像を描画
    */
+
   ctx.drawImage(
     video,
     sourceX, sourceY, sourceWidth, sourceHeight,
@@ -495,9 +495,9 @@ function takePhoto() {
   );
 
   /*
-   * CSS上の表示座標から写真上の座標へ変換。
-   * XとYに同一の倍率を使い、縦横のずれを防ぐ。
+   * 画面座標から写真座標へ変換
    */
+
   const screenToPhoto = canvas.width / viewWidth;
 
   const panelCenterX = viewWidth / 2 + posX;
@@ -506,15 +506,16 @@ function takePhoto() {
   const photoCenterX = panelCenterX * screenToPhoto;
   const photoCenterY = panelCenterY * screenToPhoto;
 
-  const panelWidth = panel.offsetWidth;
-  const panelHeight = panel.offsetHeight;
+  const photoWidth =
+    panel.offsetWidth * scale * screenToPhoto;
 
-  const photoWidth = panelWidth * scale * screenToPhoto;
-  const photoHeight = panelHeight * scale * screenToPhoto;
+  const photoHeight =
+    panel.offsetHeight * scale * screenToPhoto;
 
   /*
-   * 画面上と同じ中心・倍率・回転でパネルを合成。
+   * 表示と同じ位置・拡大率・回転で合成
    */
+
   ctx.save();
 
   ctx.translate(photoCenterX, photoCenterY);
@@ -531,9 +532,9 @@ function takePhoto() {
   ctx.restore();
 
   /*
-   * JPEG Blobを作成して保存に使用する。
-   * Data URLよりメモリ消費を抑えやすい。
+   * JPEG画像を生成
    */
+
   canvas.toBlob(function(blob) {
     if (!blob) {
       alert("写真を作成できませんでした。もう一度お試しください。");
@@ -556,7 +557,7 @@ function takePhoto() {
 }
 
 /* =========================
-   保存データの後片付け
+   保存画像の後片付け
 ========================= */
 
 function clearSavedPhoto() {
@@ -570,8 +571,6 @@ function clearSavedPhoto() {
 
 /* =========================
    保存ボタン
-   対応ブラウザでは共有シートを利用。
-   対応しない場合はJPEGをダウンロード。
 ========================= */
 
 saveBtn.addEventListener("click", async function() {
@@ -580,39 +579,61 @@ saveBtn.addEventListener("click", async function() {
   saving = true;
   saveBtn.disabled = true;
 
+  saveHelp.style.display = "none";
+  saveHelp.textContent = "";
+
+  const filename =
+    "face-panel-" +
+    new Date().toISOString().replace(/[:.]/g, "-") +
+    ".jpg";
+
   try {
-    const filename = "face-panel-" +
-      new Date().toISOString().replace(/[:.]/g, "-") +
-      ".jpg";
-
-    const file = new File(
-      [savedBlob],
-      filename,
-      { type: "image/jpeg" }
-    );
-
     /*
-     * ファイル共有に対応するブラウザでは、
-     * 共有先の選択画面を表示する。
-     * iPhoneでは「画像を保存」などを選択できる。
+     * iPhone / iPad：
+     * ファイル共有に対応していれば共有画面を開く。
+     * 利用者が「画像を保存」を選ぶ。
      */
-    if (navigator.share &&
+
+    if (isAppleMobile()) {
+      const file = new File(
+        [savedBlob],
+        filename,
+        { type: "image/jpeg" }
+      );
+
+      if (
+        navigator.share &&
         navigator.canShare &&
-        navigator.canShare({ files: [file] })) {
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: "顔出しフォトパネル",
+          text: "撮影した写真"
+        });
 
-      await navigator.share({
-        files: [file],
-        title: "顔出しフォトパネル",
-        text: "撮影した写真"
-      });
+        return;
+      }
 
+      /*
+       * 共有機能が利用できない場合
+       */
+
+      saveHelp.textContent =
+        "共有機能を利用できません。写真を開き、" +
+        "画像を長押しして保存できるかお試しください。";
+
+      saveHelp.style.display = "block";
       return;
     }
 
     /*
-     * 共有非対応の場合は通常のダウンロード。
+     * Androidなど：
+     * 共有画面を優先せず、JPEGをダウンロードする。
      */
+
     const link = document.createElement("a");
+
     link.href = savedObjectUrl;
     link.download = filename;
     link.style.display = "none";
@@ -622,16 +643,15 @@ saveBtn.addEventListener("click", async function() {
     link.remove();
 
     saveHelp.textContent =
-      "保存操作を行いました。写真が見つからない場合は、" +
-      "ブラウザのダウンロード一覧や「ファイル」アプリを確認してください。";
+      "ダウンロード操作を行いました。保存先はブラウザの設定によって異なります。";
 
     saveHelp.style.display = "block";
 
   } catch (error) {
     /*
-     * 利用者が共有画面を閉じた場合は、
-     * 保存失敗の警告を出さない。
+     * iPhoneで共有画面を閉じた場合など
      */
+
     if (error && error.name === "AbortError") {
       return;
     }
@@ -639,8 +659,7 @@ saveBtn.addEventListener("click", async function() {
     console.error(error);
 
     saveHelp.textContent =
-      "自動で保存できませんでした。写真を長押しするか、" +
-      "ブラウザの共有メニューから保存してください。";
+      "保存できませんでした。もう一度保存ボタンを押してください。";
 
     saveHelp.style.display = "block";
 
@@ -656,12 +675,14 @@ saveBtn.addEventListener("click", async function() {
 
 retakeBtn.addEventListener("click", async function() {
   previewScreen.style.display = "none";
+
   clearSavedPhoto();
+
   await startCamera();
 });
 
 /* =========================
-   ページを離れるときの処理
+   ページを離れるとき
 ========================= */
 
 window.addEventListener("pagehide", function() {
@@ -677,6 +698,5 @@ updatePanel();
 startCamera();
 
 </script>
-
 </body>
 </html>
