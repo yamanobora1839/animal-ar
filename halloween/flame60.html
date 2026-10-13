@@ -537,15 +537,21 @@ function applyBodyTransform() {
 }
 
 
+
 function applyLogoTransform() {
   logoLayer.style.left = "50%";
   logoLayer.style.top = "auto";
   logoLayer.style.bottom =
     "max(90px, calc(env(safe-area-inset-bottom) + 90px))";
+
   logoLayer.style.transform =
-    "translateX(-50%) scale(" + logoTransform.scale + ") rotate(" +
+    "translate(-50%, 0) translate(" +
+    logoTransform.x + "px, " +
+    (-logoTransform.y) + "px) scale(" +
+    logoTransform.scale + ") rotate(" +
     logoTransform.rotation + "rad)";
 }
+
 
 
 function updatePanelVisibility() {
