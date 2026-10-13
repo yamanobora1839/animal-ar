@@ -8,7 +8,7 @@
 <title>ハロウィンフォト</title>
 
 <style>
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html, body {
   margin: 0;
@@ -17,7 +17,7 @@ html, body {
   overflow: hidden;
   background: #000;
   color: #fff;
-  font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
+  font-family: sans-serif;
 }
 
 button {
@@ -47,11 +47,9 @@ button.active {
 
 .hidden { display: none !important; }
 
-.app, .stage {
-  position: absolute;
+.stage {
+  position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
   overflow: hidden;
   background: #000;
 }
@@ -83,6 +81,7 @@ button.active {
   max-height: none;
   object-fit: fill;
   user-select: none;
+  -webkit-user-select: none;
   -webkit-user-drag: none;
 }
 
@@ -97,45 +96,58 @@ button.active {
   transform-origin: center center;
 }
 
-.empty {
+/* センター名と撮影日 */
+#logoLayer {
   position: absolute;
   z-index: 5;
+  left: 50%;
+  top: 15%;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  color: #fff;
+  font-size: clamp(18px, 4vw, 34px);
+  font-weight: 900;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow:
+    -2px -2px 2px #222,
+     2px -2px 2px #222,
+    -2px  2px 2px #222,
+     2px  2px 2px #222,
+     0 3px 5px #000;
+  padding: 7px 10px;
+  border-radius: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+#logoLayer.editing {
+  outline: 2px dashed rgba(255,255,255,.8);
+  background: rgba(0,0,0,.12);
+}
+
+#logoTitle, #logoDate { display: block; }
+#logoDate { font-size: .7em; }
+
+.empty {
+  position: absolute;
+  z-index: 6;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   text-align: center;
-  line-height: 1.5;
   background: rgb(0 0 0 / 35%);
   pointer-events: none;
 }
 
-.controls {
-  position: absolute;
-  z-index: 20;
-  left: 7px;
-  right: 7px;
-  bottom: max(8px, env(safe-area-inset-bottom));
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px;
-  background: rgb(0 0 0 / 72%);
-  border: 1px solid rgb(255 255 255 / 15%);
-  border-radius: 12px;
-}
-
-.controls button {
-  flex: 1 1 90px;
-  min-width: 0;
-  padding: 8px 5px;
-}
-
 .panel-choices {
-  position: absolute;
-  z-index: 21;
+  position: fixed;
+  z-index: 20;
   top: max(8px, env(safe-area-inset-top));
   left: 7px;
   right: 7px;
@@ -158,8 +170,30 @@ button.active {
   color: #171717;
 }
 
+.controls {
+  position: fixed;
+  z-index: 20;
+  left: 7px;
+  right: 7px;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px;
+  background: rgb(0 0 0 / 72%);
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 12px;
+}
+
+.controls button {
+  flex: 1 1 90px;
+  min-width: 0;
+  padding: 8px 5px;
+}
+
 .section {
-  position: absolute;
+  position: fixed;
   z-index: 30;
   left: 7px;
   right: 7px;
@@ -240,7 +274,7 @@ button.active {
 }
 
 .status {
-  position: absolute;
+  position: fixed;
   z-index: 40;
   top: max(52px, calc(env(safe-area-inset-top) + 44px));
   left: 8px;
@@ -251,10 +285,65 @@ button.active {
   pointer-events: none;
 }
 
+#previewScreen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+  align-items: center;
+  justify-content: center;
+}
+
+#previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+#previewControls {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+#previewControls button {
+  min-width: 120px;
+  font-size: 15px;
+  padding: 12px;
+}
+
 @media (orientation: landscape) {
   .section { max-height: 40dvh; }
   .body-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .body-option img { height: 42px; }
+
+  .panel-choices {
+    top: 50%;
+    bottom: auto;
+    left: 8px;
+    right: auto;
+    transform: translateY(-50%);
+    flex-direction: column;
+  }
+
+  .panel-choices button { min-width: 90px; }
+
+  .controls {
+    top: 50%;
+    bottom: auto;
+    left: auto;
+    right: 8px;
+    width: 115px;
+    transform: translateY(-50%);
+    flex-direction: column;
+  }
+
+  #logoLayer { font-size: clamp(16px, 3.5vw, 26px); }
 }
 
 @media (max-width: 380px) and (orientation: portrait) {
@@ -266,47 +355,57 @@ button.active {
 </head>
 
 <body>
-<div class="app">
-  <div class="stage" id="stage">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="photoCanvas"></canvas>
-    <img id="panelLayer" class="layer panel-layer" alt="" draggable="false">
-    <img id="bodyLayer" class="layer body-layer hidden" alt="" draggable="false">
+<div class="stage" id="stage">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="photoCanvas"></canvas>
 
-    <div class="empty" id="emptyMessage">
-      「撮影を開始」を押してください
-    </div>
+  <img id="panelLayer" class="layer panel-layer" alt="" draggable="false">
+  <img id="bodyLayer" class="layer body-layer hidden" alt="" draggable="false">
+
+  <div id="logoLayer" aria-label="センター名と撮影日の位置調整">
+    <span id="logoTitle">岐阜県動物愛護センター</span>
+    <span id="logoDate"></span>
   </div>
 
-  <div class="panel-choices" id="panelChoices">
-    <button type="button" data-panel="2" class="active">パネル1</button>
-    <button type="button" data-panel="1">パネル2</button>
+  <div class="empty" id="emptyMessage">「撮影を開始」を押してください</div>
+</div>
+
+<div class="panel-choices" id="panelChoices">
+  <button type="button" data-panel="2" class="active">パネル1</button>
+  <button type="button" data-panel="1">パネル2</button>
+</div>
+
+<div class="controls">
+  <button id="startButton">撮影を開始</button>
+  <button id="captureButton" disabled>撮影</button>
+  <button id="panelToggleButton" class="secondary">パネル非表示</button>
+  <button id="reselectButton" class="secondary hidden">衣装を選び直す</button>
+  <button id="retakeButton" class="secondary hidden">撮り直す</button>
+  <button id="saveButton" class="hidden">写真を保存</button>
+</div>
+
+<section class="section hidden" id="bodySection">
+  <h2>衣装を選ぶ</h2>
+  <p class="hint">衣装を選ぶと一覧が閉じます。衣装と文字はドラッグで移動できます。2本指で拡大・縮小・回転できます。</p>
+
+  <div class="categories" id="categories">
+    <button class="active" data-category="mahoutukai">魔法使い</button>
+    <button data-category="majo">魔女</button>
+    <button data-category="mahou_child">魔法の子ども</button>
   </div>
 
-  <div class="controls">
-    <button id="startButton">撮影を開始</button>
-    <button id="captureButton" disabled>撮影</button>
-    <button id="panelToggleButton" class="secondary">パネル非表示</button>
-    <button id="reselectButton" class="secondary hidden">衣装を選び直す</button>
-    <button id="retakeButton" class="secondary hidden">撮り直す</button>
-    <button id="saveButton" class="hidden">写真を保存</button>
+  <div class="body-grid" id="bodyGrid"></div>
+  <p class="small">撮影日とセンター名も写真に合成して保存します。</p>
+</section>
+
+<div class="status" id="status" role="status" aria-live="polite"></div>
+
+<div id="previewScreen">
+  <img id="previewImage" alt="撮影した写真">
+  <div id="previewControls">
+    <button id="previewRetakeButton">撮り直す</button>
+    <button id="previewSaveButton">写真を保存</button>
   </div>
-
-  <section class="section hidden" id="bodySection">
-    <h2>衣装を選ぶ</h2>
-    <p class="hint">衣装を選ぶと一覧が閉じます。画像を指で動かして位置を調整できます。2本指で拡大・縮小・回転できます。</p>
-
-    <div class="categories" id="categories">
-      <button class="active" data-category="mahoutukai">魔法使い</button>
-      <button data-category="majo">魔女</button>
-      <button data-category="mahou_child">魔法の子ども</button>
-    </div>
-
-    <div class="body-grid" id="bodyGrid"></div>
-    <p class="small">PNG形式で保存します。</p>
-  </section>
-
-  <div class="status" id="status" role="status" aria-live="polite"></div>
 </div>
 
 <script>
@@ -328,6 +427,9 @@ const video = document.getElementById("video");
 const photoCanvas = document.getElementById("photoCanvas");
 const panelLayer = document.getElementById("panelLayer");
 const bodyLayer = document.getElementById("bodyLayer");
+const logoLayer = document.getElementById("logoLayer");
+const logoTitle = document.getElementById("logoTitle");
+const logoDate = document.getElementById("logoDate");
 const emptyMessage = document.getElementById("emptyMessage");
 const startButton = document.getElementById("startButton");
 const captureButton = document.getElementById("captureButton");
@@ -340,6 +442,10 @@ const bodySection = document.getElementById("bodySection");
 const categoriesElement = document.getElementById("categories");
 const bodyGrid = document.getElementById("bodyGrid");
 const statusElement = document.getElementById("status");
+const previewScreen = document.getElementById("previewScreen");
+const previewImage = document.getElementById("previewImage");
+const previewRetakeButton = document.getElementById("previewRetakeButton");
+const previewSaveButton = document.getElementById("previewSaveButton");
 
 let cameraStream = null;
 let cameraStarted = false;
@@ -350,14 +456,29 @@ let panelImage = new Image();
 let currentCategory = "mahoutukai";
 let selectedBodyImage = null;
 let selectedBodyName = "";
+let savedBlob = null;
+let savedUrl = null;
 
 const panelBase = { x: 0, y: 0, width: 0, height: 0 };
 const bodyTransform = {
   x: 0, y: 0, width: 0, height: 0, scale: 1, rotation: 0
 };
 
+/* 文字位置・大きさ・角度 */
+const logoTransform = {
+  x: 0, y: 0, scale: 1, rotation: 0
+};
+
 function setStatus(message) {
   statusElement.textContent = message;
+}
+
+function updateDate() {
+  const now = new Date();
+  logoDate.textContent =
+    now.getFullYear() + "年" +
+    (now.getMonth() + 1) + "月" +
+    now.getDate() + "日";
 }
 
 function loadImage(src) {
@@ -395,6 +516,23 @@ function layoutPanelInitial() {
   applyPanelPosition();
 }
 
+function applyBodyTransform() {
+  bodyLayer.style.left = bodyTransform.x + "px";
+  bodyLayer.style.top = bodyTransform.y + "px";
+  bodyLayer.style.width = bodyTransform.width * bodyTransform.scale + "px";
+  bodyLayer.style.height = bodyTransform.height * bodyTransform.scale + "px";
+  bodyLayer.style.transformOrigin = "center center";
+  bodyLayer.style.transform = "rotate(" + bodyTransform.rotation + "rad)";
+}
+
+function applyLogoTransform() {
+  logoLayer.style.left = logoTransform.x + "px";
+  logoLayer.style.top = logoTransform.y + "px";
+  logoLayer.style.transform =
+    "translate(-50%, -50%) scale(" + logoTransform.scale + ") rotate(" +
+    logoTransform.rotation + "rad)";
+}
+
 function updatePanelVisibility() {
   panelLayer.style.visibility = panelVisible ? "visible" : "hidden";
   panelToggleButton.textContent = panelVisible ? "パネル非表示" : "パネル表示";
@@ -409,7 +547,6 @@ async function selectPanel(id) {
     panelImage = image;
     panelLayer.src = image.src;
 
-    /* 選択したパネルに合わせて初期位置・大きさを調整 */
     layoutPanelInitial();
 
     panelChoices.querySelectorAll("button[data-panel]").forEach(button => {
@@ -419,7 +556,7 @@ async function selectPanel(id) {
     setStatus(id === "2" ? "パネル1を選択しました。" : "パネル2を選択しました。");
   } catch (error) {
     console.error(error);
-    setStatus("パネル画像を読み込めませんでした。ファイル名と配置を確認してください。");
+    setStatus("パネル画像を読み込めません。画像のファイル名と配置を確認してください。");
   }
 }
 
@@ -459,22 +596,18 @@ async function startCamera() {
     cameraStarted = true;
     captureButton.disabled = false;
     emptyMessage.classList.add("hidden");
-    setStatus("位置を確認して撮影してください。");
+    setStatus("文字はドラッグで移動できます。位置を確認して撮影してください。");
   } catch (error) {
     console.error(error);
-    setStatus("カメラを起動できませんでした。カメラの使用許可を確認してください。");
+    setStatus("カメラを起動できません。カメラの使用許可を確認してください。");
     startButton.disabled = false;
   }
 }
 
-/* 画面表示と同じ範囲を切り抜いて撮影 */
 function drawVideoCover(ctx, outputWidth, outputHeight) {
   const sourceWidth = video.videoWidth;
   const sourceHeight = video.videoHeight;
-
-  if (!sourceWidth || !sourceHeight) {
-    throw new Error("カメラ映像の準備ができていません。");
-  }
+  if (!sourceWidth || !sourceHeight) throw new Error("カメラ映像の準備ができていません。");
 
   const sourceRatio = sourceWidth / sourceHeight;
   const outputRatio = outputWidth / outputHeight;
@@ -565,10 +698,10 @@ function renderBodyChoices(category) {
         selectedBodyName = filename;
 
         const targetHeight = stage.clientHeight * 0.72;
-        const scale = targetHeight / selectedBodyImage.naturalHeight;
+        const ratio = targetHeight / selectedBodyImage.naturalHeight;
 
-        bodyTransform.width = selectedBodyImage.naturalWidth * scale;
-        bodyTransform.height = selectedBodyImage.naturalHeight * scale;
+        bodyTransform.width = selectedBodyImage.naturalWidth * ratio;
+        bodyTransform.height = selectedBodyImage.naturalHeight * ratio;
         bodyTransform.scale = 1;
         bodyTransform.rotation = 0;
         bodyTransform.x = (stage.clientWidth - bodyTransform.width) / 2;
@@ -580,7 +713,7 @@ function renderBodyChoices(category) {
 
         bodySection.classList.add("hidden");
         renderBodyChoices(category);
-        setStatus("衣装を配置しました。指で位置や大きさを調整してください。");
+        setStatus("衣装を配置しました。位置や大きさを調整してください。");
       } catch (error) {
         console.error(error);
         setStatus("衣装画像を読み込めませんでした。");
@@ -604,15 +737,6 @@ categoriesElement.addEventListener("click", event => {
 
   renderBodyChoices(category);
 });
-
-function applyBodyTransform() {
-  bodyLayer.style.left = bodyTransform.x + "px";
-  bodyLayer.style.top = bodyTransform.y + "px";
-  bodyLayer.style.width = bodyTransform.width * bodyTransform.scale + "px";
-  bodyLayer.style.height = bodyTransform.height * bodyTransform.scale + "px";
-  bodyLayer.style.transformOrigin = "center center";
-  bodyLayer.style.transform = "rotate(" + bodyTransform.rotation + "rad)";
-}
 
 function centerOf(points) {
   const values = [...points.values()];
@@ -639,6 +763,7 @@ function pointOnStage(event) {
   return { x: event.clientX - rect.left, y: event.clientY - rect.top };
 }
 
+/* パネルと衣装のジェスチャー */
 function attachGestures(element, type) {
   const pointers = new Map();
   let start = null;
@@ -646,12 +771,9 @@ function attachGestures(element, type) {
   function readTransform() {
     if (type === "panel") {
       return {
-        x: panelBase.x,
-        y: panelBase.y,
-        width: panelBase.width,
-        height: panelBase.height,
-        scale: 1,
-        rotation: 0
+        x: panelBase.x, y: panelBase.y,
+        width: panelBase.width, height: panelBase.height,
+        scale: 1, rotation: 0
       };
     }
     return { ...bodyTransform };
@@ -674,7 +796,6 @@ function attachGestures(element, type) {
     const center = centerOf(pointers);
     const distance = distanceOf(pointers);
     const angle = angleOf(pointers);
-
     const imageCenterX = t.x + t.width * t.scale / 2;
     const imageCenterY = t.y + t.height * t.scale / 2;
     const dx = center.x - imageCenterX;
@@ -683,10 +804,7 @@ function attachGestures(element, type) {
     const sin = Math.sin(t.rotation);
 
     start = {
-      ...t,
-      center,
-      distance,
-      angle,
+      ...t, center, distance, angle,
       anchorX: (dx * cos + dy * sin) / t.scale,
       anchorY: (-dx * sin + dy * cos) / t.scale
     };
@@ -722,14 +840,11 @@ function attachGestures(element, type) {
 
     if (type === "panel") {
       const newWidth = Math.max(40, Math.min(stage.clientWidth * 4, start.width * ratio));
-      const scale = newWidth / start.width;
-
+      const factor = newWidth / start.width;
       t.width = newWidth;
-      t.height = start.height * scale;
-
-      /* 指の中間点を基準にして、画像がずれないようにする */
-      t.x = center.x - (start.center.x - start.x) * scale;
-      t.y = center.y - (start.center.y - start.y) * scale;
+      t.height = start.height * factor;
+      t.x = center.x - (start.center.x - start.x) * factor;
+      t.y = center.y - (start.center.y - start.y) * factor;
     } else {
       t.scale = Math.max(0.15, Math.min(5, start.scale * ratio));
       t.rotation = start.rotation + angleOf(pointers) - start.angle;
@@ -738,12 +853,11 @@ function attachGestures(element, type) {
       const sin = Math.sin(t.rotation);
       const offsetX = (start.anchorX * cos - start.anchorY * sin) * t.scale;
       const offsetY = (start.anchorX * sin + start.anchorY * cos) * t.scale;
+      const cx = center.x - offsetX;
+      const cy = center.y - offsetY;
 
-      const imageCenterX = center.x - offsetX;
-      const imageCenterY = center.y - offsetY;
-
-      t.x = imageCenterX - t.width * t.scale / 2;
-      t.y = imageCenterY - t.height * t.scale / 2;
+      t.x = cx - t.width * t.scale / 2;
+      t.y = cy - t.height * t.scale / 2;
     }
 
     writeTransform(t);
@@ -752,12 +866,8 @@ function attachGestures(element, type) {
   function endPointer(event) {
     if (!pointers.has(event.pointerId)) return;
     pointers.delete(event.pointerId);
-
-    if (pointers.size === 0) {
-      start = null;
-    } else {
-      beginGesture();
-    }
+    if (pointers.size === 0) start = null;
+    else beginGesture();
   }
 
   element.addEventListener("pointerup", endPointer);
@@ -765,95 +875,190 @@ function attachGestures(element, type) {
   element.addEventListener("lostpointercapture", endPointer);
 }
 
+/* センター名と日付もドラッグ・ピンチ・回転可能 */
+(function attachLogoGestures() {
+  const pointers = new Map();
+  let start = null;
+
+  function begin() {
+    const center = centerOf(pointers);
+    const distance = distanceOf(pointers);
+    const angle = angleOf(pointers);
+
+    start = {
+      x: logoTransform.x,
+      y: logoTransform.y,
+      scale: logoTransform.scale,
+      rotation: logoTransform.rotation,
+      center,
+      distance,
+      angle
+    };
+  }
+
+  logoLayer.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    logoLayer.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, pointOnStage(event));
+    logoLayer.classList.add("editing");
+    begin();
+  });
+
+  logoLayer.addEventListener("pointermove", event => {
+    if (!pointers.has(event.pointerId) || !start) return;
+    event.preventDefault();
+
+    pointers.set(event.pointerId, pointOnStage(event));
+    const center = centerOf(pointers);
+
+    if (pointers.size === 1) {
+      logoTransform.x = start.x + center.x - start.center.x;
+      logoTransform.y = start.y + center.y - start.center.y;
+    } else {
+      const distance = distanceOf(pointers);
+      if (start.distance > 0) {
+        logoTransform.scale = Math.max(
+          0.4,
+          Math.min(3, start.scale * distance / start.distance)
+        );
+      }
+      logoTransform.rotation =
+        start.rotation + angleOf(pointers) - start.angle;
+    }
+
+    applyLogoTransform();
+  });
+
+  function endPointer(event) {
+    if (!pointers.has(event.pointerId)) return;
+    pointers.delete(event.pointerId);
+
+    if (pointers.size === 0) {
+      start = null;
+      logoLayer.classList.remove("editing");
+    } else {
+      begin();
+    }
+  }
+
+  logoLayer.addEventListener("pointerup", endPointer);
+  logoLayer.addEventListener("pointercancel", endPointer);
+  logoLayer.addEventListener("lostpointercapture", endPointer);
+})();
+
 attachGestures(panelLayer, "panel");
 attachGestures(bodyLayer, "body");
 
+function drawLogo(ctx, scaleX, scaleY) {
+  const rect = logoLayer.getBoundingClientRect();
+  const stageRect = stage.getBoundingClientRect();
+
+  const centerX = (rect.left - stageRect.left + rect.width / 2) * scaleX;
+  const centerY = (rect.top - stageRect.top + rect.height / 2) * scaleY;
+
+  const computedTitle = getComputedStyle(logoTitle);
+  const titleFontSize = parseFloat(computedTitle.fontSize) || 28;
+  const dateFontSize = titleFontSize * 0.7;
+  const cssScale = logoTransform.scale;
+
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.rotate(logoTransform.rotation);
+  ctx.scale(cssScale * scaleX, cssScale * scaleY);
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#222";
+  ctx.fillStyle = "#fff";
+  ctx.shadowColor = "#000";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
+
+  ctx.font = `900 ${titleFontSize}px sans-serif`;
+  ctx.strokeText(logoTitle.textContent, 0, -titleFontSize * 0.38);
+  ctx.fillText(logoTitle.textContent, 0, -titleFontSize * 0.38);
+
+  ctx.font = `900 ${dateFontSize}px sans-serif`;
+  ctx.strokeText(logoDate.textContent, 0, titleFontSize * 0.65);
+  ctx.fillText(logoDate.textContent, 0, titleFontSize * 0.65);
+
+  ctx.restore();
+}
+
+async function createPhotoBlob() {
+  if (!captured || !selectedBodyImage) {
+    throw new Error("撮影して衣装を選んでください。");
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = photoCanvas.width;
+  canvas.height = photoCanvas.height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("画像を作成できません。");
+
+  ctx.drawImage(photoCanvas, 0, 0);
+
+  const scaleX = canvas.width / stage.clientWidth;
+  const scaleY = canvas.height / stage.clientHeight;
+
+  if (panelVisible && panelImage.complete && panelImage.naturalWidth > 0) {
+    ctx.drawImage(
+      panelImage,
+      panelBase.x * scaleX,
+      panelBase.y * scaleY,
+      panelBase.width * scaleX,
+      panelBase.height * scaleY
+    );
+  }
+
+  const cx =
+    (bodyTransform.x + bodyTransform.width * bodyTransform.scale / 2) * scaleX;
+  const cy =
+    (bodyTransform.y + bodyTransform.height * bodyTransform.scale / 2) * scaleY;
+  const bw = bodyTransform.width * bodyTransform.scale * scaleX;
+  const bh = bodyTransform.height * bodyTransform.scale * scaleY;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(bodyTransform.rotation);
+  ctx.drawImage(selectedBodyImage, -bw / 2, -bh / 2, bw, bh);
+  ctx.restore();
+
+  drawLogo(ctx, scaleX, scaleY);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error("写真を作成できませんでした。"));
+    }, "image/png");
+  });
+}
+
 async function savePhoto() {
-  if (!captured) {
-    setStatus("先に撮影してください。");
-    return;
-  }
-
-  if (!selectedBodyImage) {
-    setStatus("先に衣装を選んでください。");
-    return;
-  }
-
   saveButton.disabled = true;
   setStatus("写真を作成しています…");
 
   try {
-    const canvas = document.createElement("canvas");
-    canvas.width = photoCanvas.width;
-    canvas.height = photoCanvas.height;
+    savedBlob = await createPhotoBlob();
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("画像を作成できません。");
+    if (savedUrl) URL.revokeObjectURL(savedUrl);
+    savedUrl = URL.createObjectURL(savedBlob);
 
-    ctx.drawImage(photoCanvas, 0, 0);
-
-    const scaleX = canvas.width / stage.clientWidth;
-    const scaleY = canvas.height / stage.clientHeight;
-
-    /* 選択中で、表示状態のパネルだけを保存画像に合成 */
-    if (panelVisible && panelImage.complete && panelImage.naturalWidth > 0) {
-      ctx.drawImage(
-        panelImage,
-        panelBase.x * scaleX,
-        panelBase.y * scaleY,
-        panelBase.width * scaleX,
-        panelBase.height * scaleY
-      );
-    }
-
-    const centerX =
-      (bodyTransform.x + bodyTransform.width * bodyTransform.scale / 2) * scaleX;
-    const centerY =
-      (bodyTransform.y + bodyTransform.height * bodyTransform.scale / 2) * scaleY;
-    const bodyWidth = bodyTransform.width * bodyTransform.scale * scaleX;
-    const bodyHeight = bodyTransform.height * bodyTransform.scale * scaleY;
-
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.rotate(bodyTransform.rotation);
-    ctx.drawImage(
-      selectedBodyImage,
-      -bodyWidth / 2,
-      -bodyHeight / 2,
-      bodyWidth,
-      bodyHeight
-    );
-    ctx.restore();
-
-    const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob(result => {
-        if (result) resolve(result);
-        else reject(new Error("PNG画像を作成できませんでした。"));
-      }, "image/png");
-    });
-
-    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    const now = new Date();
-    const stamp =
-      now.getFullYear() +
-      String(now.getMonth() + 1).padStart(2, "0") +
-      String(now.getDate()).padStart(2, "0") + "_" +
-      String(now.getHours()).padStart(2, "0") +
-      String(now.getMinutes()).padStart(2, "0") +
-      String(now.getSeconds()).padStart(2, "0");
-
-    link.href = url;
-    link.download = "halloween_photo_" + stamp + ".png";
+    link.href = savedUrl;
+    link.download = "gifu_animal_center_" +
+      new Date().toISOString().replace(/[:.]/g, "-") + ".png";
     document.body.appendChild(link);
     link.click();
     link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
 
-    setStatus("写真を作成しました。保存先を確認してください。");
+    setStatus("写真を保存する操作を行いました。保存先を確認してください。");
   } catch (error) {
     console.error(error);
-    setStatus("写真を保存できませんでした。もう一度お試しください。");
+    setStatus(error.message || "写真を保存できませんでした。");
   } finally {
     saveButton.disabled = false;
   }
@@ -894,8 +1099,7 @@ panelToggleButton.addEventListener("click", () => {
 
 panelChoices.addEventListener("click", event => {
   const button = event.target.closest("button[data-panel]");
-  if (!button) return;
-  selectPanel(button.dataset.panel);
+  if (button) selectPanel(button.dataset.panel);
 });
 
 reselectButton.addEventListener("click", () => {
@@ -915,9 +1119,10 @@ window.addEventListener("orientationchange", () => {
   }, 250);
 });
 
-/* 起動時はパネル02を表示 */
-selectPanel("2");
+updateDate();
+applyLogoTransform();
 updatePanelVisibility();
+selectPanel("2");
 </script>
 </body>
 </html>
