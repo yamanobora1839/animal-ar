@@ -1,113 +1,105 @@
-```html
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
-<title>ハロウィンフォト</title>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0,
+               maximum-scale=1.0, user-scalable=no,
+               viewport-fit=cover">
+<title>顔出しフォトパネル</title>
 
 <style>
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 
 html, body {
   margin: 0;
+  padding: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
   background: #000;
-  color: #fff;
   font-family: sans-serif;
 }
 
 button {
-  border: 0;
-  border-radius: 9px;
-  padding: 9px 11px;
-  min-height: 42px;
-  background: #ff9d32;
-  color: #171717;
-  font-size: 13px;
-  font-weight: 700;
+  border: none;
+  border-radius: 28px;
+  padding: 11px 13px;
+  background: rgba(255,255,255,.96);
+  color: #222;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35);
   cursor: pointer;
   touch-action: manipulation;
 }
 
-button.secondary {
-  background: #444;
-  color: #fff;
+button:active {
+  opacity: .75;
 }
 
-button.active {
-  background: #ff9d32;
-  color: #171717;
-  outline: 2px solid #fff;
-  outline-offset: -3px;
+button:disabled {
+  opacity: .5;
 }
 
-.hidden { display: none !important; }
-
-.stage {
+#camera {
   position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: #000;
-}
-
-#video, #photoCanvas {
-  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  z-index: 1;
+  background: #000;
 }
 
-#video { z-index: 1; }
-
-#photoCanvas {
+#panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 90vw;
+  max-width: 700px;
+  height: auto;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
   z-index: 2;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.stage.show-photo #video { visibility: hidden; }
-.stage.show-photo #photoCanvas { visibility: visible; }
-
-.layer {
-  position: absolute;
-  display: block;
-  max-width: none;
-  max-height: none;
-  object-fit: fill;
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
-}
-
-.panel-layer {
-  z-index: 3;
   touch-action: none;
 }
 
-.body-layer {
-  z-index: 4;
-  touch-action: none;
-  transform-origin: center center;
+/* 撮影案内 */
+#help {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: rgba(0,0,0,.65);
+  color: white;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
-/* センター名と撮影日 */
-#logoLayer {
-  position: absolute;
-  z-index: 5;
+/* 写真に合成する文字 */
+#logoText {
+  position: fixed;
   left: 50%;
   top: 15%;
+  z-index: 5;
   transform: translate(-50%, -50%);
   transform-origin: center center;
-  color: #fff;
-  font-size: clamp(18px, 4vw, 34px);
+  color: white;
+  font-size: clamp(18px, 4vw, 36px);
   font-weight: 900;
-  line-height: 1.3;
+  line-height: 1.25;
   text-align: center;
   white-space: nowrap;
   text-shadow:
@@ -116,175 +108,113 @@ button.active {
     -2px  2px 2px #222,
      2px  2px 2px #222,
      0 3px 5px #000;
-  padding: 7px 10px;
+  padding: 8px 12px;
   border-radius: 8px;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: none;
-  cursor: grab;
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
-#logoLayer.editing {
-  outline: 2px dashed rgba(255,255,255,.8);
-  background: rgba(0,0,0,.12);
+#logoText.editing {
+  outline: 2px dashed rgba(255,255,255,.85);
+  background: rgba(0,0,0,.15);
 }
 
-#logoTitle, #logoDate { display: block; }
-#logoDate { font-size: .7em; }
+#logoTitle,
+#logoDate {
+  display: block;
+}
 
-.empty {
-  position: absolute;
-  z-index: 6;
-  inset: 0;
+#logoDate {
+  font-size: .7em;
+}
+
+/* パネル選択 */
+#panelButtons {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  z-index: 10;
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
-  background: rgb(0 0 0 / 35%);
-  pointer-events: none;
+  gap: 7px;
+  padding: 0 6px;
 }
 
-.panel-choices {
+.panelButton.active {
+  background: #222;
+  color: white;
+}
+
+/* 撮影・リセット */
+#controls {
   position: fixed;
-  z-index: 20;
-  top: max(8px, env(safe-area-inset-top));
-  left: 7px;
-  right: 7px;
+  left: 0;
+  right: 0;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 10;
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: 12px;
+  padding: 0 10px;
 }
 
-.panel-choices button {
-  flex: 1 1 0;
-  max-width: 180px;
-  min-height: 38px;
-  padding: 7px 5px;
-  background: rgb(40 40 40 / 90%);
-  color: #fff;
+#controls button {
+  min-width: 112px;
 }
 
-.panel-choices button.active {
-  background: #ff9d32;
-  color: #171717;
-}
-
-.controls {
-  position: fixed;
-  z-index: 20;
-  left: 7px;
-  right: 7px;
-  bottom: max(8px, env(safe-area-inset-bottom));
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px;
-  background: rgb(0 0 0 / 72%);
-  border: 1px solid rgb(255 255 255 / 15%);
-  border-radius: 12px;
-}
-
-.controls button {
-  flex: 1 1 90px;
-  min-width: 0;
-  padding: 8px 5px;
-}
-
-.section {
+/* 文字調整ボタン */
+#textControls {
+  display: none;
   position: fixed;
   z-index: 30;
-  left: 7px;
-  right: 7px;
-  bottom: calc(env(safe-area-inset-bottom) + 70px);
-  max-height: 44dvh;
-  overflow-y: auto;
-  padding: 9px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  background: rgb(25 25 25 / 95%);
-  border: 1px solid rgb(255 255 255 / 18%);
-  border-radius: 12px;
-}
-
-.section h2 {
-  margin: 0;
-  font-size: 14px;
-}
-
-.hint, .small {
-  margin: 0;
-  color: #ddd;
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.categories {
-  display: flex;
-  flex-wrap: wrap;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 46px);
   gap: 5px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(0,0,0,.78);
+  box-shadow: 0 2px 12px rgba(0,0,0,.4);
 }
 
-.categories button {
-  flex: 1 1 auto;
-  min-height: 34px;
-  padding: 6px;
-  background: #454545;
-  color: #fff;
-  font-size: 12px;
-}
-
-.categories button.active {
-  background: #ff9d32;
-  color: #171717;
-}
-
-.body-grid {
+#textControls.visible {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
 }
 
-.body-option {
-  min-width: 0;
-  padding: 4px;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  background: #383838;
-  color: #fff;
+#textControls button {
+  width: 52px;
+  height: 46px;
+  padding: 0;
+  border-radius: 12px;
+  font-size: 25px;
+  line-height: 1;
+  box-shadow: none;
+  background: rgba(255,255,255,.96);
 }
 
-.body-option.active { border-color: #ff9d32; }
-
-.body-option img {
-  display: block;
-  width: 100%;
-  height: 58px;
-  object-fit: contain;
+#textControls .empty {
+  visibility: hidden;
   pointer-events: none;
 }
 
-.body-option span {
-  display: block;
-  margin-top: 3px;
-  font-size: 10px;
-  text-align: center;
-}
-
-.status {
-  position: fixed;
-  z-index: 40;
-  top: max(52px, calc(env(safe-area-inset-top) + 44px));
-  left: 8px;
-  right: 8px;
-  text-align: center;
-  font-size: 12px;
-  text-shadow: 0 1px 4px #000;
+/* 文字調整中はほかの操作ボタンを隠す */
+body.adjusting #panelButtons,
+body.adjusting #controls {
+  visibility: hidden;
   pointer-events: none;
 }
 
+#photoCanvas {
+  display: none;
+}
+
+/* 撮影後のプレビュー */
 #previewScreen {
   display: none;
   position: fixed;
@@ -296,6 +226,7 @@ button.active {
 }
 
 #previewImage {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -303,176 +234,256 @@ button.active {
 
 #previewControls {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  bottom: calc(16px + env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 0 12px;
 }
 
 #previewControls button {
-  min-width: 120px;
-  font-size: 15px;
-  padding: 12px;
+  min-width: 125px;
+  padding: 14px 16px;
+  font-size: 16px;
 }
 
-@media (orientation: landscape) {
-  .section { max-height: 40dvh; }
-  .body-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .body-option img { height: 42px; }
+#saveHelp {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,.82);
+  color: white;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  display: none;
+}
 
-  .panel-choices {
+/* 横向き */
+@media (orientation: landscape) {
+  #help {
+    top: calc(8px + env(safe-area-inset-top));
+  }
+
+  #panelButtons {
     top: 50%;
     bottom: auto;
-    left: 8px;
+    left: calc(8px + env(safe-area-inset-left));
     right: auto;
     transform: translateY(-50%);
     flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0;
   }
 
-  .panel-choices button { min-width: 90px; }
+  #panelButtons button {
+    padding: 10px 11px;
+    font-size: 12px;
+  }
 
-  .controls {
+  #controls {
     top: 50%;
     bottom: auto;
     left: auto;
-    right: 8px;
-    width: 115px;
+    right: calc(8px + env(safe-area-inset-right));
     transform: translateY(-50%);
     flex-direction: column;
+    gap: 10px;
+    padding: 0;
   }
 
-  #logoLayer { font-size: clamp(16px, 3.5vw, 26px); }
+  #controls button {
+    min-width: 90px;
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  #textControls {
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 38px);
+    gap: 4px;
+    padding: 6px;
+  }
+
+  #textControls button {
+    width: 44px;
+    height: 38px;
+    font-size: 22px;
+  }
+
+  #previewControls {
+    left: auto;
+    right: calc(12px + env(safe-area-inset-right));
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #previewControls button {
+    min-width: 110px;
+  }
+
+  #saveHelp {
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: auto;
+    max-width: 55%;
+  }
 }
 
-@media (max-width: 380px) and (orientation: portrait) {
-  .controls { gap: 4px; padding: 5px; }
-  .controls button { flex-basis: 78px; font-size: 12px; }
-  .body-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 高さの低い横画面 */
+@media (orientation: landscape) and (max-height: 450px) {
+  #logoText {
+    font-size: clamp(16px, 3.5vw, 26px);
+  }
+
+  #panelButtons button {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+
+  #controls button {
+    padding: 9px 7px;
+  }
 }
 </style>
 </head>
 
 <body>
-<div class="stage" id="stage">
-  <video id="video" autoplay playsinline muted></video>
-  <canvas id="photoCanvas"></canvas>
 
-  <img id="panelLayer" class="layer panel-layer" alt="" draggable="false">
-  <img id="bodyLayer" class="layer body-layer hidden" alt="" draggable="false">
+<video id="camera" autoplay playsinline></video>
 
-  <div id="logoLayer" aria-label="センター名と撮影日の位置調整">
-    <span id="logoTitle">岐阜県動物愛護センター</span>
-    <span id="logoDate"></span>
-  </div>
+<img id="panel"
+     src="face-panel/flame50.png"
+     alt="顔出しパネル"
+     draggable="false">
 
-  <div class="empty" id="emptyMessage">「撮影を開始」を押してください</div>
+<div id="help">
+  パネル：指で移動・2本指で拡大縮小・回転
 </div>
 
-<div class="panel-choices" id="panelChoices">
-  <button type="button" data-panel="2" class="active">パネル1</button>
-  <button type="button" data-panel="1">パネル2</button>
+<div id="logoText" role="button" aria-label="文字の位置調整">
+  <span id="logoTitle">岐阜県動物愛護センター</span>
+  <span id="logoDate"></span>
 </div>
 
-<div class="controls">
-  <button id="startButton">撮影を開始</button>
-  <button id="captureButton" disabled>撮影</button>
-  <button id="panelToggleButton" class="secondary">パネル非表示</button>
-  <button id="reselectButton" class="secondary hidden">衣装を選び直す</button>
-  <button id="retakeButton" class="secondary hidden">撮り直す</button>
-  <button id="saveButton" class="hidden">写真を保存</button>
+<div id="panelButtons">
+  <button class="panelButton active"
+          data-image="flame50.png">🐶🐱 犬・猫</button>
+  <button class="panelButton"
+          data-image="flame51.png">🐶 犬</button>
+  <button class="panelButton"
+          data-image="flame52.png">🐱 猫</button>
 </div>
 
-<section class="section hidden" id="bodySection">
-  <h2>衣装を選ぶ</h2>
-  <p class="hint">衣装を選ぶと一覧が閉じます。衣装と文字はドラッグで移動できます。2本指で拡大・縮小・回転できます。</p>
+<div id="controls">
+  <button id="resetBtn">↩ リセット</button>
+  <button id="photoBtn">📷 撮影</button>
+</div>
 
-  <div class="categories" id="categories">
-    <button class="active" data-category="mahoutukai">魔法使い</button>
-    <button data-category="majo">魔女</button>
-    <button data-category="mahou_child">魔法の子ども</button>
-  </div>
+<!-- 文字調整：8個の記号ボタン -->
+<div id="textControls" aria-label="文字の位置調整">
+  <button type="button" data-action="rotateLeft"
+          aria-label="左回転" title="左回転">↶</button>
+  <button type="button" data-action="up"
+          aria-label="上へ" title="上へ">↑</button>
+  <button type="button" data-action="rotateRight"
+          aria-label="右回転" title="右回転">↷</button>
 
-  <div class="body-grid" id="bodyGrid"></div>
-  <p class="small">撮影日とセンター名も写真に合成して保存します。</p>
-</section>
+  <button type="button" data-action="left"
+          aria-label="左へ" title="左へ">←</button>
+  <button type="button" class="empty" tabindex="-1"
+          aria-hidden="true"> </button>
+  <button type="button" data-action="right"
+          aria-label="右へ" title="右へ">→</button>
 
-<div class="status" id="status" role="status" aria-live="polite"></div>
+  <button type="button" data-action="shrink"
+          aria-label="縮小" title="縮小">−</button>
+  <button type="button" data-action="down"
+          aria-label="下へ" title="下へ">↓</button>
+  <button type="button" data-action="enlarge"
+          aria-label="拡大" title="拡大">＋</button>
+</div>
+
+<canvas id="photoCanvas"></canvas>
 
 <div id="previewScreen">
   <img id="previewImage" alt="撮影した写真">
+  <div id="saveHelp" role="status"></div>
   <div id="previewControls">
-    <button id="previewRetakeButton">撮り直す</button>
-    <button id="previewSaveButton">写真を保存</button>
+    <button id="retakeBtn">↩ 撮り直す</button>
+    <button id="saveBtn">💾 保存</button>
   </div>
 </div>
 
 <script>
 "use strict";
 
-const PANEL_FILES = {
-  "2": "./halloween_face_panel02.png",
-  "1": "./halloween_face_panel.png"
-};
-
-const CATEGORIES = {
-  mahoutukai: { label: "魔法使い", prefix: "body_mahoutukai", count: 8 },
-  majo: { label: "魔女", prefix: "body_majo", count: 8 },
-  mahou_child: { label: "魔法の子ども", prefix: "body_mahou_child", count: 6 }
-};
-
-const stage = document.getElementById("stage");
-const video = document.getElementById("video");
-const photoCanvas = document.getElementById("photoCanvas");
-const panelLayer = document.getElementById("panelLayer");
-const bodyLayer = document.getElementById("bodyLayer");
-const logoLayer = document.getElementById("logoLayer");
-const logoTitle = document.getElementById("logoTitle");
-const logoDate = document.getElementById("logoDate");
-const emptyMessage = document.getElementById("emptyMessage");
-const startButton = document.getElementById("startButton");
-const captureButton = document.getElementById("captureButton");
-const panelToggleButton = document.getElementById("panelToggleButton");
-const panelChoices = document.getElementById("panelChoices");
-const reselectButton = document.getElementById("reselectButton");
-const retakeButton = document.getElementById("retakeButton");
-const saveButton = document.getElementById("saveButton");
-const bodySection = document.getElementById("bodySection");
-const categoriesElement = document.getElementById("categories");
-const bodyGrid = document.getElementById("bodyGrid");
-const statusElement = document.getElementById("status");
+/* =========================
+   要素
+========================= */
+const video = document.getElementById("camera");
+const panel = document.getElementById("panel");
+const canvas = document.getElementById("photoCanvas");
 const previewScreen = document.getElementById("previewScreen");
 const previewImage = document.getElementById("previewImage");
-const previewRetakeButton = document.getElementById("previewRetakeButton");
-const previewSaveButton = document.getElementById("previewSaveButton");
+const saveBtn = document.getElementById("saveBtn");
+const retakeBtn = document.getElementById("retakeBtn");
+const saveHelp = document.getElementById("saveHelp");
+const photoBtn = document.getElementById("photoBtn");
+const panelButtons = document.querySelectorAll(".panelButton");
+const logoText = document.getElementById("logoText");
+const logoTitle = document.getElementById("logoTitle");
+const logoDate = document.getElementById("logoDate");
+const textControls = document.getElementById("textControls");
 
-let cameraStream = null;
-let cameraStarted = false;
-let captured = false;
-let panelVisible = true;
-let selectedPanelId = "2";
-let panelImage = new Image();
-let currentCategory = "mahoutukai";
-let selectedBodyImage = null;
-let selectedBodyName = "";
+/* =========================
+   パネルの状態
+========================= */
+let posX = 0;
+let posY = 0;
+let scale = 1;
+let rotation = 0;
+let currentPanel = "flame50.png";
+
+let startX = 0;
+let startY = 0;
+let startDistance = 0;
+let startAngle = 0;
+let startScale = 1;
+let startRotation = 0;
+
+/* =========================
+   文字の状態
+========================= */
+let logoX = 0;
+let logoY = 0;
+let logoScale = 1;
+let logoRotation = 0;
+let editingText = false;
+
+const MOVE_STEP = 10;
+const SCALE_STEP = 0.1;
+const ROTATE_STEP = 5;
+
+/* =========================
+   カメラ・写真の状態
+========================= */
+let cameraStarting = false;
 let savedBlob = null;
-let savedUrl = null;
+let savedObjectUrl = null;
+let saving = false;
 
-const panelBase = { x: 0, y: 0, width: 0, height: 0 };
-const bodyTransform = {
-  x: 0, y: 0, width: 0, height: 0, scale: 1, rotation: 0
-};
-
-/* 文字位置・大きさ・角度 */
-const logoTransform = {
-  x: 0, y: 0, scale: 1, rotation: 0
-};
-
-function setStatus(message) {
-  statusElement.textContent = message;
-}
-
+/* =========================
+   日付
+========================= */
 function updateDate() {
   const now = new Date();
   logoDate.textContent =
@@ -481,490 +492,340 @@ function updateDate() {
     now.getDate() + "日";
 }
 
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("画像を読み込めません: " + src));
-    image.src = src;
-  });
+/* =========================
+   iPhone / iPad 判定
+========================= */
+function isAppleMobile() {
+  const ua = navigator.userAgent || "";
+  return /iPhone|iPad|iPod/i.test(ua) ||
+    (navigator.platform === "MacIntel" &&
+     navigator.maxTouchPoints > 1);
 }
 
-function applyPanelPosition() {
-  panelLayer.style.left = panelBase.x + "px";
-  panelLayer.style.top = panelBase.y + "px";
-  panelLayer.style.width = panelBase.width + "px";
-  panelLayer.style.height = panelBase.height + "px";
-}
-
-function layoutPanelInitial() {
-  if (!panelImage.naturalWidth) return;
-
-  const sw = stage.clientWidth;
-  const sh = stage.clientHeight;
-  if (!sw || !sh) return;
-
-  const ratio = Math.min(
-    sw * 0.98 / panelImage.naturalWidth,
-    sh * 0.98 / panelImage.naturalHeight
-  );
-
-  panelBase.width = panelImage.naturalWidth * ratio;
-  panelBase.height = panelImage.naturalHeight * ratio;
-  panelBase.x = (sw - panelBase.width) / 2;
-  panelBase.y = (sh - panelBase.height) / 2;
-  applyPanelPosition();
-}
-
-function applyBodyTransform() {
-  bodyLayer.style.left = bodyTransform.x + "px";
-  bodyLayer.style.top = bodyTransform.y + "px";
-  bodyLayer.style.width = bodyTransform.width * bodyTransform.scale + "px";
-  bodyLayer.style.height = bodyTransform.height * bodyTransform.scale + "px";
-  bodyLayer.style.transformOrigin = "center center";
-  bodyLayer.style.transform = "rotate(" + bodyTransform.rotation + "rad)";
-}
-
-function applyLogoTransform() {
-  logoLayer.style.left = logoTransform.x + "px";
-  logoLayer.style.top = logoTransform.y + "px";
-  logoLayer.style.transform =
-    "translate(-50%, -50%) scale(" + logoTransform.scale + ") rotate(" +
-    logoTransform.rotation + "rad)";
-}
-
-function updatePanelVisibility() {
-  panelLayer.style.visibility = panelVisible ? "visible" : "hidden";
-  panelToggleButton.textContent = panelVisible ? "パネル非表示" : "パネル表示";
-}
-
-async function selectPanel(id) {
-  if (!PANEL_FILES[id]) return;
-
-  try {
-    const image = await loadImage(PANEL_FILES[id]);
-    selectedPanelId = id;
-    panelImage = image;
-    panelLayer.src = image.src;
-
-    layoutPanelInitial();
-
-    panelChoices.querySelectorAll("button[data-panel]").forEach(button => {
-      button.classList.toggle("active", button.dataset.panel === id);
-    });
-
-    setStatus(id === "2" ? "パネル1を選択しました。" : "パネル2を選択しました。");
-  } catch (error) {
-    console.error(error);
-    setStatus("パネル画像を読み込めません。画像のファイル名と配置を確認してください。");
-  }
-}
-
+/* =========================
+   カメラ起動
+========================= */
 async function startCamera() {
-  if (cameraStarted) return;
-
-  if (!navigator.mediaDevices?.getUserMedia) {
-    setStatus("カメラを利用できません。HTTPSでページを開いてください。");
-    return;
-  }
-
-  startButton.disabled = true;
-  setStatus("カメラを起動しています…");
+  if (cameraStarting) return;
+  cameraStarting = true;
 
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
+    stopCamera();
+
+    if (!navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia) {
+      throw new Error("カメラAPIを利用できません");
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: { ideal: "environment" },
         width: { ideal: 1920 },
         height: { ideal: 1080 }
-      }
+      },
+      audio: false
     });
 
-    video.srcObject = cameraStream;
-
-    await new Promise((resolve, reject) => {
-      if (video.readyState >= 1 && video.videoWidth > 0) {
-        resolve();
-      } else {
-        video.onloadedmetadata = resolve;
-        video.onerror = () => reject(new Error("カメラ映像を読み込めません。"));
-      }
-    });
-
+    video.srcObject = stream;
     await video.play();
-    cameraStarted = true;
-    captureButton.disabled = false;
-    emptyMessage.classList.add("hidden");
-    setStatus("文字はドラッグで移動できます。位置を確認して撮影してください。");
+
   } catch (error) {
     console.error(error);
-    setStatus("カメラを起動できません。カメラの使用許可を確認してください。");
-    startButton.disabled = false;
+    alert(
+      "カメラを起動できませんでした。\n\n" +
+      "ブラウザのカメラ使用を許可してください。\n" +
+      "HTTPSのページから開いていることも確認してください。"
+    );
+  } finally {
+    cameraStarting = false;
   }
 }
 
-function drawVideoCover(ctx, outputWidth, outputHeight) {
-  const sourceWidth = video.videoWidth;
-  const sourceHeight = video.videoHeight;
-  if (!sourceWidth || !sourceHeight) throw new Error("カメラ映像の準備ができていません。");
-
-  const sourceRatio = sourceWidth / sourceHeight;
-  const outputRatio = outputWidth / outputHeight;
-  let sx = 0, sy = 0, sw = sourceWidth, sh = sourceHeight;
-
-  if (sourceRatio > outputRatio) {
-    sw = sourceHeight * outputRatio;
-    sx = (sourceWidth - sw) / 2;
-  } else {
-    sh = sourceWidth / outputRatio;
-    sy = (sourceHeight - sh) / 2;
-  }
-
-  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outputWidth, outputHeight);
-}
-
-function capturePhoto() {
-  if (!cameraStarted || !video.videoWidth) {
-    setStatus("先にカメラを起動してください。");
-    return;
-  }
-
-  const width = stage.clientWidth;
-  const height = stage.clientHeight;
-  const ratio = video.videoWidth / video.videoHeight;
-  const stageRatio = width / height;
-  let outputWidth, outputHeight;
-
-  if (ratio > stageRatio) {
-    outputHeight = video.videoHeight;
-    outputWidth = Math.round(outputHeight * stageRatio);
-  } else {
-    outputWidth = video.videoWidth;
-    outputHeight = Math.round(outputWidth / stageRatio);
-  }
-
-  photoCanvas.width = Math.max(1, outputWidth);
-  photoCanvas.height = Math.max(1, outputHeight);
-
-  try {
-    drawVideoCover(photoCanvas.getContext("2d"), photoCanvas.width, photoCanvas.height);
-  } catch (error) {
-    console.error(error);
-    setStatus("撮影に失敗しました。もう一度お試しください。");
-    return;
-  }
-
-  captured = true;
-  stage.classList.add("show-photo");
-  captureButton.classList.add("hidden");
-  retakeButton.classList.remove("hidden");
-  saveButton.classList.remove("hidden");
-  reselectButton.classList.remove("hidden");
-  bodySection.classList.remove("hidden");
-
-  renderBodyChoices(currentCategory);
-  setStatus("衣装を選んで位置を調整してください。");
-}
-
-function renderBodyChoices(category) {
-  currentCategory = category;
-  bodyGrid.innerHTML = "";
-  const data = CATEGORIES[category];
-
-  for (let i = 1; i <= data.count; i++) {
-    const filename = data.prefix + String(i).padStart(2, "0") + ".png";
-    const src = "./" + filename;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "body-option";
-    button.setAttribute("aria-label", data.label + " " + i);
-
-    const image = document.createElement("img");
-    image.src = src;
-    image.alt = data.label + " " + i;
-    image.loading = "lazy";
-    image.draggable = false;
-
-    const label = document.createElement("span");
-    label.textContent = data.label + " " + i;
-
-    button.append(image, label);
-    if (selectedBodyName === filename) button.classList.add("active");
-
-    button.addEventListener("click", async () => {
-      try {
-        selectedBodyImage = await loadImage(src);
-        selectedBodyName = filename;
-
-        const targetHeight = stage.clientHeight * 0.72;
-        const ratio = targetHeight / selectedBodyImage.naturalHeight;
-
-        bodyTransform.width = selectedBodyImage.naturalWidth * ratio;
-        bodyTransform.height = selectedBodyImage.naturalHeight * ratio;
-        bodyTransform.scale = 1;
-        bodyTransform.rotation = 0;
-        bodyTransform.x = (stage.clientWidth - bodyTransform.width) / 2;
-        bodyTransform.y = (stage.clientHeight - bodyTransform.height) / 2;
-
-        bodyLayer.src = src;
-        bodyLayer.classList.remove("hidden");
-        applyBodyTransform();
-
-        bodySection.classList.add("hidden");
-        renderBodyChoices(category);
-        setStatus("衣装を配置しました。位置や大きさを調整してください。");
-      } catch (error) {
-        console.error(error);
-        setStatus("衣装画像を読み込めませんでした。");
-      }
-    });
-
-    bodyGrid.appendChild(button);
+/* =========================
+   カメラ停止
+========================= */
+function stopCamera() {
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
   }
 }
 
-categoriesElement.addEventListener("click", event => {
-  const button = event.target.closest("button[data-category]");
-  if (!button) return;
+/* =========================
+   パネル表示更新
+========================= */
+function updatePanel() {
+  panel.style.transform =
+    `translate(-50%, -50%) ` +
+    `translate(${posX}px, ${posY}px) ` +
+    `scale(${scale}) rotate(${rotation}deg)`;
+}
 
-  const category = button.dataset.category;
-  if (!CATEGORIES[category]) return;
+/* =========================
+   文字表示更新
+========================= */
+function updateLogo() {
+  logoText.style.transform =
+    `translate(-50%, -50%) ` +
+    `translate(${logoX}px, ${logoY}px) ` +
+    `scale(${logoScale}) rotate(${logoRotation}deg)`;
+}
 
-  categoriesElement.querySelectorAll("button").forEach(item => {
-    item.classList.toggle("active", item === button);
-  });
+/* =========================
+   文字調整ボタンの表示切替
+========================= */
+function setTextEditing(show) {
+  editingText = show;
+  textControls.classList.toggle("visible", show);
+  logoText.classList.toggle("editing", show);
+  document.body.classList.toggle("adjusting", show);
+}
 
-  renderBodyChoices(category);
+logoText.addEventListener("click", function(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  setTextEditing(!editingText);
 });
 
-function centerOf(points) {
-  const values = [...points.values()];
-  return {
-    x: values.reduce((sum, p) => sum + p.x, 0) / values.length,
-    y: values.reduce((sum, p) => sum + p.y, 0) / values.length
-  };
-}
+/* =========================
+   文字の調整
+========================= */
+textControls.addEventListener("click", function(event) {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
 
-function distanceOf(points) {
-  const values = [...points.values()];
-  if (values.length < 2) return 0;
-  return Math.hypot(values[1].x - values[0].x, values[1].y - values[0].y);
-}
+  event.preventDefault();
+  event.stopPropagation();
 
-function angleOf(points) {
-  const values = [...points.values()];
-  if (values.length < 2) return 0;
-  return Math.atan2(values[1].y - values[0].y, values[1].x - values[0].x);
-}
-
-function pointOnStage(event) {
-  const rect = stage.getBoundingClientRect();
-  return { x: event.clientX - rect.left, y: event.clientY - rect.top };
-}
-
-/* パネルと衣装のジェスチャー */
-function attachGestures(element, type) {
-  const pointers = new Map();
-  let start = null;
-
-  function readTransform() {
-    if (type === "panel") {
-      return {
-        x: panelBase.x, y: panelBase.y,
-        width: panelBase.width, height: panelBase.height,
-        scale: 1, rotation: 0
-      };
-    }
-    return { ...bodyTransform };
+  switch (button.dataset.action) {
+    case "up":
+      logoY -= MOVE_STEP;
+      break;
+    case "down":
+      logoY += MOVE_STEP;
+      break;
+    case "left":
+      logoX -= MOVE_STEP;
+      break;
+    case "right":
+      logoX += MOVE_STEP;
+      break;
+    case "enlarge":
+      logoScale = Math.min(logoScale + SCALE_STEP, 3);
+      break;
+    case "shrink":
+      logoScale = Math.max(logoScale - SCALE_STEP, 0.4);
+      break;
+    case "rotateLeft":
+      logoRotation -= ROTATE_STEP;
+      break;
+    case "rotateRight":
+      logoRotation += ROTATE_STEP;
+      break;
   }
 
-  function writeTransform(t) {
-    if (type === "panel") {
-      Object.assign(panelBase, {
-        x: t.x, y: t.y, width: t.width, height: t.height
-      });
-      applyPanelPosition();
-    } else {
-      Object.assign(bodyTransform, t);
-      applyBodyTransform();
-    }
-  }
+  updateLogo();
+});
 
-  function beginGesture() {
-    const t = readTransform();
-    const center = centerOf(pointers);
-    const distance = distanceOf(pointers);
-    const angle = angleOf(pointers);
-    const imageCenterX = t.x + t.width * t.scale / 2;
-    const imageCenterY = t.y + t.height * t.scale / 2;
-    const dx = center.x - imageCenterX;
-    const dy = center.y - imageCenterY;
-    const cos = Math.cos(t.rotation);
-    const sin = Math.sin(t.rotation);
+/* =========================
+   パネル切り替え
+========================= */
+panelButtons.forEach(button => {
+  button.addEventListener("click", function() {
+    currentPanel = this.dataset.image;
 
-    start = {
-      ...t, center, distance, angle,
-      anchorX: (dx * cos + dy * sin) / t.scale,
-      anchorY: (-dx * sin + dy * cos) / t.scale
-    };
-  }
+    panelButtons.forEach(btn => btn.classList.remove("active"));
+    this.classList.add("active");
 
-  element.addEventListener("pointerdown", event => {
-    if (type === "body" && (!captured || !selectedBodyImage)) return;
-    if (type === "panel" && !panelVisible) return;
-
-    event.preventDefault();
-    element.setPointerCapture(event.pointerId);
-    pointers.set(event.pointerId, pointOnStage(event));
-    beginGesture();
+    panel.onload = null;
+    panel.src = "face-panel/" + currentPanel;
   });
+});
 
-  element.addEventListener("pointermove", event => {
-    if (!pointers.has(event.pointerId) || !start) return;
-    event.preventDefault();
+/* =========================
+   パネルのタッチ操作
+========================= */
+panel.addEventListener("touchstart", function(event) {
+  event.preventDefault();
 
-    pointers.set(event.pointerId, pointOnStage(event));
-    const center = centerOf(pointers);
-    const t = { ...start };
+  if (event.touches.length === 1) {
+    const touch = event.touches[0];
+    startX = touch.clientX - posX;
+    startY = touch.clientY - posY;
 
-    if (pointers.size === 1) {
-      t.x = start.x + center.x - start.center.x;
-      t.y = start.y + center.y - start.center.y;
-      writeTransform(t);
-      return;
-    }
+  } else if (event.touches.length === 2) {
+    const t1 = event.touches[0];
+    const t2 = event.touches[1];
 
-    const distance = distanceOf(pointers);
-    const ratio = start.distance > 0 ? distance / start.distance : 1;
-
-    if (type === "panel") {
-      const newWidth = Math.max(40, Math.min(stage.clientWidth * 4, start.width * ratio));
-      const factor = newWidth / start.width;
-      t.width = newWidth;
-      t.height = start.height * factor;
-      t.x = center.x - (start.center.x - start.x) * factor;
-      t.y = center.y - (start.center.y - start.y) * factor;
-    } else {
-      t.scale = Math.max(0.15, Math.min(5, start.scale * ratio));
-      t.rotation = start.rotation + angleOf(pointers) - start.angle;
-
-      const cos = Math.cos(t.rotation);
-      const sin = Math.sin(t.rotation);
-      const offsetX = (start.anchorX * cos - start.anchorY * sin) * t.scale;
-      const offsetY = (start.anchorX * sin + start.anchorY * cos) * t.scale;
-      const cx = center.x - offsetX;
-      const cy = center.y - offsetY;
-
-      t.x = cx - t.width * t.scale / 2;
-      t.y = cy - t.height * t.scale / 2;
-    }
-
-    writeTransform(t);
-  });
-
-  function endPointer(event) {
-    if (!pointers.has(event.pointerId)) return;
-    pointers.delete(event.pointerId);
-    if (pointers.size === 0) start = null;
-    else beginGesture();
+    startDistance = getDistance(t1, t2);
+    startAngle = getAngle(t1, t2);
+    startScale = scale;
+    startRotation = rotation;
   }
+}, { passive: false });
 
-  element.addEventListener("pointerup", endPointer);
-  element.addEventListener("pointercancel", endPointer);
-  element.addEventListener("lostpointercapture", endPointer);
+panel.addEventListener("touchmove", function(event) {
+  event.preventDefault();
+
+  if (event.touches.length === 1) {
+    const touch = event.touches[0];
+    posX = touch.clientX - startX;
+    posY = touch.clientY - startY;
+    updatePanel();
+
+  } else if (event.touches.length === 2) {
+    const t1 = event.touches[0];
+    const t2 = event.touches[1];
+
+    const currentDistance = getDistance(t1, t2);
+    const currentAngle = getAngle(t1, t2);
+
+    if (startDistance > 0) {
+      scale = startScale * currentDistance / startDistance;
+      scale = Math.max(0.25, Math.min(scale, 4));
+    }
+
+    let angleDifference = currentAngle - startAngle;
+    if (angleDifference > 180) angleDifference -= 360;
+    if (angleDifference < -180) angleDifference += 360;
+
+    rotation = startRotation + angleDifference;
+    updatePanel();
+  }
+}, { passive: false });
+
+function getDistance(t1, t2) {
+  const dx = t2.clientX - t1.clientX;
+  const dy = t2.clientY - t1.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
 }
 
-/* センター名と日付もドラッグ・ピンチ・回転可能 */
-(function attachLogoGestures() {
-  const pointers = new Map();
-  let start = null;
+function getAngle(t1, t2) {
+  return Math.atan2(
+    t2.clientY - t1.clientY,
+    t2.clientX - t1.clientX
+  ) * 180 / Math.PI;
+}
 
-  function begin() {
-    const center = centerOf(pointers);
-    const distance = distanceOf(pointers);
-    const angle = angleOf(pointers);
+/* =========================
+   リセット
+   パネルと文字を初期状態に戻す
+========================= */
+document.getElementById("resetBtn").addEventListener("click", function() {
+  posX = 0;
+  posY = 0;
+  scale = 1;
+  rotation = 0;
 
-    start = {
-      x: logoTransform.x,
-      y: logoTransform.y,
-      scale: logoTransform.scale,
-      rotation: logoTransform.rotation,
-      center,
-      distance,
-      angle
-    };
+  logoX = 0;
+  logoY = 0;
+  logoScale = 1;
+  logoRotation = 0;
+
+  setTextEditing(false);
+  updatePanel();
+  updateLogo();
+});
+
+/* =========================
+   写真の作成
+========================= */
+photoBtn.addEventListener("click", takePhoto);
+
+function takePhoto() {
+  if (!video.videoWidth || !video.videoHeight) {
+    alert("カメラの準備ができていません。");
+    return;
   }
 
-  logoLayer.addEventListener("pointerdown", event => {
-    event.preventDefault();
-    logoLayer.setPointerCapture(event.pointerId);
-    pointers.set(event.pointerId, pointOnStage(event));
-    logoLayer.classList.add("editing");
-    begin();
-  });
-
-  logoLayer.addEventListener("pointermove", event => {
-    if (!pointers.has(event.pointerId) || !start) return;
-    event.preventDefault();
-
-    pointers.set(event.pointerId, pointOnStage(event));
-    const center = centerOf(pointers);
-
-    if (pointers.size === 1) {
-      logoTransform.x = start.x + center.x - start.center.x;
-      logoTransform.y = start.y + center.y - start.center.y;
-    } else {
-      const distance = distanceOf(pointers);
-      if (start.distance > 0) {
-        logoTransform.scale = Math.max(
-          0.4,
-          Math.min(3, start.scale * distance / start.distance)
-        );
-      }
-      logoTransform.rotation =
-        start.rotation + angleOf(pointers) - start.angle;
-    }
-
-    applyLogoTransform();
-  });
-
-  function endPointer(event) {
-    if (!pointers.has(event.pointerId)) return;
-    pointers.delete(event.pointerId);
-
-    if (pointers.size === 0) {
-      start = null;
-      logoLayer.classList.remove("editing");
-    } else {
-      begin();
-    }
+  if (!panel.complete || !panel.naturalWidth) {
+    alert("パネル画像を読み込んでいます。少し待ってから撮影してください。");
+    return;
   }
 
-  logoLayer.addEventListener("pointerup", endPointer);
-  logoLayer.addEventListener("pointercancel", endPointer);
-  logoLayer.addEventListener("lostpointercapture", endPointer);
-})();
+  /* 撮影前に文字調整ボタンを閉じる */
+  setTextEditing(false);
 
-attachGestures(panelLayer, "panel");
-attachGestures(bodyLayer, "body");
+  const viewWidth = window.innerWidth;
+  const viewHeight = window.innerHeight;
+  const videoWidth = video.videoWidth;
+  const videoHeight = video.videoHeight;
 
-function drawLogo(ctx, scaleX, scaleY) {
-  const rect = logoLayer.getBoundingClientRect();
-  const stageRect = stage.getBoundingClientRect();
+  /*
+   * object-fit: cover と同じ範囲を計算
+   */
+  const coverScale = Math.max(
+    viewWidth / videoWidth,
+    viewHeight / videoHeight
+  );
 
-  const centerX = (rect.left - stageRect.left + rect.width / 2) * scaleX;
-  const centerY = (rect.top - stageRect.top + rect.height / 2) * scaleY;
+  const sourceWidth = viewWidth / coverScale;
+  const sourceHeight = viewHeight / coverScale;
+  const sourceX = (videoWidth - sourceWidth) / 2;
+  const sourceY = (videoHeight - sourceHeight) / 2;
 
-  const computedTitle = getComputedStyle(logoTitle);
-  const titleFontSize = parseFloat(computedTitle.fontSize) || 28;
-  const dateFontSize = titleFontSize * 0.7;
-  const cssScale = logoTransform.scale;
+  canvas.width = Math.max(1, Math.round(sourceWidth));
+  canvas.height = Math.max(1, Math.round(sourceHeight));
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    alert("写真を作成できませんでした。");
+    return;
+  }
+
+  /* カメラ映像 */
+  ctx.drawImage(
+    video,
+    sourceX, sourceY, sourceWidth, sourceHeight,
+    0, 0, canvas.width, canvas.height
+  );
+
+  /*
+   * 画面座標から写真座標へ変換
+   */
+  const sx = canvas.width / viewWidth;
+  const sy = canvas.height / viewHeight;
+
+  /*
+   * パネル画像を画面と同じ位置・大きさ・角度で合成
+   */
+  const panelCenterX = viewWidth / 2 + posX;
+  const panelCenterY = viewHeight / 2 + posY;
+  const photoCenterX = panelCenterX * sx;
+  const photoCenterY = panelCenterY * sy;
+  const photoWidth = panel.offsetWidth * scale * sx;
+  const photoHeight = panel.offsetHeight * scale * sy;
 
   ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.rotate(logoTransform.rotation);
-  ctx.scale(cssScale * scaleX, cssScale * scaleY);
+  ctx.translate(photoCenterX, photoCenterY);
+  ctx.rotate(rotation * Math.PI / 180);
+
+  ctx.drawImage(
+    panel,
+    -photoWidth / 2,
+    -photoHeight / 2,
+    photoWidth,
+    photoHeight
+  );
+
+  ctx.restore();
+
+  /*
+   * 文字を写真に合成
+   * 画面表示の位置・拡大率・回転角度を反映
+   */
+  const logoCenterX = (viewWidth / 2 + logoX) * sx;
+  const logoCenterY = (viewHeight * 0.15 + logoY) * sy;
+
+  const titleStyle = getComputedStyle(logoTitle);
+  const dateStyle = getComputedStyle(logoDate);
+  const titleFontSize = parseFloat(titleStyle.fontSize) || 28;
+  const dateFontSize = parseFloat(dateStyle.fontSize) || 20;
+
+  ctx.save();
+  ctx.translate(logoCenterX, logoCenterY);
+  ctx.rotate(logoRotation * Math.PI / 180);
+  ctx.scale(logoScale * sx, logoScale * sy);
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -972,7 +833,7 @@ function drawLogo(ctx, scaleX, scaleY) {
   ctx.lineWidth = 3;
   ctx.strokeStyle = "#222";
   ctx.fillStyle = "#fff";
-  ctx.shadowColor = "#000";
+  ctx.shadowColor = "rgba(0,0,0,.65)";
   ctx.shadowBlur = 4;
   ctx.shadowOffsetY = 2;
 
@@ -985,145 +846,138 @@ function drawLogo(ctx, scaleX, scaleY) {
   ctx.fillText(logoDate.textContent, 0, titleFontSize * 0.65);
 
   ctx.restore();
+
+  /* JPEG画像を生成 */
+  canvas.toBlob(function(blob) {
+    if (!blob) {
+      alert("写真を作成できませんでした。もう一度お試しください。");
+      return;
+    }
+
+    clearSavedPhoto();
+
+    savedBlob = blob;
+    savedObjectUrl = URL.createObjectURL(blob);
+
+    previewImage.src = savedObjectUrl;
+    previewScreen.style.display = "flex";
+    saveHelp.style.display = "none";
+    saveHelp.textContent = "";
+
+    stopCamera();
+  }, "image/jpeg", 0.95);
 }
 
-async function createPhotoBlob() {
-  if (!captured || !selectedBodyImage) {
-    throw new Error("撮影して衣装を選んでください。");
+/* =========================
+   保存画像の後片付け
+========================= */
+function clearSavedPhoto() {
+  if (savedObjectUrl) {
+    URL.revokeObjectURL(savedObjectUrl);
   }
 
-  const canvas = document.createElement("canvas");
-  canvas.width = photoCanvas.width;
-  canvas.height = photoCanvas.height;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("画像を作成できません。");
-
-  ctx.drawImage(photoCanvas, 0, 0);
-
-  const scaleX = canvas.width / stage.clientWidth;
-  const scaleY = canvas.height / stage.clientHeight;
-
-  if (panelVisible && panelImage.complete && panelImage.naturalWidth > 0) {
-    ctx.drawImage(
-      panelImage,
-      panelBase.x * scaleX,
-      panelBase.y * scaleY,
-      panelBase.width * scaleX,
-      panelBase.height * scaleY
-    );
-  }
-
-  const cx =
-    (bodyTransform.x + bodyTransform.width * bodyTransform.scale / 2) * scaleX;
-  const cy =
-    (bodyTransform.y + bodyTransform.height * bodyTransform.scale / 2) * scaleY;
-  const bw = bodyTransform.width * bodyTransform.scale * scaleX;
-  const bh = bodyTransform.height * bodyTransform.scale * scaleY;
-
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(bodyTransform.rotation);
-  ctx.drawImage(selectedBodyImage, -bw / 2, -bh / 2, bw, bh);
-  ctx.restore();
-
-  drawLogo(ctx, scaleX, scaleY);
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(blob => {
-      if (blob) resolve(blob);
-      else reject(new Error("写真を作成できませんでした。"));
-    }, "image/png");
-  });
+  savedObjectUrl = null;
+  savedBlob = null;
 }
 
-async function savePhoto() {
-  saveButton.disabled = true;
-  setStatus("写真を作成しています…");
+/* =========================
+   保存ボタン
+========================= */
+saveBtn.addEventListener("click", async function() {
+  if (!savedBlob || saving) return;
+
+  saving = true;
+  saveBtn.disabled = true;
+  saveHelp.style.display = "none";
+  saveHelp.textContent = "";
+
+  const filename =
+    "face-panel-" +
+    new Date().toISOString().replace(/[:.]/g, "-") +
+    ".jpg";
 
   try {
-    savedBlob = await createPhotoBlob();
+    if (isAppleMobile()) {
+      const file = new File(
+        [savedBlob],
+        filename,
+        { type: "image/jpeg" }
+      );
 
-    if (savedUrl) URL.revokeObjectURL(savedUrl);
-    savedUrl = URL.createObjectURL(savedBlob);
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: "顔出しフォトパネル",
+          text: "撮影した写真"
+        });
+        return;
+      }
 
+      saveHelp.textContent =
+        "共有機能を利用できません。写真を開き、" +
+        "画像を長押しして保存できるかお試しください。";
+      saveHelp.style.display = "block";
+      return;
+    }
+
+    /* Androidなど：画像をダウンロード */
     const link = document.createElement("a");
-    link.href = savedUrl;
-    link.download = "gifu_animal_center_" +
-      new Date().toISOString().replace(/[:.]/g, "-") + ".png";
+    link.href = savedObjectUrl;
+    link.download = filename;
+    link.style.display = "none";
+
     document.body.appendChild(link);
     link.click();
     link.remove();
 
-    setStatus("写真を保存する操作を行いました。保存先を確認してください。");
+    saveHelp.textContent =
+      "ダウンロード操作を行いました。保存先はブラウザの設定によって異なります。";
+    saveHelp.style.display = "block";
+
   } catch (error) {
+    if (error && error.name === "AbortError") {
+      return;
+    }
+
     console.error(error);
-    setStatus(error.message || "写真を保存できませんでした。");
+    saveHelp.textContent =
+      "保存できませんでした。もう一度保存ボタンを押してください。";
+    saveHelp.style.display = "block";
+
   } finally {
-    saveButton.disabled = false;
+    saving = false;
+    saveBtn.disabled = false;
   }
-}
-
-function retakePhoto() {
-  captured = false;
-  selectedBodyImage = null;
-  selectedBodyName = "";
-
-  Object.assign(bodyTransform, {
-    x: 0, y: 0, width: 0, height: 0, scale: 1, rotation: 0
-  });
-
-  stage.classList.remove("show-photo");
-  bodyLayer.removeAttribute("src");
-  bodyLayer.classList.add("hidden");
-  bodySection.classList.add("hidden");
-
-  captureButton.classList.remove("hidden");
-  captureButton.disabled = !cameraStarted;
-  retakeButton.classList.add("hidden");
-  saveButton.classList.add("hidden");
-  reselectButton.classList.add("hidden");
-  emptyMessage.classList.add("hidden");
-
-  setStatus("位置を確認して、もう一度撮影してください。");
-}
-
-startButton.addEventListener("click", startCamera);
-captureButton.addEventListener("click", capturePhoto);
-
-panelToggleButton.addEventListener("click", () => {
-  panelVisible = !panelVisible;
-  updatePanelVisibility();
-  setStatus(panelVisible ? "パネルを表示しました。" : "パネルを非表示にしました。");
 });
 
-panelChoices.addEventListener("click", event => {
-  const button = event.target.closest("button[data-panel]");
-  if (button) selectPanel(button.dataset.panel);
+/* =========================
+   撮り直す
+========================= */
+retakeBtn.addEventListener("click", async function() {
+  previewScreen.style.display = "none";
+  clearSavedPhoto();
+  await startCamera();
 });
 
-reselectButton.addEventListener("click", () => {
-  bodySection.classList.remove("hidden");
+/* =========================
+   ページを離れるとき
+========================= */
+window.addEventListener("pagehide", function() {
+  stopCamera();
+  clearSavedPhoto();
 });
 
-retakeButton.addEventListener("click", retakePhoto);
-saveButton.addEventListener("click", savePhoto);
-
-window.addEventListener("resize", () => {
-  if (!captured) layoutPanelInitial();
-});
-
-window.addEventListener("orientationchange", () => {
-  setTimeout(() => {
-    if (!captured) layoutPanelInitial();
-  }, 250);
-});
-
+/* =========================
+   起動
+========================= */
 updateDate();
-applyLogoTransform();
-updatePanelVisibility();
-selectPanel("2");
+updatePanel();
+updateLogo();
+startCamera();
 </script>
 </body>
 </html>
-```
