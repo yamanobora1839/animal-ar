@@ -4,8 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0,
-               user-scalable=no, viewport-fit=cover">
+      content="width=device-width, initial-scale=1.0,
+               maximum-scale=1.0, user-scalable=no,
+               viewport-fit=cover">
 <title>顔出しフォトパネル</title>
 
 <style>
@@ -22,6 +23,27 @@ html, body {
   overflow: hidden;
   background: #000;
   font-family: sans-serif;
+}
+
+button {
+  border: none;
+  border-radius: 28px;
+  padding: 11px 13px;
+  background: rgba(255,255,255,.96);
+  color: #222;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:active {
+  opacity: .75;
+}
+
+button:disabled {
+  opacity: .5;
 }
 
 #camera {
@@ -50,6 +72,7 @@ html, body {
   touch-action: none;
 }
 
+/* 撮影案内 */
 #help {
   position: fixed;
   top: calc(10px + env(safe-area-inset-top));
@@ -60,37 +83,54 @@ html, body {
   border-radius: 20px;
   background: rgba(0,0,0,.65);
   color: white;
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
+  pointer-events: none;
 }
 
-button {
-  border: none;
-  border-radius: 28px;
-  padding: 11px 13px;
-  background: rgba(255,255,255,.96);
-  color: #222;
-  font-size: 14px;
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0,0,0,.35);
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-button:active {
-  opacity: .8;
-}
-
-button:disabled {
-  opacity: .5;
-}
-
-.panelButton.active {
-  background: #222;
+/* 写真に合成する文字 */
+#logoText {
+  position: fixed;
+  left: 50%;
+  top: 15%;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
   color: white;
+  font-size: clamp(18px, 4vw, 36px);
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow:
+    -2px -2px 2px #222,
+     2px -2px 2px #222,
+    -2px  2px 2px #222,
+     2px  2px 2px #222,
+     0 3px 5px #000;
+  padding: 8px 12px;
+  border-radius: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
-/* パネル選択ボタン：縦向き */
+#logoText.editing {
+  outline: 2px dashed rgba(255,255,255,.85);
+  background: rgba(0,0,0,.15);
+}
+
+#logoTitle,
+#logoDate {
+  display: block;
+}
+
+#logoDate {
+  font-size: .7em;
+}
+
+/* パネル選択 */
 #panelButtons {
   position: fixed;
   left: 0;
@@ -100,12 +140,16 @@ button:disabled {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
   gap: 7px;
   padding: 0 6px;
 }
 
-/* 撮影・リセット：縦向き */
+.panelButton.active {
+  background: #222;
+  color: white;
+}
+
+/* 撮影・リセット */
 #controls {
   position: fixed;
   left: 0;
@@ -122,47 +166,48 @@ button:disabled {
   min-width: 112px;
 }
 
-/* 施設名・日付の表示 */
-#logoText {
+/* 文字調整ボタン */
+#textControls {
+  display: none;
   position: fixed;
+  z-index: 30;
   left: 50%;
-  top: 16%;
-  z-index: 5;
-  transform: translate(-50%, -50%);
-  transform-origin: center center;
-  color: white;
-  text-align: center;
-  white-space: nowrap;
-  font-weight: bold;
-  text-shadow:
-    -2px -2px 3px #000,
-     2px -2px 3px #000,
-    -2px  2px 3px #000,
-     2px  2px 3px #000;
-  pointer-events: auto;
-  touch-action: none;
-  user-select: none;
-}
-
-#logoTitle {
-  display: block;
-  font-size: clamp(18px, 4vw, 34px);
-}
-
-#logoDate {
-  display: block;
-  margin-top: 4px;
-  font-size: clamp(13px, 2.8vw, 23px);
-}
-
-#logoToggle {
-  position: fixed;
-  top: calc(52px + env(safe-area-inset-top));
-  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  z-index: 11;
-  padding: 7px 12px;
-  font-size: 12px;
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 46px);
+  gap: 5px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(0,0,0,.78);
+  box-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+
+#textControls.visible {
+  display: grid;
+}
+
+#textControls button {
+  width: 52px;
+  height: 46px;
+  padding: 0;
+  border-radius: 12px;
+  font-size: 25px;
+  line-height: 1;
+  box-shadow: none;
+  background: rgba(255,255,255,.96);
+}
+
+#textControls .empty {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 文字調整中はほかの操作ボタンを隠す */
+body.adjusting #panelButtons,
+body.adjusting #controls {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 #photoCanvas {
@@ -211,7 +256,7 @@ button:disabled {
   bottom: calc(82px + env(safe-area-inset-bottom));
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgba(0,0,0,.78);
+  background: rgba(0,0,0,.82);
   color: white;
   text-align: center;
   font-size: 13px;
@@ -219,143 +264,100 @@ button:disabled {
   display: none;
 }
 
-/* ========================================
-   横向きレイアウト
-   画面の左右端にボタンを配置し、
-   パネルの顔部分に重なりにくくする
-======================================== */
+/* 横向き */
 @media (orientation: landscape) {
   #help {
     top: calc(8px + env(safe-area-inset-top));
-    left: 50%;
-    font-size: 11px;
-    padding: 6px 9px;
   }
 
-  /* パネル選択：左端に縦並び */
   #panelButtons {
     top: 50%;
+    bottom: auto;
     left: calc(8px + env(safe-area-inset-left));
     right: auto;
-    bottom: auto;
     transform: translateY(-50%);
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-items: stretch;
-    justify-content: center;
-    gap: 7px;
-    padding: 0;
-    max-height: 76vh;
-  }
-
-  #panelButtons button {
-    padding: 9px 10px;
-    font-size: 12px;
-    min-width: 0;
-    white-space: nowrap;
-  }
-
-  /* 撮影・リセット：右端に縦並び */
-  #controls {
-    top: 50%;
-    left: auto;
-    right: calc(8px + env(safe-area-inset-right));
-    bottom: auto;
-    transform: translateY(-50%);
-    flex-direction: column;
-    align-items: stretch;
-    gap: 9px;
-    padding: 0;
-  }
-
-  #controls button {
-    min-width: 0;
-    padding: 10px 12px;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-
-  #logoToggle {
-    top: calc(8px + env(safe-area-inset-top));
-    left: auto;
-    right: calc(8px + env(safe-area-inset-right));
-    transform: none;
-    font-size: 11px;
-    padding: 6px 9px;
-  }
-
-  #logoText {
-    top: 17%;
-  }
-
-  #logoTitle {
-    font-size: clamp(15px, 3vw, 26px);
-  }
-
-  #logoDate {
-    font-size: clamp(11px, 2vw, 18px);
-  }
-
-  /* 撮影後のボタンも横向きに対応 */
-  #previewControls {
-    left: auto;
-    right: calc(10px + env(safe-area-inset-right));
-    bottom: calc(12px + env(safe-area-inset-bottom));
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
     padding: 0;
   }
 
-  #previewControls button {
-    min-width: 0;
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  #saveHelp {
-    left: 12px;
-    right: calc(145px + env(safe-area-inset-right));
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    font-size: 11px;
-  }
-}
-
-/* 高さの低い横向き画面ではボタンをさらに小さく */
-@media (orientation: landscape) and (max-height: 420px) {
-  #panelButtons {
-    left: calc(5px + env(safe-area-inset-left));
-    gap: 4px;
-  }
-
   #panelButtons button {
-    padding: 6px 7px;
-    font-size: 10px;
+    padding: 10px 11px;
+    font-size: 12px;
   }
 
   #controls {
-    right: calc(5px + env(safe-area-inset-right));
-    gap: 5px;
+    top: 50%;
+    bottom: auto;
+    left: auto;
+    right: calc(8px + env(safe-area-inset-right));
+    transform: translateY(-50%);
+    flex-direction: column;
+    gap: 10px;
+    padding: 0;
   }
 
   #controls button {
-    padding: 7px 8px;
-    font-size: 10px;
+    min-width: 90px;
+    padding: 12px 8px;
+    font-size: 13px;
   }
 
+  #textControls {
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 38px);
+    gap: 4px;
+    padding: 6px;
+  }
+
+  #textControls button {
+    width: 44px;
+    height: 38px;
+    font-size: 22px;
+  }
+
+  #previewControls {
+    left: auto;
+    right: calc(12px + env(safe-area-inset-right));
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #previewControls button {
+    min-width: 110px;
+  }
+
+  #saveHelp {
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: auto;
+    max-width: 55%;
+  }
+}
+
+/* 高さの低い横画面 */
+@media (orientation: landscape) and (max-height: 450px) {
   #logoText {
-    top: 13%;
+    font-size: clamp(16px, 3.5vw, 26px);
   }
 
-  #logoToggle {
-    font-size: 10px;
-    padding: 5px 7px;
+  #panelButtons button {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+
+  #controls button {
+    padding: 9px 7px;
   }
 }
 </style>
 </head>
 
 <body>
+
 <video id="camera" autoplay playsinline></video>
 
 <img id="panel"
@@ -363,24 +365,51 @@ button:disabled {
      alt="顔出しパネル"
      draggable="false">
 
-<div id="help">1本指：移動　2本指：拡大・縮小・回転</div>
+<div id="help">
+  パネル：指で移動・2本指で拡大縮小・回転
+</div>
 
-<div id="logoText">
+<div id="logoText" role="button" aria-label="文字の位置調整">
   <span id="logoTitle">岐阜県動物愛護センター</span>
   <span id="logoDate"></span>
 </div>
 
-<button id="logoToggle">文字表示：ON</button>
-
 <div id="panelButtons">
-  <button class="panelButton active" data-image="flame50.png">🐶🐱 犬・猫</button>
-  <button class="panelButton" data-image="flame51.png">🐶 犬</button>
-  <button class="panelButton" data-image="flame52.png">🐱 猫</button>
+  <button class="panelButton active"
+          data-image="flame50.png">🐶🐱 犬・猫</button>
+  <button class="panelButton"
+          data-image="flame51.png">🐶 犬</button>
+  <button class="panelButton"
+          data-image="flame52.png">🐱 猫</button>
 </div>
 
 <div id="controls">
   <button id="resetBtn">↩ リセット</button>
   <button id="photoBtn">📷 撮影</button>
+</div>
+
+<!-- 文字調整：8個の記号ボタン -->
+<div id="textControls" aria-label="文字の位置調整">
+  <button type="button" data-action="rotateLeft"
+          aria-label="左回転" title="左回転">↶</button>
+  <button type="button" data-action="up"
+          aria-label="上へ" title="上へ">↑</button>
+  <button type="button" data-action="rotateRight"
+          aria-label="右回転" title="右回転">↷</button>
+
+  <button type="button" data-action="left"
+          aria-label="左へ" title="左へ">←</button>
+  <button type="button" class="empty" tabindex="-1"
+          aria-hidden="true"> </button>
+  <button type="button" data-action="right"
+          aria-label="右へ" title="右へ">→</button>
+
+  <button type="button" data-action="shrink"
+          aria-label="縮小" title="縮小">−</button>
+  <button type="button" data-action="down"
+          aria-label="下へ" title="下へ">↓</button>
+  <button type="button" data-action="enlarge"
+          aria-label="拡大" title="拡大">＋</button>
 </div>
 
 <canvas id="photoCanvas"></canvas>
@@ -397,6 +426,9 @@ button:disabled {
 <script>
 "use strict";
 
+/* =========================
+   要素
+========================= */
 const video = document.getElementById("camera");
 const panel = document.getElementById("panel");
 const canvas = document.getElementById("photoCanvas");
@@ -410,8 +442,11 @@ const panelButtons = document.querySelectorAll(".panelButton");
 const logoText = document.getElementById("logoText");
 const logoTitle = document.getElementById("logoTitle");
 const logoDate = document.getElementById("logoDate");
-const logoToggle = document.getElementById("logoToggle");
+const textControls = document.getElementById("textControls");
 
+/* =========================
+   パネルの状態
+========================= */
 let posX = 0;
 let posY = 0;
 let scale = 1;
@@ -425,37 +460,51 @@ let startAngle = 0;
 let startScale = 1;
 let startRotation = 0;
 
+/* =========================
+   文字の状態
+========================= */
 let logoX = 0;
 let logoY = 0;
 let logoScale = 1;
 let logoRotation = 0;
-let logoStartX = 0;
-let logoStartY = 0;
-let logoStartDistance = 0;
-let logoStartAngle = 0;
-let logoStartScale = 1;
-let logoStartRotation = 0;
-let logoVisible = true;
+let editingText = false;
 
+const MOVE_STEP = 10;
+const SCALE_STEP = 0.1;
+const ROTATE_STEP = 5;
+
+/* =========================
+   カメラ・写真の状態
+========================= */
 let cameraStarting = false;
 let savedBlob = null;
 let savedObjectUrl = null;
 let saving = false;
 
+/* =========================
+   日付
+========================= */
+function updateDate() {
+  const now = new Date();
+  logoDate.textContent =
+    now.getFullYear() + "年" +
+    (now.getMonth() + 1) + "月" +
+    now.getDate() + "日";
+}
+
+/* =========================
+   iPhone / iPad 判定
+========================= */
 function isAppleMobile() {
   const ua = navigator.userAgent || "";
   return /iPhone|iPad|iPod/i.test(ua) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    (navigator.platform === "MacIntel" &&
+     navigator.maxTouchPoints > 1);
 }
 
-function updateDate() {
-  const d = new Date();
-  logoDate.textContent =
-    d.getFullYear() + "年" +
-    (d.getMonth() + 1) + "月" +
-    d.getDate() + "日";
-}
-
+/* =========================
+   カメラ起動
+========================= */
 async function startCamera() {
   if (cameraStarting) return;
   cameraStarting = true;
@@ -479,6 +528,7 @@ async function startCamera() {
 
     video.srcObject = stream;
     await video.play();
+
   } catch (error) {
     console.error(error);
     alert(
@@ -491,6 +541,9 @@ async function startCamera() {
   }
 }
 
+/* =========================
+   カメラ停止
+========================= */
 function stopCamera() {
   if (video.srcObject) {
     video.srcObject.getTracks().forEach(track => track.stop());
@@ -498,28 +551,148 @@ function stopCamera() {
   }
 }
 
+/* =========================
+   パネル表示更新
+========================= */
 function updatePanel() {
   panel.style.transform =
-    `translate(-50%, -50%) translate(${posX}px, ${posY}px) ` +
+    `translate(-50%, -50%) ` +
+    `translate(${posX}px, ${posY}px) ` +
     `scale(${scale}) rotate(${rotation}deg)`;
 }
 
+/* =========================
+   文字表示更新
+========================= */
 function updateLogo() {
   logoText.style.transform =
-    `translate(-50%, -50%) translate(${logoX}px, ${logoY}px) ` +
+    `translate(-50%, -50%) ` +
+    `translate(${logoX}px, ${logoY}px) ` +
     `scale(${logoScale}) rotate(${logoRotation}deg)`;
-  logoText.style.display = logoVisible ? "block" : "none";
-  logoToggle.textContent = logoVisible ? "文字表示：ON" : "文字表示：OFF";
 }
 
+/* =========================
+   文字調整ボタンの表示切替
+========================= */
+function setTextEditing(show) {
+  editingText = show;
+  textControls.classList.toggle("visible", show);
+  logoText.classList.toggle("editing", show);
+  document.body.classList.toggle("adjusting", show);
+}
+
+logoText.addEventListener("click", function(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  setTextEditing(!editingText);
+});
+
+/* =========================
+   文字の調整
+========================= */
+textControls.addEventListener("click", function(event) {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  switch (button.dataset.action) {
+    case "up":
+      logoY -= MOVE_STEP;
+      break;
+    case "down":
+      logoY += MOVE_STEP;
+      break;
+    case "left":
+      logoX -= MOVE_STEP;
+      break;
+    case "right":
+      logoX += MOVE_STEP;
+      break;
+    case "enlarge":
+      logoScale = Math.min(logoScale + SCALE_STEP, 3);
+      break;
+    case "shrink":
+      logoScale = Math.max(logoScale - SCALE_STEP, 0.4);
+      break;
+    case "rotateLeft":
+      logoRotation -= ROTATE_STEP;
+      break;
+    case "rotateRight":
+      logoRotation += ROTATE_STEP;
+      break;
+  }
+
+  updateLogo();
+});
+
+/* =========================
+   パネル切り替え
+========================= */
 panelButtons.forEach(button => {
   button.addEventListener("click", function() {
     currentPanel = this.dataset.image;
+
     panelButtons.forEach(btn => btn.classList.remove("active"));
     this.classList.add("active");
+
+    panel.onload = null;
     panel.src = "face-panel/" + currentPanel;
   });
 });
+
+/* =========================
+   パネルのタッチ操作
+========================= */
+panel.addEventListener("touchstart", function(event) {
+  event.preventDefault();
+
+  if (event.touches.length === 1) {
+    const touch = event.touches[0];
+    startX = touch.clientX - posX;
+    startY = touch.clientY - posY;
+
+  } else if (event.touches.length === 2) {
+    const t1 = event.touches[0];
+    const t2 = event.touches[1];
+
+    startDistance = getDistance(t1, t2);
+    startAngle = getAngle(t1, t2);
+    startScale = scale;
+    startRotation = rotation;
+  }
+}, { passive: false });
+
+panel.addEventListener("touchmove", function(event) {
+  event.preventDefault();
+
+  if (event.touches.length === 1) {
+    const touch = event.touches[0];
+    posX = touch.clientX - startX;
+    posY = touch.clientY - startY;
+    updatePanel();
+
+  } else if (event.touches.length === 2) {
+    const t1 = event.touches[0];
+    const t2 = event.touches[1];
+
+    const currentDistance = getDistance(t1, t2);
+    const currentAngle = getAngle(t1, t2);
+
+    if (startDistance > 0) {
+      scale = startScale * currentDistance / startDistance;
+      scale = Math.max(0.25, Math.min(scale, 4));
+    }
+
+    let angleDifference = currentAngle - startAngle;
+    if (angleDifference > 180) angleDifference -= 360;
+    if (angleDifference < -180) angleDifference += 360;
+
+    rotation = startRotation + angleDifference;
+    updatePanel();
+  }
+}, { passive: false });
 
 function getDistance(t1, t2) {
   const dx = t2.clientX - t1.clientX;
@@ -534,101 +707,29 @@ function getAngle(t1, t2) {
   ) * 180 / Math.PI;
 }
 
-panel.addEventListener("touchstart", function(event) {
-  event.preventDefault();
-
-  if (event.touches.length === 1) {
-    const t = event.touches[0];
-    startX = t.clientX - posX;
-    startY = t.clientY - posY;
-  } else if (event.touches.length === 2) {
-    startDistance = getDistance(event.touches[0], event.touches[1]);
-    startAngle = getAngle(event.touches[0], event.touches[1]);
-    startScale = scale;
-    startRotation = rotation;
-  }
-}, { passive: false });
-
-panel.addEventListener("touchmove", function(event) {
-  event.preventDefault();
-
-  if (event.touches.length === 1) {
-    const t = event.touches[0];
-    posX = t.clientX - startX;
-    posY = t.clientY - startY;
-    updatePanel();
-  } else if (event.touches.length === 2) {
-    const distance = getDistance(event.touches[0], event.touches[1]);
-    const angle = getAngle(event.touches[0], event.touches[1]);
-
-    if (startDistance > 0) {
-      scale = Math.max(0.25, Math.min(4, startScale * distance / startDistance));
-    }
-
-    let difference = angle - startAngle;
-    if (difference > 180) difference -= 360;
-    if (difference < -180) difference += 360;
-
-    rotation = startRotation + difference;
-    updatePanel();
-  }
-}, { passive: false });
-
-logoText.addEventListener("touchstart", function(event) {
-  if (!logoVisible) return;
-  event.preventDefault();
-
-  if (event.touches.length === 1) {
-    const t = event.touches[0];
-    logoStartX = t.clientX - logoX;
-    logoStartY = t.clientY - logoY;
-  } else if (event.touches.length === 2) {
-    logoStartDistance = getDistance(event.touches[0], event.touches[1]);
-    logoStartAngle = getAngle(event.touches[0], event.touches[1]);
-    logoStartScale = logoScale;
-    logoStartRotation = logoRotation;
-  }
-}, { passive: false });
-
-logoText.addEventListener("touchmove", function(event) {
-  if (!logoVisible) return;
-  event.preventDefault();
-
-  if (event.touches.length === 1) {
-    const t = event.touches[0];
-    logoX = t.clientX - logoStartX;
-    logoY = t.clientY - logoStartY;
-    updateLogo();
-  } else if (event.touches.length === 2) {
-    const distance = getDistance(event.touches[0], event.touches[1]);
-    const angle = getAngle(event.touches[0], event.touches[1]);
-
-    if (logoStartDistance > 0) {
-      logoScale = Math.max(0.5, Math.min(3, logoStartScale * distance / logoStartDistance));
-    }
-
-    let difference = angle - logoStartAngle;
-    if (difference > 180) difference -= 360;
-    if (difference < -180) difference += 360;
-
-    logoRotation = logoStartRotation + difference;
-    updateLogo();
-  }
-}, { passive: false });
-
-logoToggle.addEventListener("click", function() {
-  logoVisible = !logoVisible;
-  updateLogo();
-});
-
+/* =========================
+   リセット
+   パネルと文字を初期状態に戻す
+========================= */
 document.getElementById("resetBtn").addEventListener("click", function() {
   posX = 0;
   posY = 0;
   scale = 1;
   rotation = 0;
+
+  logoX = 0;
+  logoY = 0;
+  logoScale = 1;
+  logoRotation = 0;
+
+  setTextEditing(false);
   updatePanel();
+  updateLogo();
 });
 
+/* =========================
+   写真の作成
+========================= */
 photoBtn.addEventListener("click", takePhoto);
 
 function takePhoto() {
@@ -642,11 +743,17 @@ function takePhoto() {
     return;
   }
 
+  /* 撮影前に文字調整ボタンを閉じる */
+  setTextEditing(false);
+
   const viewWidth = window.innerWidth;
   const viewHeight = window.innerHeight;
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
 
+  /*
+   * object-fit: cover と同じ範囲を計算
+   */
   const coverScale = Math.max(
     viewWidth / videoWidth,
     viewHeight / videoHeight
@@ -666,22 +773,33 @@ function takePhoto() {
     return;
   }
 
+  /* カメラ映像 */
   ctx.drawImage(
     video,
     sourceX, sourceY, sourceWidth, sourceHeight,
     0, 0, canvas.width, canvas.height
   );
 
-  const ratio = canvas.width / viewWidth;
+  /*
+   * 画面座標から写真座標へ変換
+   */
+  const sx = canvas.width / viewWidth;
+  const sy = canvas.height / viewHeight;
 
-  const centerX = (viewWidth / 2 + posX) * ratio;
-  const centerY = (viewHeight / 2 + posY) * ratio;
-  const photoWidth = panel.offsetWidth * scale * ratio;
-  const photoHeight = panel.offsetHeight * scale * ratio;
+  /*
+   * パネル画像を画面と同じ位置・大きさ・角度で合成
+   */
+  const panelCenterX = viewWidth / 2 + posX;
+  const panelCenterY = viewHeight / 2 + posY;
+  const photoCenterX = panelCenterX * sx;
+  const photoCenterY = panelCenterY * sy;
+  const photoWidth = panel.offsetWidth * scale * sx;
+  const photoHeight = panel.offsetHeight * scale * sy;
 
   ctx.save();
-  ctx.translate(centerX, centerY);
+  ctx.translate(photoCenterX, photoCenterY);
   ctx.rotate(rotation * Math.PI / 180);
+
   ctx.drawImage(
     panel,
     -photoWidth / 2,
@@ -689,41 +807,47 @@ function takePhoto() {
     photoWidth,
     photoHeight
   );
+
   ctx.restore();
 
-  /* 文字も撮影画像に合成 */
-  if (logoVisible) {
-    const logoRect = logoText.getBoundingClientRect();
-    const logoCenterX = (logoRect.left + logoRect.width / 2) * ratio;
-    const logoCenterY = (logoRect.top + logoRect.height / 2) * ratio;
+  /*
+   * 文字を写真に合成
+   * 画面表示の位置・拡大率・回転角度を反映
+   */
+  const logoCenterX = (viewWidth / 2 + logoX) * sx;
+  const logoCenterY = (viewHeight * 0.15 + logoY) * sy;
 
-    ctx.save();
-    ctx.translate(logoCenterX, logoCenterY);
-    ctx.rotate(logoRotation * Math.PI / 180);
-    ctx.scale(logoScale, logoScale);
+  const titleStyle = getComputedStyle(logoTitle);
+  const dateStyle = getComputedStyle(logoDate);
+  const titleFontSize = parseFloat(titleStyle.fontSize) || 28;
+  const dateFontSize = parseFloat(dateStyle.fontSize) || 20;
 
-    const titleStyle = getComputedStyle(logoTitle);
-    const dateStyle = getComputedStyle(logoDate);
-    const titleFontSize = parseFloat(titleStyle.fontSize) * ratio;
-    const dateFontSize = parseFloat(dateStyle.fontSize) * ratio;
-    const titleText = logoTitle.textContent;
-    const dateText = logoDate.textContent;
+  ctx.save();
+  ctx.translate(logoCenterX, logoCenterY);
+  ctx.rotate(logoRotation * Math.PI / 180);
+  ctx.scale(logoScale * sx, logoScale * sy);
 
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = `bold ${titleFontSize}px sans-serif`;
-    ctx.lineWidth = 3 * ratio;
-    ctx.strokeStyle = "#000";
-    ctx.fillStyle = "#fff";
-    ctx.strokeText(titleText, 0, -dateFontSize * 0.55);
-    ctx.fillText(titleText, 0, -dateFontSize * 0.55);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#222";
+  ctx.fillStyle = "#fff";
+  ctx.shadowColor = "rgba(0,0,0,.65)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
 
-    ctx.font = `bold ${dateFontSize}px sans-serif`;
-    ctx.strokeText(dateText, 0, titleFontSize * 0.75);
-    ctx.fillText(dateText, 0, titleFontSize * 0.75);
-    ctx.restore();
-  }
+  ctx.font = `900 ${titleFontSize}px sans-serif`;
+  ctx.strokeText(logoTitle.textContent, 0, -titleFontSize * 0.38);
+  ctx.fillText(logoTitle.textContent, 0, -titleFontSize * 0.38);
 
+  ctx.font = `900 ${dateFontSize}px sans-serif`;
+  ctx.strokeText(logoDate.textContent, 0, titleFontSize * 0.65);
+  ctx.fillText(logoDate.textContent, 0, titleFontSize * 0.65);
+
+  ctx.restore();
+
+  /* JPEG画像を生成 */
   canvas.toBlob(function(blob) {
     if (!blob) {
       alert("写真を作成できませんでした。もう一度お試しください。");
@@ -731,22 +855,34 @@ function takePhoto() {
     }
 
     clearSavedPhoto();
+
     savedBlob = blob;
     savedObjectUrl = URL.createObjectURL(blob);
+
     previewImage.src = savedObjectUrl;
     previewScreen.style.display = "flex";
     saveHelp.style.display = "none";
     saveHelp.textContent = "";
+
     stopCamera();
   }, "image/jpeg", 0.95);
 }
 
+/* =========================
+   保存画像の後片付け
+========================= */
 function clearSavedPhoto() {
-  if (savedObjectUrl) URL.revokeObjectURL(savedObjectUrl);
+  if (savedObjectUrl) {
+    URL.revokeObjectURL(savedObjectUrl);
+  }
+
   savedObjectUrl = null;
   savedBlob = null;
 }
 
+/* =========================
+   保存ボタン
+========================= */
 saveBtn.addEventListener("click", async function() {
   if (!savedBlob || saving) return;
 
@@ -762,7 +898,11 @@ saveBtn.addEventListener("click", async function() {
 
   try {
     if (isAppleMobile()) {
-      const file = new File([savedBlob], filename, { type: "image/jpeg" });
+      const file = new File(
+        [savedBlob],
+        filename,
+        { type: "image/jpeg" }
+      );
 
       if (
         navigator.share &&
@@ -778,15 +918,18 @@ saveBtn.addEventListener("click", async function() {
       }
 
       saveHelp.textContent =
-        "共有機能を利用できません。写真を開き、画像を長押しして保存できるかお試しください。";
+        "共有機能を利用できません。写真を開き、" +
+        "画像を長押しして保存できるかお試しください。";
       saveHelp.style.display = "block";
       return;
     }
 
+    /* Androidなど：画像をダウンロード */
     const link = document.createElement("a");
     link.href = savedObjectUrl;
     link.download = filename;
     link.style.display = "none";
+
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -796,29 +939,41 @@ saveBtn.addEventListener("click", async function() {
     saveHelp.style.display = "block";
 
   } catch (error) {
-    if (error && error.name === "AbortError") return;
+    if (error && error.name === "AbortError") {
+      return;
+    }
 
     console.error(error);
     saveHelp.textContent =
       "保存できませんでした。もう一度保存ボタンを押してください。";
     saveHelp.style.display = "block";
+
   } finally {
     saving = false;
     saveBtn.disabled = false;
   }
 });
 
+/* =========================
+   撮り直す
+========================= */
 retakeBtn.addEventListener("click", async function() {
   previewScreen.style.display = "none";
   clearSavedPhoto();
   await startCamera();
 });
 
+/* =========================
+   ページを離れるとき
+========================= */
 window.addEventListener("pagehide", function() {
   stopCamera();
   clearSavedPhoto();
 });
 
+/* =========================
+   起動
+========================= */
 updateDate();
 updatePanel();
 updateLogo();
