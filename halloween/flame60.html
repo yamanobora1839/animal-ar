@@ -1,1 +1,872 @@
 
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#171321">
+<title>ハロウィン顔出しフォト</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #171321;
+    --panel: #241d32;
+    --accent: #ff9b35;
+    --text: #fffaf3;
+    --muted: #d4cbdc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
+  }
+
+  body { min-height: 100dvh; }
+
+  button {
+    font: inherit;
+    border: 0;
+    border-radius: 12px;
+    padding: 11px 14px;
+    color: #201529;
+    background: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  button.secondary {
+    color: var(--text);
+    background: #494052;
+  }
+
+  button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 760px;
+    min-height: 100dvh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 10px 10px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  h1 { font-size: 18px; margin: 0; }
+
+  .hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .stage-wrap {
+    position: relative;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stage {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    max-height: min(68dvh, 720px);
+    background: #08070b;
+    border-radius: 14px;
+    touch-action: none;
+  }
+
+  .stage video,
+  .stage canvas,
+  .stage img.layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .stage video {
+    inset: 0;
+    transform: scaleX(-1);
+  }
+
+  .stage canvas {
+    inset: 0;
+    display: none;
+  }
+
+  .stage img.layer {
+    inset: auto;
+    max-width: none;
+    max-height: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .stage img.panel-layer {
+    z-index: 2;
+    pointer-events: auto;
+    touch-action: none;
+  }
+
+  .stage img.body-layer {
+    z-index: 3;
+    touch-action: none;
+  }
+
+  .stage .empty {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    text-align: center;
+    color: #e8dfef;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .controls button { flex: 1 1 120px; }
+
+  .section {
+    display: none;
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .section.visible { display: grid; }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .categories {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  .categories button {
+    flex: 1 1 30%;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .categories button.active { outline: 2px solid #fff; }
+
+  .body-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    max-height: 220px;
+    overflow: auto;
+  }
+
+  .body-option {
+    padding: 5px;
+    background: #352b43;
+    color: var(--text);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .body-option.active { border-color: var(--accent); }
+
+  .body-option img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: contain;
+  }
+
+  .body-option span { font-size: 11px; }
+
+  .status {
+    min-height: 18px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .small {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .hidden { display: none !important; }
+
+  @media (orientation: landscape) and (max-height: 560px) {
+    .app {
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(250px, .8fr);
+      align-items: start;
+    }
+
+    header, .hint, .status { grid-column: 1 / -1; }
+
+    .stage-wrap { min-height: 0; }
+
+    .stage {
+      max-height: 75dvh;
+      width: auto;
+      height: 75dvh;
+      aspect-ratio: 3 / 4;
+    }
+
+    .body-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>ハロウィン顔出しフォト</h1>
+    <button id="startCamera">カメラを起動</button>
+  </header>
+
+  <p class="hint" id="topHint">
+    カメラを起動し、顔が丸い穴に合うようにパネルを2本指で拡大・縮小してください。パネルの回転はできません。
+  </p>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage" aria-label="写真プレビュー">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="photoCanvas"></canvas>
+      <div class="empty" id="emptyMessage">
+        「カメラを起動」を押してください。<br>
+        カメラ利用の許可が必要です。
+      </div>
+      <img id="panelLayer" class="layer panel-layer" alt="顔出しパネル" draggable="false">
+      <img id="bodyLayer" class="layer body-layer hidden" alt="選択した全身画像" draggable="false">
+    </div>
+  </div>
+
+  <div class="controls" id="cameraControls">
+    <button id="captureBtn" disabled>撮影</button>
+    <button id="resetPanelBtn" class="secondary" disabled>パネル位置を初期化</button>
+  </div>
+
+  <div class="section" id="bodySection">
+    <p class="section-title">全身画像を1つ選んでください</p>
+
+    <div class="categories" role="group" aria-label="衣装カテゴリー">
+      <button class="active" data-category="wizard">魔法使い 8種</button>
+      <button data-category="witch">魔女 8種</button>
+      <button data-category="child">子供魔法使い 6種</button>
+    </div>
+
+    <div class="body-grid" id="bodyGrid"></div>
+
+    <p class="small">
+      全身画像は1つだけ選択できます。画像をドラッグして移動し、2本指で拡大・縮小・回転できます。
+    </p>
+
+    <div class="controls">
+      <button id="saveBtn" disabled>完成画像を保存</button>
+      <button id="retakeBtn" class="secondary">撮り直す</button>
+    </div>
+  </div>
+
+  <p class="status" id="status" aria-live="polite">準備中です。</p>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // flame60.html と画像ファイルは同じ halloween フォルダに置きます。
+  const ASSET_DIR = './';
+  const PANEL_SRC = ASSET_DIR + 'halloween_face_panel.png';
+
+  const CATEGORIES = {
+    wizard: { prefix: 'body_mahoutukai', count: 8, label: '魔法使い' },
+    witch:  { prefix: 'body_majo', count: 8, label: '魔女' },
+    child:  { prefix: 'body_mahou_child', count: 6, label: '子供魔法使い' }
+  };
+
+  const $ = id => document.getElementById(id);
+
+  const video = $('video');
+  const stage = $('stage');
+  const panelLayer = $('panelLayer');
+  const bodyLayer = $('bodyLayer');
+  const photoCanvas = $('photoCanvas');
+  const photoCtx = photoCanvas.getContext('2d');
+  const status = $('status');
+  const bodyGrid = $('bodyGrid');
+
+  let stream = null;
+  let captured = false;
+
+  let panelScale = 1;
+  let panelX = 0;
+  let panelY = 0;
+  let panelBase = { width: 0, height: 0 };
+
+  let bodyTransform = {
+    x: 0,
+    y: 0,
+    scale: 1,
+    rotation: 0
+  };
+
+  // 選択した全身画像の表示サイズ
+  let bodyBase = { width: 0, height: 0 };
+
+  let selectedBody = null;
+  let activeCategory = 'wizard';
+
+  let activePointers = new Map();
+  let gesture = null;
+  let dragTarget = null;
+
+  let lastStageSize = { width: 0, height: 0 };
+
+  function setStatus(message) {
+    status.textContent = message;
+  }
+
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function stageSize() {
+    const r = stage.getBoundingClientRect();
+    return { width: r.width, height: r.height };
+  }
+
+  function fitSize(naturalWidth, naturalHeight) {
+    const s = stageSize();
+    const ratio = Math.min(
+      s.width / naturalWidth,
+      s.height / naturalHeight
+    );
+
+    return {
+      width: naturalWidth * ratio,
+      height: naturalHeight * ratio
+    };
+  }
+
+  function layoutPanelInitial() {
+    if (!panelLayer.naturalWidth || !panelLayer.naturalHeight) return;
+
+    const s = stageSize();
+    panelBase = fitSize(panelLayer.naturalWidth, panelLayer.naturalHeight);
+
+    panelX = (s.width - panelBase.width) / 2;
+    panelY = (s.height - panelBase.height) / 2;
+    panelScale = 1;
+
+    applyPanelTransform();
+  }
+
+  function applyPanelTransform() {
+    panelLayer.style.width = (panelBase.width * panelScale) + 'px';
+    panelLayer.style.height = (panelBase.height * panelScale) + 'px';
+    panelLayer.style.left = panelX + 'px';
+    panelLayer.style.top = panelY + 'px';
+    panelLayer.style.right = 'auto';
+    panelLayer.style.bottom = 'auto';
+    panelLayer.style.transform = 'none';
+  }
+
+  function applyBodyTransform() {
+    bodyLayer.style.width = bodyBase.width + 'px';
+    bodyLayer.style.height = bodyBase.height + 'px';
+    bodyLayer.style.left = bodyTransform.x + 'px';
+    bodyLayer.style.top = bodyTransform.y + 'px';
+    bodyLayer.style.right = 'auto';
+    bodyLayer.style.bottom = 'auto';
+    bodyLayer.style.transformOrigin = 'center center';
+    bodyLayer.style.transform =
+      `rotate(${bodyTransform.rotation}rad) scale(${bodyTransform.scale})`;
+  }
+
+  panelLayer.src = PANEL_SRC;
+
+  panelLayer.addEventListener('load', () => {
+    layoutPanelInitial();
+    setStatus('顔出しパネルを読み込みました。');
+  });
+
+  panelLayer.addEventListener('error', () => {
+    setStatus('顔出しパネルを読み込めません。画像の場所とファイル名を確認してください。');
+  });
+
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus('このブラウザではカメラを利用できません。HTTPSのページを開いてください。');
+      return;
+    }
+
+    try {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+      }
+
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 1600 }
+        }
+      });
+
+      video.srcObject = stream;
+      await video.play();
+
+      $('emptyMessage').classList.add('hidden');
+      $('captureBtn').disabled = false;
+      $('resetPanelBtn').disabled = false;
+
+      setStatus('顔の位置を合わせて「撮影」を押してください。');
+    } catch (e) {
+      setStatus('カメラを起動できませんでした。ブラウザのカメラ許可とHTTPS接続を確認してください。');
+    }
+  }
+
+  function point(e) {
+    const r = stage.getBoundingClientRect();
+    return {
+      x: e.clientX - r.left,
+      y: e.clientY - r.top
+    };
+  }
+
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const angle = (a, b) => Math.atan2(b.y - a.y, b.x - a.x);
+
+  function beginGesture(e, target) {
+    e.preventDefault();
+
+    try {
+      stage.setPointerCapture(e.pointerId);
+    } catch (_) {}
+
+    activePointers.set(e.pointerId, point(e));
+    dragTarget = target;
+
+    if (activePointers.size === 1) {
+      const p = point(e);
+
+      gesture = {
+        target,
+        startPoint: p,
+        startX: target === 'panel' ? panelX : bodyTransform.x,
+        startY: target === 'panel' ? panelY : bodyTransform.y,
+        startScale: target === 'panel' ? panelScale : bodyTransform.scale,
+        startRotation: bodyTransform.rotation
+      };
+    } else if (activePointers.size >= 2) {
+      const pts = [...activePointers.values()];
+
+      gesture = {
+        target,
+        startDistance: distance(pts[0], pts[1]),
+        startAngle: angle(pts[0], pts[1]),
+        startScale: target === 'panel' ? panelScale : bodyTransform.scale,
+        startRotation: bodyTransform.rotation,
+        startX: target === 'panel' ? panelX : bodyTransform.x,
+        startY: target === 'panel' ? panelY : bodyTransform.y,
+        center: {
+          x: (pts[0].x + pts[1].x) / 2,
+          y: (pts[0].y + pts[1].y) / 2
+        }
+      };
+    }
+  }
+
+  function moveGesture(e) {
+    if (!activePointers.has(e.pointerId) || !gesture) return;
+
+    e.preventDefault();
+    activePointers.set(e.pointerId, point(e));
+
+    const pts = [...activePointers.values()];
+
+    if (pts.length >= 2) {
+      const d = Math.max(1, distance(pts[0], pts[1]));
+      const a = angle(pts[0], pts[1]);
+
+      const mid = {
+        x: (pts[0].x + pts[1].x) / 2,
+        y: (pts[0].y + pts[1].y) / 2
+      };
+
+      const factor = d / Math.max(1, gesture.startDistance);
+
+      if (gesture.target === 'panel') {
+        panelScale = clamp(gesture.startScale * factor, 0.25, 4);
+        panelX = gesture.startX + mid.x - gesture.center.x;
+        panelY = gesture.startY + mid.y - gesture.center.y;
+
+        // 顔出しパネルは回転させません。
+        applyPanelTransform();
+      } else {
+        bodyTransform.scale = clamp(gesture.startScale * factor, 0.15, 5);
+        bodyTransform.rotation = gesture.startRotation + a - gesture.startAngle;
+        bodyTransform.x = gesture.startX + mid.x - gesture.center.x;
+        bodyTransform.y = gesture.startY + mid.y - gesture.center.y;
+
+        applyBodyTransform();
+      }
+    } else if (pts.length === 1) {
+      const p = pts[0];
+
+      if (gesture.target === 'panel') {
+        panelX = gesture.startX + p.x - gesture.startPoint.x;
+        panelY = gesture.startY + p.y - gesture.startPoint.y;
+        applyPanelTransform();
+      } else {
+        bodyTransform.x = gesture.startX + p.x - gesture.startPoint.x;
+        bodyTransform.y = gesture.startY + p.y - gesture.startPoint.y;
+        applyBodyTransform();
+      }
+    }
+  }
+
+  function endGesture(e) {
+    activePointers.delete(e.pointerId);
+
+    if (!activePointers.size) {
+      gesture = null;
+      dragTarget = null;
+      return;
+    }
+
+    const [, p] = [...activePointers.entries()][0];
+
+    gesture = {
+      target: dragTarget,
+      startPoint: p,
+      startX: dragTarget === 'panel' ? panelX : bodyTransform.x,
+      startY: dragTarget === 'panel' ? panelY : bodyTransform.y,
+      startScale: dragTarget === 'panel' ? panelScale : bodyTransform.scale,
+      startRotation: bodyTransform.rotation
+    };
+  }
+
+  panelLayer.addEventListener('pointerdown', e => {
+    if (!captured) beginGesture(e, 'panel');
+  });
+
+  bodyLayer.addEventListener('pointerdown', e => {
+    if (captured) beginGesture(e, 'body');
+  });
+
+  stage.addEventListener('pointermove', moveGesture);
+  stage.addEventListener('pointerup', endGesture);
+  stage.addEventListener('pointercancel', endGesture);
+
+  $('startCamera').addEventListener('click', startCamera);
+
+  $('resetPanelBtn').addEventListener('click', () => {
+    layoutPanelInitial();
+    setStatus('パネル位置と大きさを初期化しました。');
+  });
+
+  function capturePhoto() {
+    if (!video.videoWidth || !video.videoHeight) {
+      setStatus('カメラ映像がまだ準備できていません。少し待ってから撮影してください。');
+      return;
+    }
+
+    const s = stageSize();
+    const outputW = 1200;
+    const outputH = Math.round(outputW * s.height / s.width);
+
+    photoCanvas.width = outputW;
+    photoCanvas.height = outputH;
+
+    const ctx = photoCtx;
+    ctx.clearRect(0, 0, outputW, outputH);
+
+    // 表示と同様に、前面カメラの写真を左右反転して固定します。
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const stageRatio = s.width / s.height;
+
+    let dw, dh, dx, dy;
+
+    if (videoRatio > stageRatio) {
+      dh = outputH;
+      dw = dh * videoRatio;
+      dx = (outputW - dw) / 2;
+      dy = 0;
+    } else {
+      dw = outputW;
+      dh = dw / videoRatio;
+      dx = 0;
+      dy = (outputH - dh) / 2;
+    }
+
+    ctx.save();
+    ctx.translate(outputW, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, dx, dy, dw, dh);
+    ctx.restore();
+
+    captured = true;
+
+    video.style.display = 'none';
+    photoCanvas.style.display = 'block';
+    panelLayer.style.pointerEvents = 'none';
+
+    $('captureBtn').disabled = true;
+    $('resetPanelBtn').disabled = true;
+    $('bodySection').classList.add('visible');
+
+    $('topHint').textContent =
+      '全身画像を1つ選び、顔や体に合うように位置・大きさ・角度を調整してください。';
+
+    setStatus('撮影しました。カテゴリーを選び、全身画像を1つ選択してください。');
+
+    loadCategory(activeCategory);
+  }
+
+  $('captureBtn').addEventListener('click', capturePhoto);
+
+  function drawPanel(ctx, scaleX, scaleY) {
+    if (!panelLayer.complete || !panelLayer.naturalWidth) return;
+
+    ctx.drawImage(
+      panelLayer,
+      panelX * scaleX,
+      panelY * scaleY,
+      panelBase.width * panelScale * scaleX,
+      panelBase.height * panelScale * scaleY
+    );
+  }
+
+  function drawBody(ctx, scaleX, scaleY) {
+    if (!selectedBody) return;
+
+    const w = bodyBase.width * scaleX;
+    const h = bodyBase.height * scaleY;
+
+    ctx.save();
+
+    ctx.translate(
+      (bodyTransform.x + bodyBase.width / 2) * scaleX,
+      (bodyTransform.y + bodyBase.height / 2) * scaleY
+    );
+
+    ctx.rotate(bodyTransform.rotation);
+    ctx.scale(bodyTransform.scale, bodyTransform.scale);
+    ctx.drawImage(selectedBody, -w / 2, -h / 2, w, h);
+
+    ctx.restore();
+  }
+
+  function loadCategory(category) {
+    activeCategory = category;
+
+    document.querySelectorAll('[data-category]').forEach(b => {
+      b.classList.toggle('active', b.dataset.category === category);
+    });
+
+    bodyGrid.innerHTML = '';
+
+    const cfg = CATEGORIES[category];
+
+    for (let i = 1; i <= cfg.count; i++) {
+      const number = String(i).padStart(2, '0');
+      const filename = `${cfg.prefix}${number}.png`;
+      const src = ASSET_DIR + filename;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'body-option';
+
+      const img = document.createElement('img');
+      img.alt = '';
+      img.loading = 'lazy';
+      img.src = src;
+
+      const label = document.createElement('span');
+      label.textContent = `${cfg.label} ${number}`;
+
+      img.onerror = () => {
+        img.style.display = 'none';
+        label.textContent += ' (未読込)';
+      };
+
+      button.append(img, label);
+
+      button.addEventListener('click', () => {
+        selectBody(src, filename, button);
+      });
+
+      bodyGrid.appendChild(button);
+    }
+  }
+
+  function selectBody(src, filename, button) {
+    const img = new Image();
+
+    img.onload = () => {
+      selectedBody = img;
+      bodyLayer.src = src;
+      bodyLayer.classList.remove('hidden');
+
+      bodyBase = fitSize(img.naturalWidth, img.naturalHeight);
+
+      const s = stageSize();
+
+      bodyTransform = {
+        x: (s.width - bodyBase.width) / 2,
+        y: (s.height - bodyBase.height) / 2,
+        scale: 1,
+        rotation: 0
+      };
+
+      applyBodyTransform();
+
+      document.querySelectorAll('.body-option').forEach(b => {
+        b.classList.toggle('active', b === button);
+      });
+
+      $('saveBtn').disabled = false;
+
+      setStatus(
+        `${filename} を選択しました。画像を移動・拡大縮小・回転して調整できます。`
+      );
+    };
+
+    img.onerror = () => {
+      setStatus(`${filename} を読み込めません。ファイル名と保存場所を確認してください。`);
+    };
+
+    img.src = src;
+  }
+
+  document.querySelectorAll('[data-category]').forEach(b => {
+    b.addEventListener('click', () => loadCategory(b.dataset.category));
+  });
+
+  $('saveBtn').addEventListener('click', () => {
+    if (!captured || !selectedBody) {
+      setStatus('撮影と全身画像の選択を先に行ってください。');
+      return;
+    }
+
+    const s = stageSize();
+    const out = document.createElement('canvas');
+
+    out.width = photoCanvas.width;
+    out.height = photoCanvas.height;
+
+    const ctx = out.getContext('2d');
+    const scaleX = out.width / s.width;
+    const scaleY = out.height / s.height;
+
+    // 重なり順：撮影写真 → 顔出しパネル → 全身画像（最前面）
+    ctx.drawImage(photoCanvas, 0, 0);
+    drawPanel(ctx, scaleX, scaleY);
+    drawBody(ctx, scaleX, scaleY);
+
+    out.toBlob(blob => {
+      if (!blob) {
+        setStatus('画像を作成できませんでした。もう一度お試しください。');
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+
+      a.href = url;
+      a.download =
+        'halloween_photo_' +
+        new Date().toISOString().replace(/[:.]/g, '-') +
+        '.png';
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+      setStatus('PNGを作成しました。ブラウザのダウンロード通知や保存画面を確認してください。');
+    }, 'image/png');
+  });
+
+  $('retakeBtn').addEventListener('click', () => {
+    captured = false;
+    selectedBody = null;
+
+    bodyLayer.removeAttribute('src');
+    bodyLayer.classList.add('hidden');
+
+    photoCanvas.style.display = 'none';
+    video.style.display = 'block';
+    panelLayer.style.pointerEvents = 'auto';
+
+    $('captureBtn').disabled = !stream;
+    $('resetPanelBtn').disabled = !stream;
+    $('saveBtn').disabled = true;
+
+    $('bodySection').classList.remove('visible');
+
+    $('topHint').textContent =
+      'カメラを起動し、顔が丸い穴に合うようにパネルを2本指で拡大・縮小してください。パネルの回転はできません。';
+
+    setStatus('撮り直しできます。顔の位置を合わせて撮影してください。');
+  });
+
+  window.addEventListener('resize', () => {
+    const s = stageSize();
+
+    if (
+      !captured &&
+      (s.width !== lastStageSize.width || s.height !== lastStageSize.height)
+    ) {
+      layoutPanelInitial();
+    }
+
+    lastStageSize = s;
+  });
+
+  loadCategory('wizard');
+})();
+</script>
+</body>
+</html>
+
